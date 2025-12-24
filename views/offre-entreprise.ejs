@@ -7,9 +7,8 @@
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #fff; }
         .hero { background: #000; color: #fff; padding: 60px 20px; text-align: center; }
         .stats-container { display: flex; justify-content: center; gap: 30px; padding: 40px; background: #f9f9f9; }
-        .stat-box { background: #fff; padding: 30px; border-radius: 10px; width: 300px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .stat-box { background: #fff; padding: 30px; border-radius: 10px; width: 300px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; }
         
-        /* Grille des tarifs */
         .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; max-width: 1100px; margin: 50px auto; padding: 0 20px; }
         .plan-card { border: 1px solid #eee; padding: 40px 25px; border-radius: 15px; text-align: center; transition: 0.3s; }
         .plan-card:hover { transform: translateY(-10px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
@@ -17,12 +16,11 @@
         .badge { background: #00aaff; color: #fff; padding: 5px 15px; border-radius: 20px; font-size: 12px; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); }
         
         .price { font-size: 36px; font-weight: bold; margin: 20px 0; }
-        .price span { font-size: 16px; color: #888; }
-        .features { list-style: none; padding: 0; margin: 30px 0; text-align: left; }
-        .features li { margin-bottom: 12px; color: #555; }
-        .features li::before { content: "✓"; color: #00aaff; margin-right: 10px; font-weight: bold; }
+        .features { list-style: none; padding: 0; margin: 30px 0; text-align: left; height: 120px; }
+        .features li { margin-bottom: 10px; color: #555; font-size: 14px; }
+        .features li::before { content: "✓"; color: #00aaff; margin-right: 10px; }
         
-        .btn-plan { display: block; padding: 15px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: 0.3s; }
+        .btn-pay { display: block; padding: 15px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: 0.3s; text-align: center; }
         .btn-black { background: #000; color: #fff; }
         .btn-blue { background: #00aaff; color: #fff; }
     </style>
@@ -31,58 +29,53 @@
 
     <div class="hero">
         <h1>Investissez dans l'Excellence Client</h1>
-        <p>Pourquoi Forfeo ? Parce que 70% de l'expérience d'achat est basée sur la façon dont le client sent qu'il est traité.</p>
+        <p>70% de l'expérience d'achat dépend de la perception du traitement client.</p>
     </div>
 
     <div class="stats-container">
         <div class="stat-box">
-            <h2 style="color:#00aaff;">92%</h2>
-            <p>De rétention client en plus après correction des points critiques.</p>
+            <h2 style="color:#00aaff; margin:0;">92%</h2>
+            <p style="font-size:14px; color:#666;">De rétention client après audit.</p>
         </div>
         <div class="stat-box">
-            <h2 style="color:#00aaff;">+15%</h2>
-            <p>D'augmentation du panier moyen grâce à un meilleur accueil.</p>
+            <h2 style="color:#00aaff; margin:0;">+15%</h2>
+            <p style="font-size:14px; color:#666;">D'augmentation du panier moyen.</p>
         </div>
     </div>
-
-    <h2 style="text-align:center; margin-top:60px;">Choisissez votre plan de performance</h2>
 
     <div class="pricing-grid">
         <div class="plan-card">
             <h3>Découverte</h3>
-            <div class="price">0 $ <span>/ mois</span></div>
+            <div class="price">Gratuit</div>
             <ul class="features">
-                <li>1 Audit mystère inclus</li>
-                <li>Accès au dashboard de base</li>
+                <li>1 Audit mystère d'essai</li>
+                <li>Accès au dashboard Forfeo</li>
                 <li>Assistant Forfy Basic</li>
-                <li>Rapports PDF standards</li>
             </ul>
-            <a href="/dashboard" class="btn-plan btn-black">Commencer gratuitement</a>
+            <a href="https://buy.stripe.com/7sY4gA06K1NZ6Eg3Xwd7q00" target="_blank" class="btn-pay btn-black">Activer gratuitement</a>
         </div>
 
         <div class="plan-card featured">
-            <div class="badge">LE PLUS POPULAIRE</div>
+            <div class="badge">RECOMMANDÉ</div>
             <h3>Croissance</h3>
-            <div class="price">199 $ <span>/ mois</span></div>
+            <div class="price">199 $ <span>/mois</span></div>
             <ul class="features">
                 <li>3 Audits complets / mois</li>
-                <li>Assistant Forfy IA Illimité</li>
-                <li>Analyse des points de friction</li>
-                <li>Support prioritaire 24/7</li>
+                <li>Forfy IA Illimitée</li>
+                <li>Analyses de friction client</li>
             </ul>
-            <a href="/dashboard" class="btn-plan btn-blue">S'abonner maintenant</a>
+            <a href="https://buy.stripe.com/6oUbJ2bPs3W79QsalUd7q02" target="_blank" class="btn-pay btn-blue">S'abonner maintenant</a>
         </div>
 
         <div class="plan-card">
             <h3>Excellence</h3>
-            <div class="price">499 $ <span>/ mois</span></div>
+            <div class="price">499 $ <span>/mois</span></div>
             <ul class="features">
                 <li>Audits illimités</li>
-                <li>Analyses prédictives par IA</li>
-                <li>Certification "Excellence Forfeo"</li>
-                <li>Consultant dédié</li>
+                <li>Analyses prédictives IA</li>
+                <li>Consultant Forfeo dédié</li>
             </ul>
-            <a href="mailto:contact@forfeo.ca" class="btn-plan btn-black">Contacter un expert</a>
+            <a href="https://buy.stripe.com/5kQ5kE7zcgIT0fS1Pod7q01" target="_blank" class="btn-pay btn-black">Choisir Excellence</a>
         </div>
     </div>
 
