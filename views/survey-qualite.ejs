@@ -1,66 +1,51 @@
 <!DOCTYPE html>
-<html lang="fr-CA">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audit Qualité - FORFEO LAB</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Évaluation Qualité | Forfeo Lab</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .survey-container { max-width: 800px; margin: 50px auto; padding: 40px; background: white; border-radius: 15px; shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #eee; }
+        .question { margin-bottom: 30px; }
+        .question label { display: block; font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; }
+        input[type="range"] { width: 100%; margin: 10px 0; }
+        textarea { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd; height: 100px; }
+        .btn-submit { background: #000; color: white; padding: 15px 30px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
+    </style>
 </head>
-<body>
-    <div class="main-container">
-        <nav class="navbar navbar-expand-lg navbar-forfeo">
-            <div class="container">
-                <a class="navbar-brand" href="/"><i class="bi bi-stars"></i> FORFEO LAB</a>
-                <a href="/dashboard" class="btn btn-sm btn-outline-primary rounded-pill">Retour Dashboard</a>
+<body style="background:#f9f9f9; font-family: sans-serif;">
+    <div class="survey-container">
+        <a href="/dashboard" style="text-decoration:none; color:#666;">← Retour au tableau de bord</a>
+        <h1 style="margin-top:20px;">🔍 Analyse de la Qualité de Service</h1>
+        <p style="color:#666; margin-bottom:40px;">Évaluez objectivement les points clés de l'expérience opérationnelle.</p>
+
+        <form action="/submit-survey" method="POST">
+            <input type="hidden" name="type" value="qualite">
+            
+            <div class="question">
+                <label>1. Propreté et présentation des lieux (1 à 10) :</label>
+                <input type="range" min="1" max="10" name="proprete" oninput="this.nextElementSibling.value = this.value">
+                <output>5</output>
             </div>
-        </nav>
-        <section class="py-5">
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-lg-8">
-                        <div class="text-center mb-5">
-                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 mb-3">Audit Standards</span>
-                            <h1 class="fw-bolder mb-3 text-dark">Sondage Qualité</h1>
-                        </div>
-                        <div class="card card-forfeo border-0 p-4 p-md-5">
-                            <div class="card-body">
-                                <form action="https://api.web3forms.com/submit" method="POST">
-                                    <input type="hidden" name="access_key" value="c7c665be-ec7f-4455-9a5e-11ebb323fff9">
-                                    <input type="hidden" name="subject" value="Nouveau Rapport Qualité">
-                                    <input type="hidden" name="redirect" id="redirectInput" value="">
-                                    
-                                    <div class="row g-4 mb-4">
-                                        <div class="col-md-6"><label class="fw-bold">Ambassadeur</label><input type="text" class="form-control" name="nom_ambassadeur" required></div>
-                                        <div class="col-md-6"><label class="fw-bold">Entreprise</label><input type="text" class="form-control" name="nom_entreprise" required></div>
-                                    </div>
-                                    <div class="mb-4">
-                                        <label class="fw-bold">Propreté des lieux</label>
-                                        <select class="form-select" name="proprete" required>
-                                            <option value="">Sélectionner...</option>
-                                            <option value="Sale">Sale</option>
-                                            <option value="Acceptable">Acceptable</option>
-                                            <option value="Impeccable">Impeccable</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-4"><label class="fw-bold">Commentaire</label><textarea class="form-control" name="commentaire" rows="3"></textarea></div>
-                                    <div class="d-grid"><button type="submit" class="btn btn-primary rounded-pill">Envoyer le rapport</button></div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
+            <div class="question">
+                <label>2. Rapidité de la prise en charge initiale :</label>
+                <select name="vitesse" style="width:100%; padding:10px;">
+                    <option value="immediat">Immédiate</option>
+                    <option value="correct">Acceptable (moins de 5 min)</option>
+                    <option value="lent">Lente (plus de 5 min)</option>
+                </select>
             </div>
-        </section>
+
+            <div class="question">
+                <label>3. Observations spécifiques sur la conformité aux standards :</label>
+                <textarea name="observations" placeholder="Détaillez vos observations ici..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">ENREGISTRER L'ÉVALUATION</button>
+        </form>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const currentUrl = window.location.href;
-            const newUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/')) + '/confirmation';
-            document.getElementById('redirectInput').value = newUrl;
-        });
-    </script>
-    <script src="/js/forfy.js"></script>
+
+    <%- include('partials/forfy') %>
 </body>
 </html>
