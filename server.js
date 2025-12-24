@@ -16,7 +16,7 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// --- CONFIGURATION NODEMAILER (EMAILS) ---
+// --- CONFIGURATION NODEMAILER (EMAILS AUTOMATIQUES) ---
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -47,6 +47,7 @@ app.get('/', (req, res) => res.render('index'));
 app.get('/candidature', (req, res) => res.render('espace-ambassadeur'));
 app.get('/business-plans', (req, res) => res.render('offre-entreprise'));
 app.get('/partenaires', (req, res) => res.render('partenaires'));
+app.get('/rapport-audit', (req, res) => res.render('rapport-audit'));
 
 // --- AUTHENTIFICATION ENTREPRISE ---
 app.post('/signup-entreprise', async (req, res) => {
@@ -75,7 +76,7 @@ app.post('/login-entreprise', async (req, res) => {
     } catch (err) { res.status(500).send("Erreur de connexion."); }
 });
 
-// --- INSCRIPTION AMBASSADEUR ---
+// --- INSCRIPTION & VALIDATION AMBASSADEUR ---
 app.post('/signup-ambassadeur', async (req, res) => {
     const { nom, email, ville, password } = req.body;
     try {
@@ -88,8 +89,7 @@ app.post('/signup-ambassadeur', async (req, res) => {
             from: `"Forfeo Lab Recruitment" <${process.env.EMAIL_USER}>`,
             to: email,
             subject: "🚀 Votre candidature Forfeo Lab est reçue",
-            html: `
-                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #050505; color: white; padding: 40px; border-radius: 20px;">
+            html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #050505; color: white; padding: 40px; border-radius: 20px;">
                     <h1 style="color: #00aaff;">Bienvenue, ${nom}</h1>
                     <p>Votre candidature pour le réseau à <strong>${ville}</strong> est en cours d'analyse.</p>
                 </div>`
@@ -100,7 +100,6 @@ app.post('/signup-ambassadeur', async (req, res) => {
     } catch (err) { res.status(500).send("Erreur lors de la candidature."); }
 });
 
-// --- VALIDATION MANUELLE AMBASSADEUR ---
 app.post('/admin/approve-ambassadeur', async (req, res) => {
     const { id, email, nom } = req.body;
     try {
@@ -117,6 +116,19 @@ app.post('/admin/approve-ambassadeur', async (req, res) => {
         await transporter.sendMail(approvalMail);
         res.json({ success: true, message: "Ambassadeur approuvé." });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+});
+
+// --- RAPPORTS D'AUDIT ---
+app.post('/submit-audit', async (req, res) => {
+    const { etablissement, score_accueil, commentaires } = req.body;
+    try {
+        await pool.query(
+            'INSERT INTO missions (type_mission, statut, entreprise_id) VALUES ($1, $2, $3)',
+            [`Audit ${etablissement}`, 'En Analyse IA', 4] 
+        );
+        sendAdminAlert("📊 Nouveau Rapport d'Audit", `Rapport soumis pour : ${etablissement}. Score: ${score_accueil}/5`);
+        res.redirect('/dashboard?status=submitted');
+    } catch (err) { res.status(500).send("Erreur lors de la transmission."); }
 });
 
 // --- DASHBOARD & ADMINISTRATION ---
@@ -165,5 +177,6 @@ app.post('/create-checkout-session', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// --- DÉMARRAGE ---
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`🚀 Forfeo Lab 2025 opérationnel sur le port ${PORT}`));
