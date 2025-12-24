@@ -2,41 +2,42 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Rapport d'Expérience | Forfeo Lab</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <title>Rapport d'Expérience Détaillé | Forfeo Lab</title>
     <style>
-        .survey-container { max-width: 800px; margin: 50px auto; padding: 40px; background: white; border-radius: 15px; border: 1px solid #eee; }
-        .section-title { border-left: 5px solid #000; padding-left: 15px; margin: 30px 0 20px 0; }
-        textarea { width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; min-height: 120px; }
-        .btn-save { background: #000; color: #fff; padding: 15px 40px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; color: #333; }
+        .survey-container { max-width: 850px; margin: 40px auto; background: white; padding: 40px; border-radius: 12px; border: 1px solid #ddd; }
+        .section-header { border-bottom: 2px solid #000; margin-bottom: 25px; padding-bottom: 10px; }
+        .field-label { font-weight: bold; display: block; margin: 20px 0 10px 0; color: #444; }
+        textarea { width: 100%; padding: 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; min-height: 150px; box-sizing: border-box; }
+        .hint { font-size: 0.85rem; color: #777; margin-bottom: 10px; font-style: italic; }
+        .btn-submit { background: #000; color: #fff; padding: 15px 30px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 30px; }
     </style>
 </head>
-<body style="background:#f4f7f6; font-family: sans-serif;">
+<body>
     <div class="survey-container">
-        <a href="/dashboard" style="text-decoration:none; color:#666;">← Dashboard</a>
-        <h1>✍️ Documentation de l'Expérience</h1>
-        
+        <div class="section-header">
+            <h1>✍️ Documentation de l'Expérience Client</h1>
+            <p>Rédigez un compte-rendu narratif pour identifier les moments de vérité.</p>
+        </div>
+
         <form action="/submit-survey" method="POST">
-            <input type="hidden" name="type" value="experience">
+            <input type="hidden" name="survey_type" value="experience_pro">
 
-            <h3 class="section-title">Le Récit de l'Expérience</h3>
-            <p>Décrivez chronologiquement votre parcours de client, du premier contact à la fin du service.</p>
-            <textarea name="recit" placeholder="Racontez votre expérience pas à pas..."></textarea>
+            <label class="field-label">Le Parcours Client (Narration)</label>
+            <p class="hint">Décrivez votre arrivée, l'attente, l'interaction avec le personnel et le départ.</p>
+            <textarea name="recit_narratif" placeholder="Ex: À mon arrivée à 14h15, j'ai remarqué que..."></textarea>
 
-            <h3 class="section-title">Points de Friction</h3>
-            <p>Quels moments ont été difficiles ou frustrants ?</p>
-            <textarea name="frictions" placeholder="Ex: Attente au comptoir, manque d'explication..."></textarea>
+            <label class="field-label">Analyse des Points de Friction</label>
+            <p class="hint">Identifiez les éléments qui ont freiné votre satisfaction (irritants).</p>
+            <textarea name="points_friction" placeholder="Ex: Manque de signalisation vers le comptoir..."></textarea>
 
-            <h3 class="section-title">Moments "Whaou"</h3>
-            <p>Qu'est-ce qui a dépassé vos attentes ?</p>
-            <textarea name="surprises" placeholder="Ex: Attention particulière, geste commercial..."></textarea>
+            <label class="field-label">Éléments de Distinction (Effet Whaou)</label>
+            <p class="hint">Qu'est-ce qui a rendu cette expérience unique ou mémorable ?</p>
+            <textarea name="points_positifs" placeholder="Ex: Le conseiller a utilisé mon nom dès la deuxième phrase..."></textarea>
 
-            <div style="text-align:right; margin-top:30px;">
-                <button type="submit" class="btn-save">PUBLIER LE RAPPORT</button>
-            </div>
+            <button type="submit" class="btn-submit">ENREGISTRER LE RAPPORT NARRATIF</button>
         </form>
     </div>
-
     <%- include('partials/forfy') %>
 </body>
 </html>
