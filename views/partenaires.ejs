@@ -1,72 +1,74 @@
 <!DOCTYPE html>
-<html lang="fr-CA">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nos Partenaires & Expériences - FORFEO LAB</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
+    <title>Nos Partenaires | Forfeo Lab</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; color: #333; margin: 0; }
+        .hero { background: #000; color: #fff; padding: 60px 20px; text-align: center; }
+        .container { max-width: 1000px; margin: -40px auto 50px; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        
+        .partner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-top: 40px; }
+        .partner-card { border: 1px solid #eee; padding: 25px; border-radius: 12px; text-align: center; transition: 0.3s; }
+        .partner-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-color: #00aaff; }
+        
+        .logo-placeholder { width: 80px; height: 80px; background: #f0f0f0; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .partner-card h3 { margin: 10px 0; font-size: 18px; }
+        .partner-card p { font-size: 14px; color: #666; line-height: 1.5; }
+        
+        .cta-section { margin-top: 50px; text-align: center; padding-top: 30px; border-top: 1px solid #eee; }
+        .btn-join { background: #00aaff; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; }
+    </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-forfeo">
-        <div class="container">
-            <a class="navbar-brand" href="/"><i class="bi bi-stars"></i> FORFEO LAB</a>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto gap-2 align-items-center">
-                    <li class="nav-item"><a class="nav-link" href="/">Accueil</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/dashboard">Espace Ambassadeur</a></li>
-                    <li class="nav-item ms-md-2"><a class="btn btn-outline-primary rounded-pill px-3 fw-bold" href="/business-plans">Offre Entreprise</a></li>
-                </ul>
+<body>
+
+    <div class="hero">
+        <h1>L'Écosystème Forfeo</h1>
+        <p>Nous collaborons avec les meilleurs pour garantir l'excellence de l'expérience client.</p>
+    </div>
+
+    <div class="container">
+        <p style="text-align: center; color: #888;">Forfeo Lab s'entoure de partenaires stratégiques dans les domaines de la data, de la formation et de l'hôtellerie-restauration.</p>
+
+        <div class="partner-grid">
+            <div class="partner-card">
+                <div class="logo-placeholder">📊</div>
+                <h3>Stripe Canada</h3>
+                <p>Gestion sécurisée des transactions et des paiements pour nos auditeurs et clients.</p>
+            </div>
+
+            <div class="partner-card">
+                <div class="logo-placeholder">🤖</div>
+                <h3>OpenAI</h3>
+                <p>Intelligence artificielle Forfy intégrée pour l'analyse prédictive des rapports d'audit.</p>
+            </div>
+
+            <div class="partner-card">
+                <div class="logo-placeholder">🏢</div>
+                <h3>Réseau Hôtelier QC</h3>
+                <p>Partenaire privilégié pour le déploiement de nos ambassadeurs en milieu touristique.</p>
+            </div>
+
+            <div class="partner-card">
+                <div class="logo-placeholder">🎓</div>
+                <h3>Academy Performance</h3>
+                <p>Formation continue de nos ambassadeurs aux dernières normes de service luxe.</p>
             </div>
         </div>
-    </nav>
-    <section class="py-5 text-center bg-white">
-        <div class="container"><h1 class="fw-bold mb-3">Nos Partenaires Certifiés</h1></div>
-    </section>
-    <section class="py-5">
-        <div class="container">
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
-                        <div style="height: 200px; background: #e2e8f0; display:flex; align-items:center; justify-content:center;">Image</div>
-                        <div class="card-body">
-                            <h5 class="fw-bold">Hôtel Le Prestige</h5>
-                            <div class="d-grid"><button class="btn btn-outline-dark rounded-pill" onclick="openWishlist('Hôtel Le Prestige')">Je veux tester !</button></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <div class="modal fade" id="wishlistModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 p-3">
-                <div class="modal-body">
-                    <h5 class="modal-title fw-bold mb-3">Ajouter à ma Wishlist ✨</h5>
-                    <form action="https://api.web3forms.com/submit" method="POST">
-                        <input type="hidden" name="access_key" value="c7c665be-ec7f-4455-9a5e-11ebb323fff9">
-                        <input type="hidden" name="redirect" id="redirectInput" value="">
-                        <input type="hidden" name="subject" value="Wishlist Forfeo">
-                        <div class="mb-3"><input type="text" id="targetExperience" name="experience" class="form-control" readonly></div>
-                        <div class="mb-3"><input type="text" name="nom" class="form-control" placeholder="Votre Nom" required></div>
-                        <div class="mb-3"><input type="email" name="email" class="form-control" placeholder="Votre Email" required></div>
-                        <div class="d-grid"><button type="submit" class="btn btn-primary rounded-pill">Envoyer</button></div>
-                    </form>
-                </div>
-            </div>
+
+        <div class="cta-section">
+            <h3>Vous souhaitez devenir partenaire ?</h3>
+            <p>Rejoignez un réseau dédié à l'optimisation de la performance client.</p><br>
+            <a href="mailto:contact@forfeo.lab" class="btn-join">Contactez-nous</a>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function openWishlist(experienceName) {
-            document.getElementById('targetExperience').value = experienceName;
-            const currentUrl = window.location.href;
-            const newUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/')) + '/confirmation';
-            document.getElementById('redirectInput').value = newUrl;
-            var myModal = new bootstrap.Modal(document.getElementById('wishlistModal'));
-            myModal.show();
-        }
-    </script>
-    <script src="/js/forfy.js"></script>
+
+    <%- include('partials/forfy') %>
+
+    <div style="text-align: center; padding-bottom: 40px;">
+        <a href="/" style="color: #999; text-decoration: none; font-size: 14px;">← Retour à l'accueil</a>
+    </div>
+
 </body>
 </html>
