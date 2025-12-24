@@ -2,92 +2,95 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Forfeo Lab | Excellence Client 2025</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forfeo Lab | Excellence Client</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #00aaff; --dark: #0a0a0a; --glass: rgba(255, 255, 255, 0.05); }
+        :root { --primary: #00aaff; --dark: #050505; --glass: rgba(255, 255, 255, 0.03); }
         body { margin: 0; font-family: 'Inter', sans-serif; background: var(--dark); color: white; overflow-x: hidden; }
 
-        /* Loader Futuriste */
+        /* Loader Scanner Futuriste */
         #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
-        .scanner { width: 250px; height: 3px; background: var(--primary); box-shadow: 0 0 25px var(--primary); animation: scan 2.5s infinite ease-in-out; }
-        @keyframes scan { 0%, 100% { transform: translateY(-60px); opacity: 0.2; } 50% { transform: translateY(60px); opacity: 1; } }
+        .scanner { width: 280px; height: 2px; background: var(--primary); box-shadow: 0 0 30px var(--primary); animation: scan 2.5s infinite ease-in-out; }
+        @keyframes scan { 0%, 100% { transform: translateY(-70px); opacity: 0.1; } 50% { transform: translateY(70px); opacity: 1; } }
 
-        nav { position: fixed; top: 0; width: 100%; padding: 20px; display: flex; justify-content: center; gap: 40px; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        nav a { color: white; text-decoration: none; font-weight: 500; font-size: 14px; letter-spacing: 1px; transition: 0.3s; opacity: 0.7; }
+        /* Navigation Style GitHub Lab */
+        nav { position: fixed; top: 0; width: 100%; padding: 25px; display: flex; justify-content: center; gap: 40px; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        nav a { color: white; text-decoration: none; font-weight: 500; font-size: 13px; letter-spacing: 2px; opacity: 0.6; transition: 0.3s; text-transform: uppercase; }
         nav a:hover { opacity: 1; color: var(--primary); }
 
-        .hero { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 20px; }
-        .hero h1 { font-size: 5rem; margin: 0; background: linear-gradient(to bottom, #fff 30%, var(--primary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        /* Hero Section Inspired by FORFEO-LAB */
+        .hero { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: radial-gradient(circle at center, #111 0%, #050505 100%); padding: 0 20px; }
+        .hero h1 { font-size: 5.5rem; margin: 0; font-weight: 800; background: linear-gradient(to bottom, #fff 40%, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { max-width: 750px; font-size: 1.3rem; opacity: 0.6; line-height: 1.6; margin: 20px 0 40px; }
+
+        .auth-box { display: flex; gap: 25px; flex-wrap: wrap; justify-content: center; }
+        .glass-card { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 45px; width: 380px; transition: 0.4s ease; }
+        .glass-card:hover { border-color: var(--primary); transform: translateY(-8px); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+
+        input { width: 100%; padding: 16px; margin-bottom: 18px; background: rgba(0,0,0,0.5); border: 1px solid #222; color: white; border-radius: 12px; font-size: 14px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(0,170,255,0.1); }
         
-        .auth-grid { display: flex; gap: 30px; margin-top: 50px; flex-wrap: wrap; justify-content: center; }
-        .glass-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 40px; width: 380px; transition: 0.4s; }
-        .glass-card:hover { border-color: var(--primary); transform: translateY(-5px); }
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; letter-spacing: 1px; transition: 0.3s; font-size: 14px; text-transform: uppercase; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 10px 25px rgba(0, 170, 255, 0.3); }
+        .btn-primary:hover { filter: brightness(1.2); transform: scale(1.02); }
 
-        input { width: 100%; padding: 14px; margin-bottom: 15px; background: rgba(0,0,0,0.4); border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box; outline: none; }
-        input:focus { border-color: var(--primary); }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; letter-spacing: 1px; transition: 0.3s; }
-        .btn-primary { background: var(--primary); color: white; box-shadow: 0 0 15px rgba(0, 170, 255, 0.4); }
-        .btn-outline { background: transparent; border: 1px solid white; color: white; }
-
-        .mission-section { padding: 100px 20px; max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
-        .mission-box { background: var(--glass); padding: 40px; border-radius: 20px; border-left: 4px solid var(--primary); }
+        /* Mission Section */
+        .mission-container { padding: 120px 20px; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+        .mission-card { background: var(--glass); padding: 50px 35px; border-radius: 20px; border-top: 2px solid var(--primary); }
+        .mission-card h3 { font-size: 1.5rem; margin-bottom: 15px; color: var(--primary); }
     </style>
 </head>
 <body>
 
-    <div id="loader">
-        <div class="scanner"></div>
-        <p style="margin-top: 40px; letter-spacing: 5px; font-size: 12px; opacity: 0.6;">AUTHENTIFICATION SYSTÈME...</p>
-    </div>
+    <div id="loader"><div class="scanner"></div><p style="margin-top: 50px; letter-spacing: 6px; font-size: 11px; opacity: 0.5;">CHARGEMENT DU LABORATOIRE...</p></div>
 
     <nav>
-        <a href="/">ACCUEIL</a>
-        <a href="/business-plans">SOLUTIONS</a>
-        <a href="/partenaires">ÉCOSYSTÈME</a>
-        <a href="/candidature">AMBASSADEURS</a>
+        <a href="/">Accueil</a>
+        <a href="/business-plans">Solutions Business</a>
+        <a href="/candidature">Ambassadeurs</a>
+        <a href="/partenaires">Partenaires</a>
     </nav>
 
     <div class="hero">
         <h1>Forfeo Lab</h1>
-        <p style="max-width: 700px; font-size: 1.2rem; opacity: 0.7; line-height: 1.6;">
-            Le premier laboratoire d'audit hybride combinant l'intelligence artificielle Forfy et l'expertise d'ambassadeurs certifiés pour une expérience client sans faille.
-        </p>
+        <p>L'excellence client n'est plus une option. C'est une science combinant l'intelligence artificielle et l'œil critique de nos ambassadeurs certifiés.</p>
 
-        <div class="auth-grid">
+        <div class="auth-box">
             <div class="glass-card">
-                <h3 style="margin-top: 0;">Connexion Business</h3>
+                <h2 style="margin-top:0;">Connexion Business</h2>
                 <form action="/login-entreprise" method="POST">
                     <input type="email" name="email" placeholder="Email professionnel" required>
                     <input type="password" name="password" placeholder="Mot de passe" required>
-                    <button type="submit" class="btn btn-primary">DÉVERROUILLER LE DASHBOARD</button>
+                    <button type="submit" class="btn btn-primary">Accéder au Dashboard</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <div class="mission-section">
-        <div class="mission-box">
-            <h3>01. Audit</h3>
-            <p style="opacity: 0.6;">Nos ambassadeurs s'immergent incognito dans votre écosystème pour capturer la réalité du terrain.</p>
+    <div class="mission-container">
+        <div class="mission-card">
+            <h3>01. Audit Immersif</h3>
+            <p style="opacity:0.6;">Nos ambassadeurs agissent incognito pour capturer la réalité brute de votre service.</p>
         </div>
-        <div class="mission-box">
-            <h3>02. Analyse</h3>
-            <p style="opacity: 0.6;">L'IA Forfy traite les données brutes pour extraire les points de friction critiques.</p>
+        <div class="mission-card">
+            <h3>02. Analyse IA</h3>
+            <p style="opacity:0.6;">L'IA Forfy traite les rapports pour extraire des points de friction invisibles à l'œil nu.</p>
         </div>
-        <div class="mission-box">
-            <h3>03. Action</h3>
-            <p style="opacity: 0.6;">Recevez des recommandations stratégiques immédiates pour augmenter votre rétention client.</p>
+        <div class="mission-card">
+            <h3>03. Certification</h3>
+            <p style="opacity:0.6;">Validez vos standards et obtenez le label d'excellence Forfeo pour vos clients.</p>
         </div>
     </div>
 
-    <section id="signup" style="padding: 100px 0; text-align: center;">
-        <h2 style="font-size: 2.5rem;">Prêt à optimiser vos standards ?</h2>
-        <div class="glass-card" style="margin: 40px auto; width: 450px;">
+    <section id="signup" style="padding: 100px 20px; text-align: center;">
+        <h2 style="font-size: 2.5rem; margin-bottom: 40px;">Initialisez votre Laboratoire</h2>
+        <div class="glass-card" style="margin: 0 auto; width: 450px;">
             <form action="/signup-entreprise" method="POST">
-                <input type="text" name="nom" placeholder="Nom de votre compagnie" required>
+                <input type="text" name="nom" placeholder="Nom de votre entreprise" required>
                 <input type="email" name="email" placeholder="Email de contact" required>
-                <input type="password" name="password" placeholder="Créer un mot de passe" required>
-                <button type="submit" class="btn btn-outline">LANCER MON LABORATOIRE</button>
+                <input type="password" name="password" placeholder="Mot de passe" required>
+                <button type="submit" class="btn btn-primary" style="background:#fff; color:#000;">Lancer l'inscription</button>
             </form>
         </div>
     </section>
@@ -100,8 +103,7 @@
             loader.style.opacity = '0';
             setTimeout(() => loader.style.display = 'none', 500);
         });
-
-        document.querySelectorAll('a, form button').forEach(el => {
+        document.querySelectorAll('a, button').forEach(el => {
             el.addEventListener('click', (e) => {
                 if(el.tagName === 'A' && el.getAttribute('href').startsWith('#')) return;
                 const loader = document.getElementById('loader');
