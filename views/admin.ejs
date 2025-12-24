@@ -21,19 +21,34 @@
             padding: 40px;
         }
 
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 40px;
+        .header-admin {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 15px;
+            margin-bottom: 40px;
         }
 
-        .admin-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 40px;
+        h1 { font-size: 2rem; margin: 0; display: flex; align-items: center; gap: 15px; }
+
+        .search-container {
+            position: relative;
+            width: 300px;
         }
+
+        #searchInput {
+            width: 100%;
+            padding: 12px 20px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 50px;
+            color: white;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #searchInput:focus { border-color: var(--primary); }
+
+        .admin-grid { display: grid; grid-template-columns: 1fr; gap: 40px; }
 
         .section-card {
             background: var(--card-bg);
@@ -52,39 +67,23 @@
             padding-bottom: 15px;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        table { width: 100%; border-collapse: collapse; }
 
         th {
             text-align: left;
             color: var(--text-dim);
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 1px;
             padding: 15px;
             border-bottom: 2px solid #222;
         }
 
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #222;
-            font-size: 0.95rem;
-        }
+        td { padding: 15px; border-bottom: 1px solid #222; font-size: 0.95rem; }
 
-        .status-badge {
-            background: #222;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            color: #ccc;
-        }
+        .status-badge { background: #222; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; color: #ccc; }
 
-        .status-validated {
-            color: #00ff88;
-            font-weight: bold;
-        }
+        .status-validated { color: #00ff88; font-weight: bold; }
 
         .btn-approve {
             background: var(--primary);
@@ -98,19 +97,19 @@
             display: inline-block;
         }
 
-        .btn-approve:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
-        }
+        .btn-approve:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3); }
 
-        tr:hover td {
-            background: rgba(255, 255, 255, 0.02);
-        }
+        tr:hover td { background: rgba(255, 255, 255, 0.02); }
     </style>
 </head>
 <body>
 
-    <h1>🚀 Laboratoire de Contrôle Forfeo</h1>
+    <div class="header-admin">
+        <h1>🚀 Console Admin Forfeo</h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Rechercher une ville ou un nom...">
+        </div>
+    </div>
 
     <div class="admin-grid">
         <div class="section-card">
@@ -125,15 +124,13 @@
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="ambassadeurTable">
                     <% ambassadeurs.forEach(amb => { %>
-                    <tr>
+                    <tr class="amb-row">
                         <td><strong><%= amb.nom %></strong></td>
-                        <td><%= amb.ville %></td>
+                        <td class="city-cell"><%= amb.ville %></td>
                         <td><%= amb.email %></td>
-                        <td>
-                            <span class="status-badge"><%= amb.statut %></span>
-                        </td>
+                        <td><span class="status-badge"><%= amb.statut %></span></td>
                         <td>
                             <% if (amb.statut === 'En attente') { %>
                                 <a href="/admin/approuver/<%= amb.id %>" class="btn-approve">Approuver</a>
@@ -164,15 +161,30 @@
                         <td>#<%= m.id %></td>
                         <td><%= m.type_mission %></td>
                         <td><%= m.details %></td>
-                        <td>
-                            <strong style="color: #00d4ff;"><%= m.statut %></strong>
-                        </td>
+                        <td><strong style="color: #00d4ff;"><%= m.statut %></strong></td>
                     </tr>
                     <% }) %>
                 </tbody>
             </table>
         </div>
     </div>
+
+    <script>
+        // Script de recherche dynamique
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            let filter = this.value.toLowerCase();
+            let rows = document.querySelectorAll('.amb-row');
+
+            rows.forEach(row => {
+                let text = row.innerText.toLowerCase();
+                if (text.includes(filter)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        });
+    </script>
 
 </body>
 </html>
