@@ -97,7 +97,7 @@ app.get('/', (req, res) => res.render('index'));
 app.get('/offre-entreprise', (req, res) => res.render('offre-entreprise'));
 app.get('/espace-ambassadeur', (req, res) => res.render('espace-ambassadeur'));
 
-// Routes Questionnaires (Correction des erreurs "Cannot GET")
+// Routes Questionnaires
 app.get('/survey-qualite', (req, res) => res.render('survey-qualite'));
 app.get('/survey-experience', (req, res) => res.render('survey-experience'));
 app.get('/survey-satisfaction', (req, res) => res.render('survey-satisfaction'));
@@ -114,7 +114,7 @@ app.post('/submit-survey', (req, res) => {
 
 // Dashboard Client
 app.get('/dashboard', async (req, res) => {
-    const userId = req.query.id || 4; // Par défaut id=4 comme vu en test
+    const userId = req.query.id || 4;
     try {
         const userResult = await pool.query('SELECT * FROM entreprises WHERE id = $1', [userId]);
         const missionsResult = await pool.query('SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC', [userId]);
@@ -142,9 +142,9 @@ app.post('/signup-ambassadeur', async (req, res) => {
     }
 });
 
-// Portail Ambassadeur (Visualisation des missions assignées)
+// Portail Ambassadeur
 app.get('/portail-ambassadeur', async (req, res) => {
-    const ambassadeurId = req.query.id || 1; 
+    const ambassadeurId = req.query.id || 1;
     try {
         const ambassResult = await pool.query('SELECT * FROM ambassadeurs WHERE id = $1', [ambassadeurId]);
         const missionsResult = await pool.query('SELECT * FROM missions WHERE ambassadeur_id = $1', [ambassadeurId]);
@@ -159,9 +159,53 @@ app.get('/portail-ambassadeur', async (req, res) => {
 });
 
 // ==========================================
-// 6. LANCEMENT DU SERVEUR
+// 6. ROUTES ADMINISTRATION 🛠️
+// ==========================================
+
+// Affichage Administration
+app.get('/admin', async (req, res) => {
+    try {
+        const ambassadeurs = (await pool.query('SELECT * FROM ambassadeurs ORDER BY id DESC')).rows;
+        const entreprises = (await pool.query('SELECT * FROM entreprises ORDER BY id DESC')).rows;
+        const missions = (await pool.query(`
+            SELECT m.*, e.nom as entreprise_nom, a.nom as ambassadeur_nom 
+            FROM missions m 
+            LEFT JOIN entreprises e ON m.entreprise_id = e.id 
+            LEFT JOIN ambassadeurs a ON m.ambassadeur_id = a.id 
+            ORDER BY m.id DESC
+        `)).rows;
+        
+        res.render('admin', { ambassadeurs, entreprises, missions });
+    } catch (err) {
+        res.send("Erreur lors du chargement de l'administration.");
+    }
+});
+
+// Assigner une mission
+app.post('/admin/assign-mission', async (req, res) => {
+    const { entreprise_id, ambassadeur_id, type_mission, details } = req.body;
+    try {
+        await pool.query(
+            'INSERT INTO missions (entreprise_id, ambassadeur_id, type_mission, details, statut) VALUES ($1, $2, $3, $4, $5)',
+            [entreprise_id, ambassadeur_id, type_mission, details, 'Assignée']
+        );
+        res.redirect('/admin');
+    } catch (err) {
+        res.send("Erreur lors de l'assignation.");
+    }
+});
+
+// Valider un ambassadeur
+app.post('/admin/valider-ambassadeur', async (req, res) => {
+    const { id } = req.body;
+    await pool.query("UPDATE ambassadeurs SET statut = 'Actif' WHERE id = $1", [id]);
+    res.redirect('/admin');
+});
+
+// ==========================================
+// 7. LANCEMENT DU SERVEUR
 // ==========================================
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-    console.log(`🚀 Forfeo en ligne sur le port ${PORT}`);
+    console.log(`🚀 Forfeo Lab en ligne sur le port ${PORT}`);
 });
