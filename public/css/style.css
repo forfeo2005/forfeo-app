@@ -1,0 +1,57 @@
+:root {
+    --brand-blue: #0052cc;
+    --brand-dark: #172b4d;
+    --bg-light: #f4f5f7;
+    --white: #ffffff;
+    --border: #dfe1e6;
+    --text-main: #172b4d;
+    --text-sub: #5e6c84;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-main);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Navigation Professionnelle */
+nav {
+    background: var(--brand-dark);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+nav a { color: white; text-decoration: none; margin-left: 20px; font-weight: 500; font-size: 0.9rem; }
+
+/* Layout Conteneur */
+.container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+/* Cartes de sections */
+.card-section {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+h2 { color: var(--brand-dark); border-bottom: 2px solid var(--brand-blue); padding-bottom: 10px; margin-bottom: 20px; }
+
+/* Tableaux Professionnels */
+table { width: 100%; border-collapse: collapse; background: white; }
+th { background: #f8f9fa; color: var(--text-sub); text-align: left; padding: 15px; font-size: 0.8rem; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+
+/* Boutons Action */
+.btn-primary { background: var(--brand-blue); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
+.btn-outline { border: 1px solid var(--brand-blue); color: var(--brand-blue); padding: 8px 16px; border-radius: 4px; text-decoration: none; }
