@@ -2,20 +2,26 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Rejoindre l'élite | Forfeo</title>
+    <title>Rejoignez l'élite | Forfeo</title>
 </head>
-<body style="font-family: sans-serif; text-align: center; padding: 50px;">
-    <h1>🚀 Rejoignez l'élite des testeurs</h1>
-    <p>Créez votre compte pour commencer vos missions.</p>
+<body style="font-family: 'Segoe UI', sans-serif; text-align: center; padding: 50px; background-color: #fff;">
+    <h1 style="margin-top: 0;">🚀 Rejoignez l'élite des testeurs</h1>
+    <p style="color: #666;">Créez votre compte pour commencer vos missions.</p>
     
-    <form action="/signup-ambassadeur" method="POST" style="max-width: 400px; margin: 0 auto; background: #f9f9f9; padding: 30px; border-radius: 10px; border: 1px solid #eee;">
-        <input type="text" name="nom" placeholder="Nom complet" style="width:100%; padding:12px; margin-bottom:15px;" required>
-        <input type="email" name="email" placeholder="Email" style="width:100%; padding:12px; margin-bottom:15px;" required>
-        <input type="text" name="ville" placeholder="Ville" style="width:100%; padding:12px; margin-bottom:15px;" required>
-        <input type="password" name="password" placeholder="Mot de passe" style="width:100%; padding:12px; margin-bottom:15px;" required>
-        <button type="submit" style="width:100%; background:black; color:white; padding:15px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">
+    <form action="/signup-ambassadeur" method="POST" style="max-width: 400px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 15px; border: 1px solid #eee; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <input type="text" name="nom" placeholder="Nom complet" style="width:100%; padding:14px; margin-bottom:15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;" required>
+        <input type="email" name="email" placeholder="Email" style="width:100%; padding:14px; margin-bottom:15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;" required>
+        <input type="text" name="ville" placeholder="Ville" style="width:100%; padding:14px; margin-bottom:15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;" required>
+        <input type="password" name="password" placeholder="Mot de passe" style="width:100%; padding:14px; margin-bottom:20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;" required>
+        <button type="submit" style="width:100%; background:black; color:white; padding:18px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size: 16px;">
             CRÉER MON COMPTE AMBASSADEUR
         </button>
     </form>
+    
+    <p style="margin-top: 30px; font-weight: 500;">Vos missions assignées apparaîtront ici après validation.</p>
+    
+    <div style="margin-top: 50px;">
+        <a href="/" style="color: #888; text-decoration: none; font-size: 14px;">← Retour à l'accueil</a>
+    </div>
 </body>
 </html>
