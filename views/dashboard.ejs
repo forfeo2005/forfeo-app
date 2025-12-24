@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Forfeo</title>
-    <link rel="stylesheet" href="/css/style.css"> <style>
+    <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
         .container { max-width: 1000px; margin: 50px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 20px; }
@@ -19,7 +19,7 @@
         .status-terminée { background: #d4edda; color: #155724; }
         .status-en-attente { background: #fff3cd; color: #856404; }
         .status-non-payé { background: #f8d7da; color: #721c24; }
-        .btn { background: #000; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .btn { background: #000; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; cursor: pointer; border:none; }
         .btn:hover { background: #333; }
     </style>
 </head>
@@ -86,42 +86,39 @@
 <div id="forfy-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; font-family: 'Segoe UI', sans-serif;">
     
     <div id="forfy-chat-box" style="display: none; background: white; width: 320px; height: 450px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); flex-direction: column; overflow: hidden; margin-bottom: 15px; border: 1px solid #eee;">
+        
         <div style="background: #000; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 20px;">🤖</span>
                 <span>Forfy Assistant</span>
             </div>
-            <span onclick="toggleForfy()" style="cursor: pointer; font-size: 20px; opacity: 0.8;">&times;</span>
+            <span onclick="toggleForfy()" style="cursor: pointer; font-size: 20px;">&times;</span>
         </div>
 
         <div id="forfy-messages" style="flex: 1; padding: 15px; overflow-y: auto; background: #fdfdfd; font-size: 14px; line-height: 1.5;">
             <div style="margin-bottom: 15px; background: #eee; padding: 10px; border-radius: 10px 10px 10px 0; max-width: 85%;">
-                Bonjour <strong><%= user.nom %></strong> ! Je suis Forfy. Je connais tout sur Forfeo. Comment puis-je vous aider ?
+                Bonjour <strong><%= user.nom %></strong> ! Je suis Forfy. Comment puis-je vous aider aujourd'hui ?
             </div>
         </div>
 
         <div style="padding: 12px; border-top: 1px solid #eee; display: flex; background: white;">
-            <input type="text" id="forfy-input" placeholder="Posez une question..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 14px;">
-            <button onclick="askForfy()" style="background: #000; color: white; border: none; width: 35px; height: 35px; margin-left: 8px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s;">
-                ➤
-            </button>
+            <input type="text" id="forfy-input" placeholder="Posez une question..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none;">
+            <button onclick="askForfy()" style="background: #000; color: white; border: none; width: 35px; height: 35px; margin-left: 8px; border-radius: 50%; cursor: pointer;">➤</button>
         </div>
     </div>
 
-    <button onclick="toggleForfy()" style="background: #000; color: white; width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 28px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; transition: transform 0.3s;">
+    <button onclick="toggleForfy()" style="background: #000; color: white; width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 28px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
         🤖
     </button>
 </div>
 
 <script>
-    // Ouvrir/Fermer la fenêtre
     function toggleForfy() {
         const box = document.getElementById('forfy-chat-box');
         box.style.display = box.style.display === 'none' ? 'flex' : 'none';
-        document.getElementById('forfy-input').focus();
+        if(box.style.display === 'flex') document.getElementById('forfy-input').focus();
     }
 
-    // Gérer la touche "Entrée"
     document.getElementById('forfy-input').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') askForfy();
     });
@@ -133,48 +130,26 @@
         
         if (!question) return;
 
-        // 1. Afficher le message de l'utilisateur
-        messages.innerHTML += `
-            <div style="text-align: right; margin-bottom: 15px;">
-                <div style="display: inline-block; background: #000; color: white; padding: 10px; border-radius: 10px 10px 0 10px; max-width: 85%;">
-                    ${question}
-                </div>
-            </div>
-        `;
-        
+        messages.innerHTML += `<div style="text-align: right; margin-bottom: 15px;"><div style="display: inline-block; background: #000; color: white; padding: 10px; border-radius: 10px 10px 0 10px; max-width: 85%;">${question}</div></div>`;
         input.value = '';
         messages.scrollTop = messages.scrollHeight;
 
-        // 2. Afficher "Forfy réfléchit..."
         const loadingId = 'loading-' + Date.now();
-        messages.innerHTML += `
-            <div id="${loadingId}" style="margin-bottom: 15px; color: #888; font-style: italic; font-size: 12px;">
-                Forfy est en train de réfléchir...
-            </div>
-        `;
+        messages.innerHTML += `<div id="${loadingId}" style="margin-bottom: 15px; color: #888; font-style: italic; font-size: 12px;">Forfy réfléchit...</div>`;
         messages.scrollTop = messages.scrollHeight;
 
         try {
-            // 3. Envoyer la question au serveur
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: question })
             });
-            
             const data = await response.json();
-
-            // 4. Supprimer l'indicateur de chargement et afficher la réponse
             document.getElementById(loadingId).remove();
-            messages.innerHTML += `
-                <div style="margin-bottom: 15px; background: #eee; padding: 10px; border-radius: 10px 10px 10px 0; max-width: 85%;">
-                    ${data.reply}
-                </div>
-            `;
+            messages.innerHTML += `<div style="margin-bottom: 15px; background: #eee; padding: 10px; border-radius: 10px 10px 10px 0; max-width: 85%;">${data.reply}</div>`;
             messages.scrollTop = messages.scrollHeight;
-
         } catch (error) {
-            document.getElementById(loadingId).innerHTML = "Désolé, j'ai un problème de connexion. 🔌";
+            document.getElementById(loadingId).innerHTML = "Erreur de connexion avec Forfy. 🔌";
         }
     }
 </script>
