@@ -2,50 +2,98 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Évaluation Qualité | Forfeo Lab</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <title>Audit Qualité Professionnel | Forfeo Lab</title>
     <style>
-        .survey-container { max-width: 800px; margin: 50px auto; padding: 40px; background: white; border-radius: 15px; shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #eee; }
-        .question { margin-bottom: 30px; }
-        .question label { display: block; font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; }
-        input[type="range"] { width: 100%; margin: 10px 0; }
-        textarea { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd; height: 100px; }
-        .btn-submit { background: #000; color: white; padding: 15px 30px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; color: #333; line-height: 1.6; }
+        .survey-container { max-width: 850px; margin: 40px auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .category-title { background: #000; color: #fff; padding: 10px 20px; border-radius: 5px; margin-top: 30px; font-size: 1.1rem; }
+        .question-block { margin: 25px 0; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+        .question-block label { display: block; font-weight: 600; margin-bottom: 12px; }
+        .options { display: flex; justify-content: space-between; gap: 10px; }
+        .option-item { flex: 1; text-align: center; }
+        input[type="radio"] { margin-bottom: 5px; }
+        textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; resize: vertical; }
+        .btn-submit { background: #00aaff; color: white; border: none; padding: 18px; width: 100%; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 30px; transition: 0.3s; }
+        .btn-submit:hover { background: #0088cc; }
     </style>
 </head>
-<body style="background:#f9f9f9; font-family: sans-serif;">
-    <div class="survey-container">
-        <a href="/dashboard" style="text-decoration:none; color:#666;">← Retour au tableau de bord</a>
-        <h1 style="margin-top:20px;">🔍 Analyse de la Qualité de Service</h1>
-        <p style="color:#666; margin-bottom:40px;">Évaluez objectivement les points clés de l'expérience opérationnelle.</p>
+<body>
 
-        <form action="/submit-survey" method="POST">
-            <input type="hidden" name="type" value="qualite">
-            
-            <div class="question">
-                <label>1. Propreté et présentation des lieux (1 à 10) :</label>
-                <input type="range" min="1" max="10" name="proprete" oninput="this.nextElementSibling.value = this.value">
-                <output>5</output>
-            </div>
-
-            <div class="question">
-                <label>2. Rapidité de la prise en charge initiale :</label>
-                <select name="vitesse" style="width:100%; padding:10px;">
-                    <option value="immediat">Immédiate</option>
-                    <option value="correct">Acceptable (moins de 5 min)</option>
-                    <option value="lent">Lente (plus de 5 min)</option>
-                </select>
-            </div>
-
-            <div class="question">
-                <label>3. Observations spécifiques sur la conformité aux standards :</label>
-                <textarea name="observations" placeholder="Détaillez vos observations ici..."></textarea>
-            </div>
-
-            <button type="submit" class="btn-submit">ENREGISTRER L'ÉVALUATION</button>
-        </form>
+<div class="survey-container">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1 style="margin: 0;">📋 Audit de Qualité Opérationnelle</h1>
+        <a href="/dashboard" style="color: #666; text-decoration: none; font-size: 0.9rem;">Annuler l'audit</a>
     </div>
+    <p style="color: #888;">Ce rapport sera transmis pour analyse et impactera le Score Forfeo de l'établissement.</p>
 
-    <%- include('partials/forfy') %>
+    <form action="/submit-survey" method="POST">
+        <input type="hidden" name="survey_type" value="qualite_pro">
+
+        <div class="category-title">1. Environnement & Ambiance</div>
+        
+        <div class="question-block">
+            <label>État général de la propreté (Sols, vitrines, mobilier) :</label>
+            <div class="options">
+                <% for(let i=1; i<=5; i++) { %>
+                    <div class="option-item">
+                        <input type="radio" name="proprete" value="<%= i %>" required> <br> <%= i %>
+                    </div>
+                <% } %>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#888; margin-top:5px;">
+                <span>Médiocre</span><span>Excellent</span>
+            </div>
+        </div>
+
+        <div class="question-block">
+            <label>Ambiance sonore et lumineuse :</label>
+            <select name="ambiance" style="width:100%; padding:10px; border-radius:8px;">
+                <option value="optimale">Optimale (Confortable)</option>
+                <option value="correcte">Correcte</option>
+                <option value="inadaptee">Inadaptée (Trop fort/sombre/clair)</option>
+            </select>
+        </div>
+
+        <div class="category-title">2. Accueil & Posture Professionnelle</div>
+
+        <div class="question-block">
+            <label>Délai avant la première interaction spontanée (Salut/Accueil) :</label>
+            <div class="options">
+                <label><input type="radio" name="delai_accueil" value="0-30s"> < 30s</label>
+                <label><input type="radio" name="delai_accueil" value="30s-2m"> 30s - 2m</label>
+                <label><input type="radio" name="delai_accueil" value="plus-2m"> > 2m</label>
+            </div>
+        </div>
+
+        <div class="question-block">
+            <label>Qualité du contact visuel et sourire :</label>
+            <div class="options">
+                <label><input type="radio" name="sourire" value="absent"> Absent</label>
+                <label><input type="radio" name="sourire" value="discret"> Discret</label>
+                <label><input type="radio" name="sourire" value="chaleureux"> Chaleureux</label>
+            </div>
+        </div>
+
+        <div class="category-title">3. Expertise & Service</div>
+
+        <div class="question-block">
+            <label>Maîtrise des produits/services par le personnel :</label>
+            <textarea name="expertise_details" placeholder="Le personnel a-t-il su répondre à vos questions techniques ?"></textarea>
+        </div>
+
+        <div class="question-block">
+            <label>Y a-t-il eu une tentative de vente incitative ou de conseil personnalisé ?</label>
+            <div style="margin-top:10px;">
+                <label><input type="radio" name="upsell" value="oui"> Oui</label>
+                <label style="margin-left:20px;"><input type="radio" name="upsell" value="non"> Non</label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-submit">FINALISER ET TRANSMETTRE L'AUDIT</button>
+    </form>
+</div>
+
+<%- include('partials/forfy') %>
+
 </body>
 </html>
