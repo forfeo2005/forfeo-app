@@ -1,72 +1,123 @@
 <!DOCTYPE html>
-<html lang="fr-CA">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Administration - FORFEO</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <title>Console Super Admin | Forfeo Lab</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .admin-container { max-width: 1200px; margin: 0 auto; }
+        header { background: #000; color: #fff; padding: 20px; border-radius: 10px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        h2 { border-bottom: 2px solid #eee; padding-bottom: 10px; color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; color: #888; font-size: 12px; text-transform: uppercase; padding: 10px; border-bottom: 1px solid #eee; }
+        td { padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+        
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .badge-waiting { background: #fff3cd; color: #856404; }
+        .badge-active { background: #d4edda; color: #155724; }
+        
+        .btn-valider { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn-valider:hover { background: #218838; }
+        .btn-back { color: #fff; text-decoration: none; font-size: 14px; border: 1px solid #fff; padding: 5px 10px; border-radius: 5px; }
+    </style>
 </head>
-<body class="bg-dark text-white">
+<body>
 
-    <div class="container py-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="fw-bold"><i class="bi bi-shield-lock-fill me-2"></i>Espace Administration</h1>
-            <a href="/login" class="btn btn-outline-light btn-sm">Déconnexion</a>
+    <div class="admin-container">
+        <header>
+            <h1 style="margin:0;">Forfeo Lab Admin</h1>
+            <a href="/dashboard" class="btn-back">Retour Dashboard</a>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2>Ambassadeurs en attente</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Ville</th>
+                            <th>Statut</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% ambassadeurs.forEach(amb => { %>
+                            <tr>
+                                <td><strong><%= amb.nom %></strong><br><small><%= amb.email %></small></td>
+                                <td><%= amb.ville %></td>
+                                <td>
+                                    <span class="badge <%= amb.statut === 'Actif' ? 'badge-active' : 'badge-waiting' %>">
+                                        <%= amb.statut %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <% if (amb.statut !== 'Actif') { %>
+                                        <form action="/admin/valider-ambassadeur" method="POST">
+                                            <input type="hidden" name="id" value="<%= amb.id %>">
+                                            <button type="submit" class="btn-valider">Valider</button>
+                                        </form>
+                                    <% } else { %>
+                                        ✅
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>Entreprises inscrites</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Entreprise</th>
+                            <th>Plan</th>
+                            <th>Missions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% entreprises.forEach(ent => { %>
+                            <tr>
+                                <td><strong><%= ent.nom %></strong><br><small><%= ent.email %></small></td>
+                                <td><span class="badge badge-active" style="background:#00aaff; color:white;"><%= ent.plan %></span></td>
+                                <td><%= ent.missions_dispo %> dispo.</td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="card border-0 shadow-lg">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th scope="col">Date</th>
-                                <th scope="col">Client</th>
-                                <th scope="col">Mission</th>
-                                <th scope="col">Détails</th>
-                                <th scope="col">Statut Actuel</th>
-                                <th scope="col">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (missions.length === 0) { %>
-                                <tr>
-                                    <td colspan="6" class="text-center p-5 text-muted">Aucune mission trouvée.</td>
-                                </tr>
-                            <% } else { %>
-                                <% missions.forEach(function(m) { %>
-                                    <tr>
-                                        <td><%= m.date_souhaitee %></td>
-                                        <td class="fw-bold text-primary"><%= m.client_nom %></td>
-                                        <td><%= m.type_mission %></td>
-                                        <td><small class="text-muted"><%= m.details %></small></td>
-                                        <td>
-                                            <% if(m.statut === 'En attente') { %>
-                                                <span class="badge bg-warning text-dark">En attente</span>
-                                            <% } else if (m.statut === 'Terminée') { %>
-                                                <span class="badge bg-success">Terminée</span>
-                                            <% } else { %>
-                                                <span class="badge bg-secondary"><%= m.statut %></span>
-                                            <% } %>
-                                        </td>
-                                        <td>
-                                            <form action="/admin/update" method="POST" class="d-flex gap-2">
-                                                <input type="hidden" name="missionId" value="<%= m.id %>">
-                                                <select name="newStatus" class="form-select form-select-sm" style="width: 130px;">
-                                                    <option value="En cours">En cours</option>
-                                                    <option value="Terminée">Terminée</option>
-                                                    <option value="Annulée">Annulée</option>
-                                                </select>
-                                                <button type="submit" class="btn btn-sm btn-dark"><i class="bi bi-check-lg"></i></button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <% }); %>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="card" style="margin-top:20px;">
+            <h2>Historique des Missions d'Audit</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Entreprise</th>
+                        <th>Ambassadeur</th>
+                        <th>Type</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% missions.forEach(m => { %>
+                        <tr>
+                            <td>#<%= m.id %></td>
+                            <td><%= m.entreprise_nom %></td>
+                            <td><%= m.ambassadeur_nom || 'Non assigné' %></td>
+                            <td><%= m.type_mission %></td>
+                            <td><span class="badge badge-active"><%= m.statut %></span></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
         </div>
     </div>
 
