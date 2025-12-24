@@ -1,74 +1,207 @@
-/* Palette Corporate */
+/* CHARTE GRAPHIQUE FORFEO CORPORATE 2025
+   Couleurs : Blanc, Bleu Acier, Gris Anthracite
+*/
+
 :root {
-    --primary: #0052cc;
-    --dark: #172b4d;
-    --gray-bg: #f4f5f7;
-    --border: #dfe1e6;
+    --primary: #0052cc;        /* Bleu institutionnel */
+    --primary-light: #e6f0ff;
+    --dark: #172b4d;           /* Gris très sombre pour le texte */
+    --text-sub: #5e6c84;       /* Gris pour les descriptions */
+    --bg-light: #f4f5f7;       /* Fond de page professionnel */
     --white: #ffffff;
-    --text-main: #172b4d;
-    --text-sub: #5e6c84;
+    --border: #dfe1e6;
+    --success: #00875a;
+}
+
+/* --- RESET & BASE --- */
+* {
+    box-sizing: border-box;
+    transition: all 0.3s ease;
 }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--gray-bg);
-    color: var(--text-main);
+    background-color: var(--bg-light);
+    color: var(--dark);
     margin: 0;
+    line-height: 1.6;
+    overflow-x: hidden;
 }
 
-/* Utilitaires */
-.bg-gray-alt { background-color: #f4f5f7; }
-.full-width { width: 100%; }
+/* --- ANIMATIONS "WOW" (Page d'accueil) --- */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-/* Navigation */
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 82, 204, 0.4); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(0, 82, 204, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 82, 204, 0); }
+}
+
+.reveal {
+    opacity: 0;
+}
+
+.reveal.active {
+    animation: fadeInUp 0.8s forwards;
+}
+
+/* --- NAVIGATION PRO --- */
 nav {
     background: var(--white);
+    padding: 15px 60px;
     border-bottom: 1px solid var(--border);
-    padding: 15px 40px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-nav .logo { font-weight: 800; color: var(--primary); font-size: 1.2rem; }
-nav a { text-decoration: none; color: var(--text-main); margin-left: 20px; font-weight: 500; font-size: 0.9rem; }
+nav .logo {
+    font-weight: 800;
+    font-size: 1.4rem;
+    color: var(--primary);
+    letter-spacing: -1px;
+}
 
-/* Conteneurs et Cartes */
-.container { max-width: 1140px; margin: 40px auto; padding: 0 20px; }
+nav a {
+    text-decoration: none;
+    color: var(--dark);
+    margin-left: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
 
-.card, .login-card {
+nav a:hover { color: var(--primary); }
+
+/* --- SECTIONS & CARTES --- */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.card {
     background: var(--white);
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 12px;
     padding: 30px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
-.login-card { max-width: 380px; margin: 100px auto; text-align: center; }
-.brand-logo { font-weight: 900; font-size: 1.5rem; color: var(--primary); margin-bottom: 10px; }
-
-/* Formulaires */
-.form-group { margin-bottom: 20px; text-align: left; }
-.form-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-sub); }
-input[type="text"], input[type="password"], input[type="email"] {
-    width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box;
+.card:hover {
+    box-shadow: 0 12px 24px rgba(0,0,0,0.08);
 }
 
-/* Tableaux */
-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-th { text-align: left; color: var(--text-sub); font-size: 0.75rem; text-transform: uppercase; padding: 12px; border-bottom: 2px solid var(--border); }
-td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-
-/* Boutons */
+/* --- BOUTONS --- */
 .btn-primary {
     background-color: var(--primary);
     color: white;
     border: none;
-    padding: 12px 24px;
-    border-radius: 3px;
-    font-weight: 600;
+    padding: 12px 28px;
+    border-radius: 6px;
+    font-weight: 700;
     cursor: pointer;
-    transition: background 0.2s;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 4px 12px rgba(0, 82, 204, 0.2);
 }
 
-.btn-primary:hover { background-color: #0043a4; }
+.btn-primary:hover {
+    background-color: #0043a4;
+    transform: translateY(-2px);
+}
+
+.full-width { width: 100%; text-align: center; }
+
+/* --- PORTAIL GRID --- */
+.portal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+    margin: 50px 0;
+}
+
+/* --- TABLEAUX PRO --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th {
+    text-align: left;
+    color: var(--text-sub);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-bottom: 2px solid var(--border);
+}
+
+td {
+    padding: 18px 15px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem;
+}
+
+tr:hover td { background-color: #fcfdfe; }
+
+/* --- SYSTEME FORFY (Bulle d'aide) --- */
+.floating-forfy {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 120px;
+    z-index: 999;
+}
+
+.forfy-video {
+    width: 100%;
+    border-radius: 50%;
+    border: 4px solid var(--white);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    cursor: pointer;
+}
+
+.chat-bubble {
+    position: absolute;
+    top: -60px;
+    right: 0;
+    background: var(--dark);
+    color: white;
+    padding: 10px 18px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    animation: fadeInUp 0.5s ease;
+}
+
+.chat-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    right: 50px;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid var(--dark);
+}
+
+/* --- FORMULAIRES --- */
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; }
+input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 1rem;
+}
+input:focus { outline: 2px solid var(--primary-light); border-color: var(--primary); }
