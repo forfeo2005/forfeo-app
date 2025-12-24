@@ -32,7 +32,7 @@
         const msg = input.value.trim();
         if(!msg) return;
 
-        content.innerHTML += `<div style="text-align:right; margin-bottom:10px;"><strong>Moi:</strong> \${msg}</div>`;
+        content.innerHTML += `<div style="text-align:right; margin-bottom:10px;"><strong>Moi:</strong> ${msg}</div>`;
         input.value = '';
         content.scrollTop = content.scrollHeight;
 
@@ -43,7 +43,7 @@
                 body: JSON.stringify({message: msg})
             });
             const data = await res.json();
-            content.innerHTML += `<div style="margin-bottom:10px; color:#444;"><strong>Forfy:</strong> \${data.reply}</div>`;
+            content.innerHTML += `<div style="margin-bottom:10px; color:#444;"><strong>Forfy:</strong> ${data.reply}</div>`;
             content.scrollTop = content.scrollHeight;
         } catch (err) {
             content.innerHTML += `<div style="color:red; font-size:12px;">Erreur de connexion avec Forfy.</div>`;
