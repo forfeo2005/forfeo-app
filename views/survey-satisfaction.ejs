@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satisfaction Client - FORFEO LAB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="main-container">
+        <nav class="navbar navbar-expand-lg navbar-forfeo">
+            <div class="container">
+                <a class="navbar-brand" href="/"><i class="bi bi-stars"></i> FORFEO LAB</a>
+                <a href="/dashboard" class="btn btn-sm btn-outline-primary rounded-pill">Retour Dashboard</a>
+            </div>
+        </nav>
+        <section class="py-5">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="text-center mb-5">
+                            <h1 class="fw-bolder mb-3 text-dark">Sondage Satisfaction</h1>
+                        </div>
+                        <div class="card card-forfeo border-0 p-4 p-md-5">
+                            <div class="card-body">
+                                <form action="https://api.web3forms.com/submit" method="POST">
+                                    <input type="hidden" name="access_key" value="c7c665be-ec7f-4455-9a5e-11ebb323fff9">
+                                    <input type="hidden" name="subject" value="Sondage Satisfaction">
+                                    <input type="hidden" name="redirect" id="redirectInput" value="">
+                                    
+                                    <div class="mb-4">
+                                        <label class="fw-bold">Niveau de satisfaction</label>
+                                        <select class="form-select" name="satisfaction" required>
+                                            <option value="Tres satisfait">Très satisfait</option>
+                                            <option value="Satisfait">Satisfait</option>
+                                            <option value="Neutre">Neutre</option>
+                                            <option value="Insatisfait">Insatisfait</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-4"><label class="fw-bold">Commentaire libre</label><textarea class="form-control" name="commentaire" rows="3"></textarea></div>
+                                    <div class="d-grid"><button type="submit" class="btn btn-primary rounded-pill">Envoyer</button></div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const currentUrl = window.location.href;
+            const newUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/')) + '/confirmation';
+            document.getElementById('redirectInput').value = newUrl;
+        });
+    </script>
+    <script src="/js/forfy.js"></script>
+</body>
+</html>
