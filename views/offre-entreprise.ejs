@@ -2,60 +2,126 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Offres Business | Forfeo</title>
+    <title>Solutions Business | Forfeo Lab 2025</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #fff; }
-        .hero { background: #000; color: #fff; padding: 60px 20px; text-align: center; }
-        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; max-width: 1100px; margin: 50px auto; padding: 0 20px; }
-        .plan-card { border: 1px solid #eee; padding: 40px 25px; border-radius: 15px; text-align: center; transition: 0.3s; }
-        .plan-card.featured { border: 2px solid #00aaff; position: relative; }
-        .badge { background: #00aaff; color: #fff; padding: 5px 15px; border-radius: 20px; font-size: 12px; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); }
-        .price { font-size: 32px; font-weight: bold; margin: 20px 0; }
-        .btn-pay { display: block; padding: 15px; border-radius: 8px; text-decoration: none; font-weight: bold; background: #000; color: #fff; }
-        .btn-blue { background: #00aaff; }
+        :root { --primary: #00aaff; --dark: #0a0a0a; --glass: rgba(255, 255, 255, 0.05); }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--dark); color: white; overflow-x: hidden; }
+
+        /* Loader Futuriste (Uniformisé avec l'accueil) */
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
+        .scanner { width: 250px; height: 3px; background: var(--primary); box-shadow: 0 0 25px var(--primary); animation: scan 2.5s infinite ease-in-out; }
+        @keyframes scan { 0%, 100% { transform: translateY(-60px); opacity: 0.2; } 50% { transform: translateY(60px); opacity: 1; } }
+
+        nav { position: fixed; top: 0; width: 100%; padding: 20px; display: flex; justify-content: center; gap: 40px; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        nav a { color: white; text-decoration: none; font-weight: 500; font-size: 14px; letter-spacing: 1px; transition: 0.3s; opacity: 0.7; }
+        nav a:hover { opacity: 1; color: var(--primary); }
+
+        .hero { padding: 150px 20px 60px; text-align: center; background: radial-gradient(circle at top, #111 0%, #0a0a0a 100%); }
+        .hero h1 { font-size: 3.5rem; margin: 0; background: linear-gradient(to bottom, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; max-width: 1200px; margin: 50px auto; padding: 0 20px; }
+        .plan-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 50px 30px; text-align: center; transition: 0.4s; position: relative; overflow: hidden; }
+        .plan-card:hover { border-color: var(--primary); transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        
+        /* Badge Recommandé */
+        .featured-badge { background: var(--primary); color: white; padding: 6px 20px; border-radius: 20px; font-size: 12px; font-weight: bold; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); letter-spacing: 1px; }
+
+        .plan-name { font-size: 1.5rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+        .price { font-size: 3.5rem; font-weight: 800; margin: 20px 0; color: #fff; }
+        .price span { font-size: 1rem; opacity: 0.5; font-weight: 400; }
+
+        .feature-list { list-style: none; padding: 0; margin: 30px 0; text-align: left; height: 180px; }
+        .feature-list li { margin-bottom: 15px; font-size: 14px; opacity: 0.8; display: flex; align-items: center; }
+        .feature-list li::before { content: "✦"; color: var(--primary); margin-right: 12px; }
+
+        .btn-pay { display: block; width: 100%; padding: 18px; border-radius: 12px; text-decoration: none; font-weight: bold; letter-spacing: 1px; transition: 0.3s; box-sizing: border-box; }
+        .btn-outline { border: 1px solid rgba(255,255,255,0.2); color: white; background: transparent; }
+        .btn-outline:hover { background: white; color: black; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 10px 20px rgba(0, 170, 255, 0.3); }
+        .btn-primary:hover { transform: scale(1.02); filter: brightness(1.1); }
+
+        .footer-note { text-align: center; margin-top: 60px; padding-bottom: 100px; opacity: 0.4; font-size: 13px; }
     </style>
 </head>
 <body>
+
+    <div id="loader">
+        <div class="scanner"></div>
+        <p style="margin-top: 40px; letter-spacing: 5px; font-size: 12px; opacity: 0.6;">CHARGEMENT DES SYSTÈMES...</p>
+    </div>
+
+    <nav>
+        <a href="/">ACCUEIL</a>
+        <a href="/business-plans">SOLUTIONS</a>
+        <a href="/partenaires">ÉCOSYSTÈME</a>
+        <a href="/candidature">AMBASSADEURS</a>
+    </nav>
+
     <div class="hero">
-        <h1>Investissez dans l'Excellence Client</h1>
-        <p>Le succès de votre entreprise passe par le regard de vos clients.</p>
+        <h1>Initialisez votre Excellence</h1>
+        <p style="opacity: 0.6; max-width: 600px; margin: 20px auto;">Choisissez le module de performance adapté à vos objectifs de croissance et de rétention client.</p>
     </div>
 
     <div class="pricing-grid">
         <div class="plan-card">
-            <h3>Découverte</h3>
-            <div class="price">49,99 $ <span>/mois</span></div>
-            <ul style="text-align:left; font-size:14px; color:#666; list-style:none; padding:0;">
-                <li>✓ 1 Audit mystère d'essai</li>
-                <li>✓ Accès au dashboard Forfeo</li>
-                <li>✓ Assistant Forfy Basic</li>
+            <div class="plan-name">Découverte</div>
+            <div class="price">49,99<span>$ / mois</span></div>
+            <ul class="feature-list">
+                <li>1 Audit mystère d'essai</li>
+                <li>Accès au dashboard Forfeo</li>
+                <li>Assistant Forfy Basic</li>
+                <li>Rapports PDF Standards</li>
             </ul>
-            <a href="https://buy.stripe.com/7sY4gA06K1NZ6Eg3Xwd7q00" class="btn-pay">Activer maintenant</a>
+            <a href="https://buy.stripe.com/7sY4gA06K1NZ6Eg3Xwd7q00" class="btn-pay btn-outline">ACTIVER LE MODULE</a>
         </div>
 
-        <div class="plan-card featured">
-            <div class="badge">RECOMMANDÉ</div>
-            <h3>Croissance</h3>
-            <div class="price">249 $ <span>/mois</span></div>
-            <ul style="text-align:left; font-size:14px; color:#666; list-style:none; padding:0;">
-                <li>✓ 3 Audits complets / mois</li>
-                <li>✓ Forfy IA Illimitée</li>
-                <li>✓ Analyses de friction client</li>
+        <div class="plan-card" style="border-color: var(--primary);">
+            <div class="featured-badge">RECOMMANDÉ</div>
+            <div class="plan-name">Croissance</div>
+            <div class="price">249<span>$ / mois</span></div>
+            <ul class="feature-list">
+                <li>3 Audits complets / mois</li>
+                <li>IA Forfy Illimitée</li>
+                <li>Analyse de friction client</li>
+                <li>Support Prioritaire</li>
             </ul>
-            <a href="https://buy.stripe.com/6oUbJ2bPs3W79QsalUd7q02" class="btn-pay btn-blue">S'abonner maintenant</a>
+            <a href="https://buy.stripe.com/6oUbJ2bPs3W79QsalUd7q02" class="btn-pay btn-primary">S'ABONNER MAINTENANT</a>
         </div>
 
         <div class="plan-card">
-            <h3>Excellence</h3>
-            <div class="price">499 $ <span>/mois</span></div>
-            <ul style="text-align:left; font-size:14px; color:#666; list-style:none; padding:0;">
-                <li>✓ Audits illimités</li>
-                <li>✓ Analyses prédictives IA</li>
-                <li>✓ Consultant Forfeo dédié</li>
+            <div class="plan-name">Excellence</div>
+            <div class="price">499<span>$ / mois</span></div>
+            <ul class="feature-list">
+                <li>Audits illimités</li>
+                <li>Analyses prédictives IA</li>
+                <li>Consultant Forfeo dédié</li>
+                <li>Certification "Elite Lab"</li>
             </ul>
-            <a href="https://buy.stripe.com/5kQ5kE7zcgIT0fS1Pod7q01" class="btn-pay">Choisir Excellence</a>
+            <a href="https://buy.stripe.com/5kQ5kE7zcgIT0fS1Pod7q01" class="btn-pay btn-outline">CHOISIR L'EXCELLENCE</a>
         </div>
     </div>
+
+    <div class="footer-note">
+        Toutes les transactions sont sécurisées par cryptage 256-bit AES via Stripe Canada.
+    </div>
+
     <%- include('partials/forfy') %>
+
+    <script>
+        // Gestion du loader
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader');
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 500);
+        });
+
+        document.querySelectorAll('a').forEach(el => {
+            el.addEventListener('click', () => {
+                const loader = document.getElementById('loader');
+                loader.style.display = 'flex';
+                loader.style.opacity = '1';
+            });
+        });
+    </script>
 </body>
 </html>
