@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport d'Audit | Forfeo Lab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #00aaff; --dark: #050505; --glass: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.08); }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--dark); color: white; }
+
+        /* Loader Scanner Futuriste */
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
+        .scanner { width: 280px; height: 2px; background: var(--primary); box-shadow: 0 0 30px var(--primary); animation: scan 2.5s infinite ease-in-out; }
+        @keyframes scan { 0%, 100% { transform: translateY(-70px); opacity: 0.1; } 50% { transform: translateY(70px); opacity: 1; } }
+
+        nav { position: fixed; top: 0; width: 100%; padding: 20px; display: flex; justify-content: center; gap: 40px; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 1000; border-bottom: 1px solid var(--border); }
+        nav a { color: white; text-decoration: none; font-weight: 500; font-size: 13px; letter-spacing: 1px; opacity: 0.6; }
+
+        .container { max-width: 800px; margin: 120px auto 60px; padding: 0 20px; }
+        .header-audit { margin-bottom: 40px; text-align: center; }
+        .header-audit h1 { font-size: 2.5rem; background: linear-gradient(to right, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .glass-form { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 25px; padding: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        
+        .field-group { margin-bottom: 30px; }
+        label { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: var(--primary); margin-bottom: 10px; font-weight: 600; }
+        
+        input, select, textarea { width: 100%; padding: 15px; background: rgba(0,0,0,0.4); border: 1px solid #222; color: white; border-radius: 12px; font-size: 15px; outline: none; transition: 0.3s; box-sizing: border-box; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(0,170,255,0.1); }
+
+        .rating-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px; }
+        .rating-option { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; text-align: center; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+        .rating-option:hover { background: rgba(0,170,255,0.1); }
+        .rating-option.active { border-color: var(--primary); background: rgba(0,170,255,0.2); font-weight: bold; }
+
+        .btn-submit { width: 100%; padding: 20px; background: var(--primary); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-top: 20px; transition: 0.3s; }
+        .btn-submit:hover { filter: brightness(1.2); transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+    <div id="loader"><div class="scanner"></div><p style="margin-top: 50px; letter-spacing: 6px; font-size: 10px; opacity: 0.5;">TRANSMISSION SÉCURISÉE...</p></div>
+
+    <nav><a href="/dashboard">ANNULER ET RETOURNER</a></nav>
+
+    <div class="container">
+        <div class="header-audit">
+            <h1>Rapport d'Audit Terrain</h1>
+            <p style="opacity: 0.5;">Saisie des observations en temps réel.</p>
+        </div>
+
+        <div class="glass-form">
+            <form action="/submit-audit" method="POST">
+                <div class="field-group">
+                    <label>Établissement Audité</label>
+                    <input type="text" name="etablissement" placeholder="Nom du commerce ou restaurant" required>
+                </div>
+
+                <div class="field-group">
+                    <label>Qualité de l'Accueil (1 à 5)</label>
+                    <div class="rating-grid" id="accueil-rating">
+                        <div class="rating-option" onclick="setRating('accueil', 1)">1</div>
+                        <div class="rating-option" onclick="setRating('accueil', 2)">2</div>
+                        <div class="rating-option" onclick="setRating('accueil', 3)">3</div>
+                        <div class="rating-option" onclick="setRating('accueil', 4)">4</div>
+                        <div class="rating-option" onclick="setRating('accueil', 5)">5</div>
+                    </div>
+                    <input type="hidden" name="score_accueil" id="input-accueil" required>
+                </div>
+
+                <div class="field-group">
+                    <label>Observations Clés</label>
+                    <textarea name="commentaires" rows="5" placeholder="Décrivez les points forts et les frictions constatées..." required></textarea>
+                </div>
+
+                <div class="field-group">
+                    <label>Preuve Visuelle (Optionnel)</label>
+                    <input type="file" name="photo" style="border: dashed 1px #444; padding: 30px; text-align: center;">
+                </div>
+
+                <button type="submit" class="btn-submit">Soumettre au Laboratoire</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader');
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 500);
+        });
+
+        function setRating(type, value) {
+            document.getElementById('input-' + type).value = value;
+            const options = document.querySelectorAll('#' + type + '-rating .rating-option');
+            options.forEach(opt => opt.classList.remove('active'));
+            options[value - 1].classList.add('active');
+        }
+
+        document.querySelector('form').addEventListener('submit', () => {
+            document.getElementById('loader').style.display = 'flex';
+            document.getElementById('loader').style.opacity = '1';
+        });
+    </script>
+</body>
+</html>
