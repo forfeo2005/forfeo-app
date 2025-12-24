@@ -18,7 +18,6 @@ const pool = new Pool({
 });
 
 // Configuration Email (Resend)
-// Si la clé n'est pas encore dans Railway, on met 'null' pour éviter que le site plante
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // ==========================================
@@ -159,7 +158,7 @@ app.get('/admin', async (req, res) => {
     }
 });
 
-// Mettre à jour le statut (+ ENVOI EMAIL)
+// Mettre à jour le statut (+ ENVOI EMAIL DIAGNOSTIC)
 app.post('/admin/update', async (req, res) => {
     const { missionId, newStatus } = req.body;
     
@@ -182,11 +181,13 @@ app.post('/admin/update', async (req, res) => {
             const client = missionInfo.rows[0];
 
             if (client) {
-                console.log(`📧 Envoi email à ${client.email}...`);
+                console.log(`📧 Tentative d'envoi à ${client.email}...`);
                 
-                await resend.emails.send({
-                    from: 'Forfeo <onboarding@resend.dev>', // Email par défaut Resend
-                    to: [client.email], // Le vrai email du client
+                // --- C'EST ICI QUE CA CHANGE ---
+                // On capture la réponse de Resend dans la variable 'data'
+                const data = await resend.emails.send({
+                    from: 'onboarding@resend.dev', // Expéditeur simplifié
+                    to: [client.email],
                     subject: '🎉 Votre mission est terminée !',
                     html: `
                         <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
@@ -201,7 +202,13 @@ app.post('/admin/update', async (req, res) => {
                         </div>
                     `
                 });
-                console.log("✅ Email envoyé avec succès !");
+
+                // On vérifie s'il y a une erreur
+                if (data.error) {
+                    console.error("❌ ERREUR RESEND CRITIQUE :", data.error);
+                } else {
+                    console.log("✅ SUCCÈS RÉEL RESEND :", data.data);
+                }
             }
         }
 
