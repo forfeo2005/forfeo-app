@@ -1,52 +1,70 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <meta charset="UTF-8">
+    <title>Dashboard Performance | Forfeo</title>
     <link rel="stylesheet" href="/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <title>Dashboard Entreprise | Forfeo</title>
 </head>
 <body>
     <nav>
         <div class="logo">FORFEO BUSINESS</div>
-        <a href="/logout" class="btn-outline">Déconnexion</a>
+        <a href="/" class="btn-outline">Retour Accueil</a>
     </nav>
 
     <div class="container">
-        <div class="grid-stats" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
-            <div class="card" style="text-align: center;">
-                <h4 style="color: var(--text-sub);">Score Global</h4>
-                <h2 style="font-size: 2.5rem; margin: 0;">8.4<span style="font-size: 1rem;">/10</span></h2>
-            </div>
-            </div>
-
         <div class="card">
-            <h2>Évolution de la Qualité de Service</h2>
-            <canvas id="performanceChart" height="100"></canvas>
+            <h2>Indice de Qualité Global</h2>
+            <div style="height: 300px;">
+                <canvas id="qualityChart"></canvas>
+            </div>
         </div>
 
-        <div class="card" style="margin-top: 30px;">
-            <h2>Missions en cours</h2>
+        <div class="card">
+            <h2>Missions d'audit en cours</h2>
             <table>
-                </table>
+                <thead>
+                    <tr>
+                        <th>Mission ID</th>
+                        <th>Type</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (missions && missions.length > 0) { %>
+                        <% missions.forEach(m => { %>
+                        <tr>
+                            <td>#<%= m.id %></td>
+                            <td><%= m.type_mission %></td>
+                            <td><span class="badge"><%= m.statut %></span></td>
+                        </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="3">Aucune donnée disponible pour le moment.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
         </div>
     </div>
 
     <script>
-        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const ctx = document.getElementById('qualityChart').getContext('2d');
+        const statsData = <%- JSON.stringify(stats || []) %>;
+        
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['Oct', 'Nov', 'Déc', 'Jan'],
+                labels: statsData.length > 0 ? statsData.map((_, i) => 'Audit ' + (i+1)) : ['En attente'],
                 datasets: [{
-                    label: 'Score Satisfaction',
-                    data: [7.2, 7.8, 8.1, 8.4],
+                    label: 'Score Global',
+                    data: statsData.length > 0 ? statsData.map(s => (s.score_accueil + s.score_service + s.score_proprete)/3) : [0],
                     borderColor: '#0052cc',
-                    tension: 0.4,
+                    tension: 0.3,
                     fill: true,
-                    backgroundColor: 'rgba(0, 82, 204, 0.05)'
+                    backgroundColor: 'rgba(0, 82, 204, 0.1)'
                 }]
             },
-            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false } } }
+            options: { responsive: true, maintainAspectRatio: false }
         });
     </script>
 </body>
