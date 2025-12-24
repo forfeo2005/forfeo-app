@@ -11,13 +11,13 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const app = express();
 
-// Connexion à la base de données Railway
+// Configuration de la connexion PostgreSQL Railway
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
 
-// --- CONFIGURATION EXPRESS ---
+// --- CONFIGURATION DE L'APPLICATION ---
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -29,48 +29,58 @@ app.get('/', (req, res) => res.render('index'));
 app.get('/candidature', (req, res) => res.render('espace-ambassadeur'));
 app.get('/business-plans', (req, res) => res.render('offre-entreprise'));
 
-// --- FIX : ROUTES POUR LES BOUTONS DU DASHBOARD ---
-// Ces routes affichent le formulaire de rapport d'audit pour chaque bouton
+// --- ROUTES DU DASHBOARD (FIX "CANNOT GET") ---
+// Ces routes redirigent les boutons "Évaluer", "Documenter" et "Améliorer"
 app.get('/survey-qualite', (req, res) => res.render('rapport-audit'));
 app.get('/survey-experience', (req, res) => res.render('rapport-audit'));
 app.get('/survey-satisfaction', (req, res) => res.render('rapport-audit'));
 
-// --- RECRUTEMENT AMBASSADEURS (FIX) ---
+// --- RECRUTEMENT AMBASSADEURS (VERSION ROBUSTE) ---
 app.post('/signup-ambassadeur', async (req, res) => {
-    const { nom, email, ville, password } = req.body; 
+    const { nom, email, ville, password } = req.body;
+    
+    // Log pour vérifier ce qui arrive du formulaire
+    console.log(`📡 Tentative d'inscription : Nom=${nom}, Email=${email}, Ville=${ville}`);
+
     try {
-        // Utilise les colonnes ville et statut que nous avons créées
-        await pool.query(
-            'INSERT INTO ambassadeurs (nom, email, ville, password, statut) VALUES ($1, $2, $3, $4, $5)',
-            [nom, email, ville, password, 'En attente']
-        );
+        // Insertion utilisant les colonnes que vous avez ajoutées
+        const query = {
+            text: 'INSERT INTO ambassadeurs(nom, email, ville, password, statut) VALUES($1, $2, $3, $4, $5)',
+            values: [nom, email, ville, password, 'En attente'],
+        };
+        await pool.query(query);
+        
+        console.log("✅ Inscription réussie dans la base de données.");
         res.render('confirmation-ambassadeur', { nom: nom });
     } catch (err) {
-        console.error("Erreur Recrutement:", err);
-        res.status(500).send("Erreur lors de la candidature. Vérifiez que la colonne 'ville' existe sur Railway.");
+        // Log ultra-détaillé pour voir si c'est la colonne 'ville' ou l'email UNIQUE qui bloque
+        console.error("❌ ERREUR CRITIQUE DB :", err.message);
+        console.error("Détails de l'erreur :", err.detail);
+        
+        res.status(500).send(`Erreur Technique : ${err.message}. Détail : ${err.detail || 'Aucun'}`);
     }
 });
 
 // --- DASHBOARD CLIENT ---
 app.get('/dashboard', async (req, res) => {
-    // Affiche par défaut les missions de l'entreprise ID 4
+    // Utilise l'ID 4 par défaut pour charger vos données existantes
     const userId = req.query.id || 4; 
     try {
         const userResult = await pool.query('SELECT * FROM entreprises WHERE id = $1', [userId]);
-        // Récupère les missions existantes (Audit Qualité, Consultation, etc.)
+        // Récupère les missions de l'entreprise (Audit, Consultation, etc.)
         const missionsResult = await pool.query('SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY date_creation DESC', [userId]);
         
         res.render('dashboard', { 
-            user: userResult.rows[0] || { nom: "Partenaire Forfeo", plan: "Découverte" }, 
+            user: userResult.rows[0] || { nom: "Client Forfeo", plan: "Découverte" }, 
             missions: missionsResult.rows 
         });
     } catch (err) {
-        console.error("Erreur Dashboard:", err);
-        res.status(500).send("Erreur de chargement des missions.");
+        console.error("Erreur chargement Dashboard:", err.message);
+        res.status(500).send("Erreur de récupération des données du dashboard.");
     }
 });
 
-// --- SOUMISSION DE RAPPORT ---
+// --- RAPPORTS D'AUDIT ---
 app.post('/submit-audit', async (req, res) => {
     const { etablissement, score_accueil, commentaires } = req.body;
     try {
@@ -92,11 +102,11 @@ app.get('/admin', async (req, res) => {
         const missions = (await pool.query('SELECT * FROM missions')).rows;
         res.render('admin', { ambassadeurs, entreprises, missions });
     } catch (err) {
-        res.status(500).send("Accès Administration restreint.");
+        res.status(500).send("Accès Admin indisponible.");
     }
 });
 
-// --- DÉMARRAGE DU SERVEUR ---
+// --- LANCEMENT ---
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`🚀 Forfeo Lab 2025 opérationnel sur le port ${PORT}`);
