@@ -2,53 +2,41 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forfeo Lab | Excellence Client</title>
+    <title>Forfeo Lab | Accueil</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; color: #333; }
-        .hero { background: #000; color: #fff; padding: 80px 20px; }
-        .auth-container { display: flex; justify-content: center; gap: 30px; padding: 50px; background: #f4f4f4; flex-wrap: wrap; }
-        .card { background: #fff; padding: 40px 30px; border-radius: 15px; width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        h3 { margin-top: 0; color: #000; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn { padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; transition: 0.3s; }
-        .btn-blue { background: #00aaff; color: white; }
-        .btn-blue:hover { background: #0088cc; }
-        .btn-black { background: #000; color: white; }
-        .btn-black:hover { background: #333; }
-        .link-ambassadeur { display: inline-block; margin-top: 20px; color: #00aaff; text-decoration: none; font-weight: 500; }
+        body { font-family: sans-serif; text-align: center; background: #f4f4f4; }
+        .hero { background: #000; color: #fff; padding: 60px; }
+        .auth-container { display: flex; justify-content: center; gap: 20px; padding: 40px; }
+        .card { background: #fff; padding: 30px; border-radius: 10px; width: 300px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input { width: 90%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ddd; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="hero">
         <h1>Forfeo Lab</h1>
-        <p>Optimisez l'expérience client grâce à nos ambassadeurs certifiés.</p>
-        <a href="/candidature" class="link-ambassadeur">Devenir Ambassadeur →</a>
+        <p>Optimisez l'expérience client.</p>
+        <a href="/candidature" style="color: #00aaff; text-decoration: none;">Devenir Ambassadeur →</a>
     </div>
 
     <div class="auth-container">
         <div class="card">
-            <h3>Nouvelle Entreprise</h3>
-            <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Créez votre compte pour commander vos premiers audits.</p>
+            <h3>Inscription Business</h3>
             <form action="/signup-entreprise" method="POST">
-                <input type="text" name="nom" placeholder="Nom de l'entreprise" required>
-                <input type="email" name="email" placeholder="Email professionnel" required>
-                <input type="password" name="password" placeholder="Créer un mot de passe" required>
-                <button type="submit" class="btn btn-blue">Créer mon compte</button>
+                <input type="text" name="nom" placeholder="Nom Entreprise" required>
+                <input type="email" name="email" placeholder="Email Pro" required>
+                <input type="password" name="password" placeholder="Mot de passe" required>
+                <button type="submit" style="background: #00aaff; color: white;">S'inscrire</button>
             </form>
         </div>
-
         <div class="card">
-            <h3>Déjà client ?</h3>
-            <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Accédez à vos rapports et votre dashboard Forfeo.</p>
+            <h3>Connexion</h3>
             <form action="/login-entreprise" method="POST">
-                <input type="email" name="email" placeholder="Votre Email" required>
+                <input type="email" name="email" placeholder="Email" required>
                 <input type="password" name="password" placeholder="Mot de passe" required>
-                <button type="submit" class="btn btn-black">Se connecter</button>
+                <button type="submit" style="background: #000; color: white;">Accéder au Dashboard</button>
             </form>
         </div>
     </div>
-
-    <%- include('partials/forfy') %>
 </body>
 </html>
