@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forfeo Lab | Excellence & Audit</title>
+    <title>Forfeo Lab | Excellence Client</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -11,18 +11,18 @@
         <div class="logo">FORFEO LAB</div>
         <div class="nav-links">
             <a href="/">Accueil</a>
-            <a href="/entreprise/dashboard">Solutions Business</a>
-            <a href="/login" class="btn-outline">Espace Admin</a>
+            <a href="/entreprise/dashboard">Portail Business</a>
+            <a href="/login" class="btn-outline">Administration</a>
         </div>
     </nav>
 
     <header class="hero">
         <div class="container reveal active">
-            <h1>Redéfinissez la Qualité de Service</h1>
-            <p>La plateforme d'élite connectant les établissements de prestige et les ambassadeurs de l'excellence.</p>
+            <h1>L'Audit au Service du Prestige</h1>
+            <p>Rejoignez le réseau n°1 des ambassadeurs de l'excellence.</p>
             <div class="hero-btns">
                 <a href="/ambassadeur/inscription" class="btn-primary">Postuler au Programme</a>
-                <a href="/entreprise/dashboard" class="btn-outline" style="color: white; border-color: white;">Découvrir nos Solutions</a>
+                <a href="/entreprise/dashboard" class="btn-outline">Espace Entreprise</a>
             </div>
         </div>
     </header>
@@ -30,57 +30,28 @@
     <section class="container">
         <div class="portal-grid">
             <div class="card reveal">
-                <h2 style="color: var(--primary);">Partenaires Business</h2>
-                <p>Mesurez votre performance réelle grâce à nos audits mystères et accédez à des rapports détaillés en temps réel.</p>
-                <ul>
-                    <li>✓ Graphiques de performance</li>
-                    <li>✓ Analyse par points de vente</li>
-                    <li>✓ Rapports d'experts</li>
-                </ul>
-                <a href="/entreprise/dashboard" class="btn-primary" style="width: 100%; text-align: center;">Accéder au Dashboard</a>
+                <h2>Solutions Partenaires</h2>
+                <p>Accédez à vos indicateurs de performance en temps réel.</p>
+                <a href="/entreprise/dashboard" class="btn-primary" style="display:block; text-align:center;">Voir mon Dashboard</a>
             </div>
 
             <div class="card reveal" style="border-top: 5px solid var(--primary);">
-                <h2 style="color: var(--primary);">Devenir Ambassadeur</h2>
-                <p>Rejoignez un réseau sélectif et profitez d'expériences gratuites en échange de vos critiques constructives.</p>
-                <ul>
-                    <li>✨ Hôtels & Restaurants offerts</li>
-                    <li>💰 Récompenses exclusives</li>
-                    <li>🗳️ Influence directe sur le luxe</li>
-                </ul>
-                <a href="/ambassadeur/inscription" class="btn-primary" style="width: 100%; text-align: center;">Rejoindre le Réseau</a>
+                <h2>Devenir Ambassadeur</h2>
+                <p>Transformez vos sorties en missions d'audit exclusives.</p>
+                <a href="/ambassadeur/inscription" class="btn-primary" style="display:block; text-align:center;">Déposer ma Candidature</a>
             </div>
         </div>
     </section>
 
     <div class="forfy-container">
-        <div class="forfy-bubble" id="forfyText">Bienvenue !</div>
-        <video class="forfy-video" id="forfyVideo" src="/videos/GifForfy.MP4" autoplay loop muted playsinline></video>
+        <div class="forfy-bubble" id="forfyText">Chargement...</div>
+        <video class="forfy-video" src="/videos/GifForfy.MP4" autoplay loop muted playsinline></video>
     </div>
 
     <script>
-        // Effet d'apparition au défilement
-        window.addEventListener('scroll', () => {
-            document.querySelectorAll('.reveal').forEach(el => {
-                if (el.getBoundingClientRect().top < window.innerHeight - 100) {
-                    el.classList.add('active');
-                }
-            });
-        });
-
-        // Chargement du message dynamique Forfy depuis le serveur
         fetch('/api/forfy-message?page=' + window.location.pathname)
             .then(res => res.json())
-            .then(data => {
-                document.getElementById('forfyText').innerText = data.message;
-            })
-            .catch(err => console.log("Erreur Forfy:", err));
-            
-        // Sécurité pour la lecture automatique de la vidéo
-        const video = document.getElementById('forfyVideo');
-        video.play().catch(() => {
-            console.log("Lecture automatique bloquée par le navigateur, clic requis.");
-        });
+            .then(data => document.getElementById('forfyText').innerText = data.message);
     </script>
 </body>
 </html>
