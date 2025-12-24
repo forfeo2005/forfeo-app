@@ -6,7 +6,7 @@ const Stripe = require('stripe');
 const OpenAI = require('openai');
 const nodemailer = require('nodemailer');
 
-// --- CONFIGURATION DES SERVICES ---
+// --- INITIALISATION DES SERVICES ---
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const app = express();
@@ -16,7 +16,7 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// --- CONFIGURATION NODEMAILER (ALERTES) ---
+// --- CONFIGURATION NODEMAILER (EMAILS AUTOMATIQUES) ---
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -25,17 +25,14 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Fonction d'envoi d'email simplifiée
-const sendAlert = (to, subject, text) => {
-    const mailOptions = {
+// Fonction utilitaire pour les alertes Admin
+const sendAdminAlert = (subject, text) => {
+    transporter.sendMail({
         from: `"Forfeo System" <${process.env.EMAIL_USER}>`,
-        to,
-        subject,
-        text
-    };
-    transporter.sendMail(mailOptions, (err) => {
-        if (err) console.error("❌ Erreur Email:", err);
-    });
+        to: process.env.ADMIN_EMAIL,
+        subject: subject,
+        text: text
+    }, (err) => { if (err) console.error("❌ Erreur Alerte Admin:", err); });
 };
 
 // --- MIDDLEWARES ---
@@ -51,7 +48,7 @@ app.get('/candidature', (req, res) => res.render('espace-ambassadeur'));
 app.get('/business-plans', (req, res) => res.render('offre-entreprise'));
 app.get('/partenaires', (req, res) => res.render('partenaires'));
 
-// --- AUTHENTIFICATION ENTREPRISE (FIX INSCRIPTION) ---
+// --- AUTHENTIFICATION ENTREPRISE ---
 app.post('/signup-entreprise', async (req, res) => {
     const { nom, email, password } = req.body;
     try {
@@ -61,7 +58,7 @@ app.post('/signup-entreprise', async (req, res) => {
         );
 
         // Notification Admin
-        sendAlert(process.env.ADMIN_EMAIL, "🚀 Nouveau Lab Business", `L'entreprise ${nom} (${email}) vient de s'inscrire.`);
+        sendAdminAlert("🚀 Nouveau Lab Business", `L'entreprise ${nom} (${email}) vient de s'inscrire.`);
         
         res.redirect(`/dashboard?id=${result.rows[0].id}`);
     } catch (err) {
@@ -81,7 +78,7 @@ app.post('/login-entreprise', async (req, res) => {
     } catch (err) { res.status(500).send("Erreur de connexion."); }
 });
 
-// --- INSCRIPTION AMBASSADEUR ---
+// --- INSCRIPTION AMBASSADEUR AVEC EMAIL DE BIENVENUE ---
 app.post('/signup-ambassadeur', async (req, res) => {
     const { nom, email, ville, password } = req.body;
     try {
@@ -89,9 +86,32 @@ app.post('/signup-ambassadeur', async (req, res) => {
             'INSERT INTO ambassadeurs (nom, email, ville, password) VALUES ($1, $2, $3, $4)',
             [nom, email, ville, password]
         );
-        
+
+        // Email automatique de bienvenue pour l'ambassadeur
+        const welcomeMailOptions = {
+            from: `"Forfeo Lab Recruitment" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: "🚀 Votre candidature Forfeo Lab est reçue",
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #050505; color: white; padding: 40px; border-radius: 20px;">
+                    <h1 style="color: #00aaff;">Bienvenue, ${nom}</h1>
+                    <p>Votre candidature pour rejoindre le réseau à <strong>${ville}</strong> est en cours d'analyse.</p>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; border-left: 4px solid #00aaff;">
+                        <p><strong>Étapes de validation :</strong></p>
+                        <ul style="color: #ccc;">
+                            <li>Analyse de votre profil par l'IA Forfy.</li>
+                            <li>Validation manuelle par notre équipe.</li>
+                            <li>Activation de votre accès aux audits.</li>
+                        </ul>
+                    </div>
+                    <p style="margin-top: 30px;">Nous vous contacterons dès que votre lab sera opérationnel.</p>
+                </div>
+            `
+        };
+        transporter.sendMail(welcomeMailOptions);
+
         // Notification Admin
-        sendAlert(process.env.ADMIN_EMAIL, "👤 Nouveau Candidat", `Candidature de ${nom} (${ville}).`);
+        sendAdminAlert("👤 Nouveau Candidat", `Candidature de ${nom} (${ville}).`);
         
         res.render('confirmation-ambassadeur', { nom: nom });
     } catch (err) { res.status(500).send("Erreur lors de la candidature."); }
@@ -99,7 +119,7 @@ app.post('/signup-ambassadeur', async (req, res) => {
 
 // --- DASHBOARD & ADMINISTRATION ---
 app.get('/dashboard', async (req, res) => {
-    const userId = req.query.id || 4; // Par défaut vers admin si ID manquant
+    const userId = req.query.id || 4; 
     try {
         const user = (await pool.query('SELECT * FROM entreprises WHERE id = $1', [userId])).rows[0];
         const missions = (await pool.query('SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY date_creation DESC', [userId])).rows;
@@ -114,7 +134,7 @@ app.get('/admin', async (req, res) => {
         const entreprises = (await pool.query('SELECT * FROM entreprises ORDER BY id DESC')).rows;
         const missions = (await pool.query('SELECT m.*, e.nom as entreprise_nom FROM missions m JOIN entreprises e ON m.entreprise_id = e.id ORDER BY m.id DESC')).rows;
         res.render('admin', { ambassadeurs, entreprises, missions });
-    } catch (err) { res.status(500).send("Accès refusé."); }
+    } catch (err) { res.status(500).send("Accès Admin refusé."); }
 });
 
 // --- IA FORFY ASSISTANT ---
@@ -126,7 +146,7 @@ app.post('/api/chat', async (req, res) => {
             model: "gpt-3.5-turbo",
         });
         res.json({ reply: completion.choices[0].message.content });
-    } catch (error) { res.json({ reply: "Forfy est momentanément hors-ligne." }); }
+    } catch (error) { res.json({ reply: "Forfy est temporairement indisponible." }); }
 });
 
 // --- STRIPE : ACHAT DE MISSION ---
@@ -151,6 +171,6 @@ app.post('/create-checkout-session', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// --- DÉMARRAGE ---
+// --- DÉMARRAGE DU SERVEUR ---
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`🚀 Serveur Forfeo Lab 2025 actif sur le port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Forfeo Lab 2025 opérationnel sur le port ${PORT}`));
