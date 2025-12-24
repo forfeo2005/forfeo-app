@@ -1,30 +1,33 @@
 require('dotenv').config();
 const express = require('express');
-const { Pool } = require('pg'); 
+const { Pool } = require('pg');
 const path = require('path');
 const app = express();
 
-// --- 1. CONNEXION BASE DE DONNÉES ---
-// On vérifie si on est en ligne (Railway) ou en local
-const isProduction = process.env.NODE_ENV === 'production';
+// --- 1. CONNEXION ROBUSTE (SSL FORCÉ) ---
 const connectionString = process.env.DATABASE_URL;
+
+// Si on n'a pas de DB URL (en local sans .env), on prévient
+if (!connectionString) {
+    console.error("⚠️ ERREUR CRITIQUE : Pas de DATABASE_URL trouvée.");
+}
 
 const pool = new Pool({
     connectionString: connectionString,
-    ssl: isProduction ? { rejectUnauthorized: false } : false
+    // ICI : On force le SSL pour Railway, sinon la requête attend à l'infini et plante
+    ssl: { rejectUnauthorized: false },
+    // On ajoute un timeout : si la DB ne répond pas en 5 secondes, on annule
+    connectionTimeoutMillis: 5000 
 });
 
-// --- 2. FONCTION MAGIQUE : CRÉATION AUTOMATIQUE DES TABLES ---
+// --- 2. INITIALISATION ---
 async function initDb() {
     try {
-        if (!connectionString) {
-            console.log("⚠️ Pas de base de données détectée (Mode Local sans DB).");
-            return;
-        }
+        console.log("🔧 Vérification de la connexion DB...");
+        // Test simple
+        await pool.query('SELECT NOW()');
+        console.log("✅ Connexion DB établie avec succès !");
 
-        console.log("🔧 Vérification des tables...");
-        
-        // Création table Entreprises
         await pool.query(`
             CREATE TABLE IF NOT EXISTS entreprises (
                 id SERIAL PRIMARY KEY,
@@ -38,91 +41,71 @@ async function initDb() {
             )
         `);
 
-        // Création table Missions
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS missions (
-                id SERIAL PRIMARY KEY,
-                entreprise_id INTEGER REFERENCES entreprises(id),
-                type_mission VARCHAR(100),
-                details TEXT,
-                date_souhaitee VARCHAR(100),
-                statut VARCHAR(50) DEFAULT 'En attente',
-                date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-
-        // Création d'un utilisateur TEST si il n'existe pas déjà
+        // Check utilisateur test
         const checkUser = await pool.query("SELECT * FROM entreprises WHERE email = 'test'");
         if (checkUser.rows.length === 0) {
             await pool.query(`
                 INSERT INTO entreprises (nom, email, password, plan, score, missions_dispo, initiales)
                 VALUES ('Hôtel Le Prestige', 'test', '1234', 'Forfait Pro', 8.4, 5, 'HP')
             `);
-            console.log("✅ Utilisateur test créé (test / 1234)");
+            console.log("👤 Utilisateur test créé.");
         }
-        
-        console.log("✅ Base de données prête !");
     } catch (err) {
-        console.error("Erreur initialisation DB:", err);
+        console.error("❌ Erreur au démarrage de la DB :", err);
     }
 }
-
-// On lance l'initialisation
 initDb();
 
-// --- 3. CONFIGURATION DU SITE ---
+// --- 3. CONFIGURATION ---
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 
-// --- 4. LES ROUTES (PAGES) ---
-
+// --- 4. ROUTES ---
 app.get('/', (req, res) => res.render('index'));
-
-// Page de Connexion
 app.get('/login', (req, res) => res.render('login'));
 
-// TRAITEMENT DE LA CONNEXION (Le vrai Videur)
+// LA ROUTE DE CONNEXION (Avec Espions 🕵️‍♂️)
 app.post('/login', async (req, res) => {
     const { businessId, password } = req.body;
+    
+    console.log(`📥 Tentative de connexion reçue pour : ${businessId}`);
 
     try {
-        // On cherche l'entreprise dans la VRAIE base de données
+        console.log("⏳ Envoi de la requête à la Base de Données...");
+        
         const result = await pool.query('SELECT * FROM entreprises WHERE email = $1', [businessId]);
         
+        console.log(`🔙 Réponse DB reçue. Utilisateurs trouvés : ${result.rows.length}`);
+
         if (result.rows.length > 0) {
             const user = result.rows[0];
             if (password === user.password) {
-                // Succès : On redirige avec l'ID
+                console.log("✅ Mot de passe correct. Redirection...");
                 res.redirect(`/dashboard?id=${user.id}`);
             } else {
+                console.log("❌ Mot de passe incorrect.");
                 res.send('<script>alert("Mot de passe incorrect"); window.location.href="/login";</script>');
             }
         } else {
-            res.send('<script>alert("Compte inconnu. Essayez : test / 1234"); window.location.href="/login";</script>');
+            console.log("❌ Utilisateur inconnu.");
+            res.send('<script>alert("Compte inconnu"); window.location.href="/login";</script>');
         }
     } catch (err) {
-        console.error(err);
-        res.send("Erreur de connexion à la base de données");
+        console.error("💥 ERREUR PENDANT LE LOGIN :", err);
+        res.status(500).send("Erreur serveur : " + err.message);
     }
 });
 
-// Tableau de bord (Connecté à la Vraie DB)
 app.get('/dashboard', async (req, res) => {
-    const userId = req.query.id; 
-
+    const userId = req.query.id;
     if (!userId) return res.redirect('/login');
 
     try {
-        // On récupère les vraies infos
         const userResult = await pool.query('SELECT * FROM entreprises WHERE id = $1', [userId]);
-        const user = userResult.rows[0];
-
-        // Si l'utilisateur n'existe pas, retour au login
-        if (!user) return res.redirect('/login');
-
-        res.render('dashboard', { user: user });
+        if (userResult.rows.length === 0) return res.redirect('/login');
+        res.render('dashboard', { user: userResult.rows[0] });
     } catch (err) {
         console.error(err);
         res.redirect('/login');
@@ -138,8 +121,7 @@ app.get('/survey-qualite', (req, res) => res.render('survey-qualite'));
 app.get('/survey-experience', (req, res) => res.render('survey-experience'));
 app.get('/survey-satisfaction', (req, res) => res.render('survey-satisfaction'));
 
-// --- 5. DÉMARRAGE ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Serveur Forfeo lancé sur le port ${PORT}`);
+    console.log(`🚀 Serveur Forfeo prêt sur le port ${PORT}`);
 });
