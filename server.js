@@ -1,73 +1,96 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <link rel="stylesheet" href="/css/style.css">
-    <title>Administration | Forfeo</title>
-</head>
-<body>
-    <nav>
-        <strong>FORFEO LAB</strong>
-        <div>
-            <a href="/">Accueil</a>
-            <a href="/admin">Console Admin</a>
-            <a href="/entreprise/portail">Client</a>
-        </div>
-    </nav>
+require('dotenv').config();
+const express = require('express');
+const { Pool } = require('pg');
+const path = require('path');
+const session = require('express-session');
+const app = express();
 
-    <div class="container">
-        <div class="card-section">
-            <h2>Gestion des Talents (Ambassadeurs)</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nom Complet</th>
-                        <th>Localisation</th>
-                        <th>Email</th>
-                        <th>État</th>
-                        <th>Décision</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% ambassadeurs.forEach(amb => { %>
-                    <tr>
-                        <td><strong><%= amb.nom %></strong></td>
-                        <td><%= amb.ville %></td>
-                        <td><%= amb.email %></td>
-                        <td><%= amb.statut %></td>
-                        <td>
-                            <% if (amb.statut === 'En attente') { %>
-                                <a href="/admin/approuver/<%= amb.id %>" class="btn-primary">Valider le profil</a>
-                            <% } else { %>
-                                <span style="color:green">Profil Actif</span>
-                            <% } %>
-                        </td>
-                    </tr>
-                    <% }) %>
-                </tbody>
-            </table>
-        </div>
+// Connexion PostgreSQL Railway
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+});
 
-        <div class="card-section">
-            <h2>Suivi des Missions Global</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Type de Mission</th>
-                        <th>Statut</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% missions.forEach(m => { %>
-                    <tr>
-                        <td>#<%= m.id %></td>
-                        <td><%= m.type_mission %></td>
-                        <td><%= m.statut %></td>
-                    </tr>
-                    <% }) %>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</body>
-</html>
+// --- CONFIGURATION ---
+app.set('view engine', 'ejs');
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Sécurité des sessions
+app.use(session({
+    secret: 'forfeo-corporate-security-2025',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // Mettre à true si vous passez en HTTPS complet
+}));
+
+// --- MIDDLEWARE DE PROTECTION ---
+const authGuard = (req, res, next) => {
+    if (req.session.adminLoggedIn) return next();
+    res.redirect('/login');
+};
+
+// --- ROUTES PUBLIQUES ---
+app.get('/', (req, res) => res.render('index'));
+app.get('/login', (req, res) => res.render('login'));
+app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
+
+// --- AUTHENTIFICATION ---
+app.post('/auth', (req, res) => {
+    const { username, password } = req.body;
+    // Identifiants administrateur
+    if (username === 'admin' && password === 'forfeo2025') {
+        req.session.adminLoggedIn = true;
+        res.redirect('/admin');
+    } else {
+        res.send('Identifiants incorrects. Veuillez réessayer.');
+    }
+});
+
+app.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/login');
+});
+
+// --- PORTAIL AMBASSADEUR (LOGIQUE) ---
+app.post('/signup-ambassadeur', async (req, res) => {
+    const { nom, email, ville, password } = req.body;
+    try {
+        await pool.query(
+            'INSERT INTO ambassadeurs (nom, email, ville, password, statut) VALUES ($1, $2, $3, $4, $5)', 
+            [nom, email, ville, password, 'En attente']
+        );
+        res.render('confirmation-ambassadeur', { nom });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Erreur lors de l'inscription.");
+    }
+});
+
+// --- PORTAIL ADMIN PROTEGE ---
+app.get('/admin', authGuard, async (req, res) => {
+    try {
+        const ambassadeurs = (await pool.query('SELECT * FROM ambassadeurs ORDER BY id DESC')).rows;
+        const missions = (await pool.query('SELECT * FROM missions ORDER BY id DESC')).rows;
+        res.render('admin', { ambassadeurs, missions });
+    } catch (err) {
+        res.status(500).send("Erreur de chargement des données admin.");
+    }
+});
+
+// Validation Ambassadeur
+app.get('/admin/approuver/:id', authGuard, async (req, res) => {
+    await pool.query("UPDATE ambassadeurs SET statut = 'Validé' WHERE id = $1", [req.params.id]);
+    res.redirect('/admin');
+});
+
+// --- PORTAIL ENTREPRISE (DASHBOARD) ---
+app.get('/entreprise/dashboard', async (req, res) => {
+    const missions = (await pool.query('SELECT * FROM missions WHERE entreprise_id = 4')).rows;
+    res.render('dashboard', { missions });
+});
+
+// --- DEMARRAGE ---
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.log(`🚀 Forfeo Corporate System Online on port ${PORT}`));
