@@ -1,0 +1,31 @@
+<div id="forfy-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+    <div id="chat-window" style="display:none; width:320px; height:450px; background:white; border-radius:15px; box-shadow:0 10px 40px rgba(0,0,0,0.2); flex-direction:column; overflow:hidden; border:1px solid #eee; margin-bottom:15px;">
+        <div style="background:#000; color:white; padding:15px; font-weight:bold; display:flex; justify-content:space-between;">
+            <span>🤖 Forfy Assistant</span>
+            <span onclick="toggleChat()" style="cursor:pointer;">×</span>
+        </div>
+        <div id="chat-logs" style="flex:1; padding:15px; overflow-y:auto; font-size:14px; background:#f9f9f9;">
+            <div style="margin-bottom:10px; color:#444;"><b>Forfy:</b> Bonjour ! Je suis Forfy. Comment puis-je vous aider à améliorer vos services aujourd'hui ?</div>
+        </div>
+        <div style="padding:10px; border-top:1px solid #eee; display:flex;">
+            <input type="text" id="user-input" placeholder="Posez une question..." style="flex:1; border:1px solid #ddd; padding:8px; border-radius:5px;">
+            <button onclick="sendMessage()" style="background:#000; color:white; border:none; padding:8px 15px; margin-left:5px; border-radius:5px; cursor:pointer;">➤</button>
+        </div>
+    </div>
+    <button onclick="toggleChat()" style="width:65px; height:65px; border-radius:50%; background:#000; color:white; font-size:30px; border:none; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,0.3);">🤖</button>
+</div>
+
+<script>
+    function toggleChat() { const w = document.getElementById('chat-window'); w.style.display = w.style.display === 'none' ? 'flex' : 'none'; }
+    async function sendMessage() {
+        const input = document.getElementById('user-input');
+        const logs = document.getElementById('chat-logs');
+        if(!input.value) return;
+        logs.innerHTML += `<div style="text-align:right; margin-bottom:10px;"><b>Moi:</b> ${input.value}</div>`;
+        const text = input.value; input.value = '';
+        const res = await fetch('/api/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({message: text}) });
+        const data = await res.json();
+        logs.innerHTML += `<div style="margin-bottom:10px; color:#444;"><b>Forfy:</b> ${data.reply}</div>`;
+        logs.scrollTop = logs.scrollHeight;
+    }
+</script>
