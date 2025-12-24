@@ -3,57 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Candidature Validée | Forfeo Lab</title>
+    <title>Candidature Reçue | Forfeo Lab</title>
     <link rel="stylesheet" href="/css/style.css">
-    <style>
-        body {
-            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(15px);
-            padding: 3rem;
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
-            max-width: 500px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-        .check-icon {
-            font-size: 4rem;
-            color: #00d4ff;
-            margin-bottom: 1.5rem;
-            display: block;
-        }
-        h1 { font-size: 2rem; margin-bottom: 1rem; background: linear-gradient(to right, #fff, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        p { color: #aaa; line-height: 1.6; margin-bottom: 2rem; }
-        .btn {
-            display: inline-block;
-            padding: 12px 30px;
-            background: #00d4ff;
-            color: #000;
-            text-decoration: none;
-            border-radius: 50px;
-            font-weight: bold;
-            transition: transform 0.2s;
-        }
-        .btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 212, 255, 0.4); }
-    </style>
 </head>
 <body>
-    <div class="card">
-        <span class="check-icon">✓</span>
-        <h1>Félicitations <%= nom %> !</h1>
-        <p>Votre candidature pour devenir Ambassadeur Forfeo à <strong><%= ville %></strong> a été transmise avec succès à notre équipe d'analyse.</p>
-        <p>Un email de bienvenue vous sera envoyé dès que votre compte sera activé.</p>
-        <a href="/" class="btn">Retour à l'écosystème</a>
+    <nav>
+        <div class="logo">FORFEO LAB</div>
+        <a href="/" class="btn-outline">Retour à l'accueil</a>
+    </nav>
+
+    <div class="container" style="text-align: center; padding-top: 80px;">
+        <div class="card reveal active">
+            <div style="font-size: 60px; color: #36b37e; margin-bottom: 20px;">✓</div>
+            
+            <h1>Félicitations <%= nom %> !</h1>
+            
+            <p style="font-size: 1.2rem; line-height: 1.8;">
+                Votre candidature pour devenir Ambassadeur Forfeo à 
+                <strong style="color: #0052cc;"><%= ville %></strong> 
+                a bien été transmise.
+            </p>
+            
+            <p style="color: #5e6c84; margin: 20px 0;">
+                Notre équipe de sélection analyse votre profil. Vous recevrez un email dès que votre accès aux expériences gratuites sera activé.
+            </p>
+
+            <div style="margin-top: 40px;">
+                <a href="/" class="btn-primary">Découvrir l'écosystème</a>
+            </div>
+        </div>
     </div>
+
+    <div class="forfy-container">
+        <div class="forfy-bubble" id="forfyText">Bienvenue dans l'aventure, <%= nom %> !</div>
+        <video class="forfy-video" src="/videos/GifForfy.MP4" autoplay loop muted playsinline></video>
+    </div>
+
+    <script>
+        fetch('/api/forfy-message?page=' + window.location.pathname)
+            .then(res => res.json())
+            .then(data => document.getElementById('forfyText').innerText = data.message);
+    </script>
 </body>
 </html>
