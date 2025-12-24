@@ -2,84 +2,75 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forfeo Lab | Plateforme de Gestion de Qualité</title>
+    <title>Forfeo Lab | L'Excellence Opérationnelle</title>
     <link rel="stylesheet" href="/css/style.css">
+    <script src="https://unpkg.com/scrollreveal"></script>
     <style>
-        .hero-section {
-            padding: 80px 0;
+        .hero-wow {
+            background: linear-gradient(135deg, #ffffff 0%, #eef2f7 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            background: white;
-            border-bottom: 1px solid var(--border);
         }
-        .hero-section h1 {
-            font-size: 2.5rem;
-            color: var(--dark);
-            margin-bottom: 20px;
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        
+        .floating-video {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
+            z-index: 1000;
         }
-        .hero-section p {
-            font-size: 1.1rem;
-            color: var(--text-sub);
-            max-width: 700px;
-            margin: 0 auto 40px;
-        }
-        .portal-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-top: 40px;
-        }
-        .portal-card {
-            padding: 40px;
-            text-align: left;
-            transition: transform 0.2s;
-        }
-        .portal-card:hover {
-            transform: translateY(-5px);
-        }
-        .icon-box {
-            font-size: 2rem;
-            margin-bottom: 20px;
+        .chat-bubble {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            background: var(--primary);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,82,204,0.3);
+            white-space: nowrap;
         }
     </style>
 </head>
 <body>
-
-    <nav>
-        <div class="logo">FORFEO LAB</div>
-        <div>
-            <a href="/login">Accès Admin</a>
-        </div>
-    </nav>
-
-    <div class="hero-section">
-        <div class="container">
-            <h1>L'excellence opérationnelle, pilotée par la donnée.</h1>
-            <p>Forfeo connecte les entreprises aux meilleurs ambassadeurs pour garantir une qualité de service irréprochable et une expérience client d'exception.</p>
-        </div>
-    </div>
-
-    <div class="container">
-        <div class="portal-grid">
-            <div class="card portal-card">
-                <div class="icon-box">🏢</div>
-                <h2>Espace Entreprise</h2>
-                <p>Accédez à votre dashboard, consultez vos rapports d'audit et pilotez vos indicateurs de performance en temps réel.</p>
-                <a href="/entreprise/dashboard" class="btn-primary">Accéder au Dashboard</a>
+    <div class="hero-wow">
+        <h1 class="reveal" style="font-size: 4rem; color: var(--dark);">Forfeo <span style="color: var(--primary);">Lab</span></h1>
+        <p class="reveal" style="font-size: 1.5rem; color: var(--text-sub);">L'élite de l'audit client au service de votre croissance.</p>
+        
+        <div class="portal-grid container">
+            <div class="card portal-card reveal">
+                <h3>Entreprises</h3>
+                <p>Pilotez votre réputation avec des données certifiées.</p>
+                <a href="/entreprise/dashboard" class="btn-primary">Accès Dashboard</a>
             </div>
-
-            <div class="card portal-card">
-                <div class="icon-box">👤</div>
-                <h2>Devenir Ambassadeur</h2>
-                <p>Rejoignez notre réseau d'experts terrain. Postulez pour réaliser des missions d'audit et de conseil dans votre ville.</p>
-                <a href="/ambassadeur/inscription" class="btn-primary">Déposer ma candidature</a>
+            <div class="card portal-card reveal">
+                <h3>Ambassadeurs</h3>
+                <p>Devenez critique exclusif. Vivez des expériences gratuites en échange de votre expertise.</p>
+                <a href="/ambassadeur/inscription" class="btn-primary">Postuler au programme</a>
             </div>
         </div>
     </div>
 
-    <footer style="margin-top: 80px; padding: 40px 0; text-align: center; color: var(--text-sub); border-top: 1px solid var(--border);">
-        <p>&copy; 2025 Forfeo Lab. Tous droits réservés.</p>
-    </footer>
+    <div class="floating-video">
+        <div class="chat-bubble" id="forfyText">Besoin d'aide ?</div>
+        <video src="/videos/forfy.mp4" autoplay loop muted style="width:100%; border-radius: 50%; border: 3px solid var(--primary);"></video>
+    </div>
 
+    <script>
+        window.addEventListener('scroll', () => {
+            document.querySelectorAll('.reveal').forEach(el => {
+                if(el.getBoundingClientRect().top < window.innerHeight) el.classList.add('active');
+            });
+        });
+        window.onload = () => document.querySelectorAll('.reveal').forEach(el => el.classList.add('active'));
+    </script>
 </body>
 </html>
