@@ -2,22 +2,20 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Devenir Ambassadeur | Forfeo Lab</title>
+    <title>Rejoindre l'élite | Forfeo</title>
 </head>
-<body style="font-family: sans-serif; text-align:center; padding:50px;">
+<body style="font-family: sans-serif; text-align: center; padding: 50px;">
     <h1>🚀 Rejoignez l'élite des testeurs</h1>
     <p>Créez votre compte pour commencer vos missions.</p>
     
-    <form style="max-width:400px; margin:auto; display:flex; flex-direction:column; gap:15px;">
-        <input type="text" placeholder="Nom complet" style="padding:12px;">
-        <input type="email" placeholder="Email professionnel" style="padding:12px;">
-        <input type="password" placeholder="Mot de passe" style="padding:12px;">
-        <button type="submit" style="background:#000; color:#fff; padding:15px; border:none; cursor:pointer; font-weight:bold;">CRÉER MON COMPTE AMBASSADEUR</button>
+    <form action="/signup-ambassadeur" method="POST" style="max-width: 400px; margin: 0 auto; background: #f9f9f9; padding: 30px; border-radius: 10px; border: 1px solid #eee;">
+        <input type="text" name="nom" placeholder="Nom complet" style="width:100%; padding:12px; margin-bottom:15px;" required>
+        <input type="email" name="email" placeholder="Email" style="width:100%; padding:12px; margin-bottom:15px;" required>
+        <input type="text" name="ville" placeholder="Ville" style="width:100%; padding:12px; margin-bottom:15px;" required>
+        <input type="password" name="password" placeholder="Mot de passe" style="width:100%; padding:12px; margin-bottom:15px;" required>
+        <button type="submit" style="width:100%; background:black; color:white; padding:15px; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">
+            CRÉER MON COMPTE AMBASSADEUR
+        </button>
     </form>
-
-    <div style="margin-top:40px; border-top:1px solid #eee; padding-top:20px;">
-        <h3>Vos missions assignées apparaîtront ici après validation.</h3>
-    </div>
-    <%- include('partials/forfy') %>
 </body>
 </html>
