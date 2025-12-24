@@ -2,41 +2,75 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Forfeo Lab | Accueil</title>
+    <title>Forfeo Lab | Excellence 2025</title>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #f4f4f4; }
-        .hero { background: #000; color: #fff; padding: 60px; }
-        .auth-container { display: flex; justify-content: center; gap: 20px; padding: 40px; }
-        .card { background: #fff; padding: 30px; border-radius: 10px; width: 300px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        input { width: 90%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ddd; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        :root { --primary: #00aaff; --dark: #0a0a0a; --glass: rgba(255, 255, 255, 0.05); }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--dark); color: white; overflow-x: hidden; }
+        .hero { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%); text-align: center; }
+        .glass-card { background: var(--glass); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px; width: 350px; }
+        .mission-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1000px; margin: -50px auto 50px; }
+        .mission-item { background: var(--glass); padding: 30px; border-radius: 15px; border-bottom: 3px solid var(--primary); }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.3); border: 1px solid #333; color: white; border-radius: 8px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { background: transparent; border: 1px solid white; color: white; }
+        nav { position: fixed; top: 0; width: 100%; padding: 20px; display: flex; justify-content: center; gap: 30px; background: rgba(0,0,0,0.8); z-index: 1000; }
+        nav a { color: white; text-decoration: none; font-weight: 500; opacity: 0.7; }
+        nav a:hover { opacity: 1; color: var(--primary); }
     </style>
 </head>
 <body>
+    <nav>
+        <a href="/">Accueil</a>
+        <a href="/business-plans">Solutions Business</a>
+        <a href="/partenaires">Écosystème</a>
+        <a href="/candidature">Devenir Ambassadeur</a>
+    </nav>
+
     <div class="hero">
-        <h1>Forfeo Lab</h1>
-        <p>Optimisez l'expérience client.</p>
-        <a href="/candidature" style="color: #00aaff; text-decoration: none;">Devenir Ambassadeur →</a>
+        <h1 style="font-size: 4rem; margin-bottom: 10px;">Forfeo Lab</h1>
+        <p style="font-size: 1.2rem; opacity: 0.8; max-width: 600px;">L'intelligence artificielle au service de l'expérience humaine. Redéfinissez vos standards de qualité avec nos ambassadeurs certifiés.</p>
+        
+        <div style="display: flex; gap: 20px; margin-top: 40px;">
+            <div class="glass-card">
+                <h3>Espace Business</h3>
+                <form action="/login-entreprise" method="POST">
+                    <input type="email" name="email" placeholder="Email Pro" required>
+                    <input type="password" name="password" placeholder="Mot de passe" required>
+                    <button type="submit" class="btn btn-primary">Connexion Dashboard</button>
+                </form>
+                <p style="font-size: 12px; margin-top: 15px;">Pas encore de compte ? <a href="#signup" style="color: var(--primary);">S'inscrire</a></p>
+            </div>
+        </div>
     </div>
 
-    <div class="auth-container">
-        <div class="card">
-            <h3>Inscription Business</h3>
-            <form action="/signup-entreprise" method="POST">
-                <input type="text" name="nom" placeholder="Nom Entreprise" required>
-                <input type="email" name="email" placeholder="Email Pro" required>
-                <input type="password" name="password" placeholder="Mot de passe" required>
-                <button type="submit" style="background: #00aaff; color: white;">S'inscrire</button>
-            </form>
+    <div class="mission-grid">
+        <div class="mission-item">
+            <h4>🔍 Mission : Audit</h4>
+            <p style="font-size: 14px; opacity: 0.7;">Nos ambassadeurs s'immergent incognito pour détecter les points de friction de votre service client.</p>
         </div>
-        <div class="card">
-            <h3>Connexion</h3>
-            <form action="/login-entreprise" method="POST">
-                <input type="email" name="email" placeholder="Email" required>
-                <input type="password" name="password" placeholder="Mot de passe" required>
-                <button type="submit" style="background: #000; color: white;">Accéder au Dashboard</button>
-            </form>
+        <div class="mission-item">
+            <h4>📊 Mission : Analyse</h4>
+            <p style="font-size: 14px; opacity: 0.7;">Chaque rapport est passé au crible par l'IA Forfy pour générer des recommandations stratégiques.</p>
+        </div>
+        <div class="mission-item">
+            <h4>🏆 Mission : Excellence</h4>
+            <p style="font-size: 14px; opacity: 0.7;">Nous certifions les établissements qui atteignent un score Forfeo supérieur à 9/10.</p>
         </div>
     </div>
+
+    <section id="signup" style="padding: 100px 20px; text-align: center;">
+        <h2>Inscrire mon Entreprise</h2>
+        <div class="glass-card" style="margin: 0 auto; width: 450px;">
+            <form action="/signup-entreprise" method="POST">
+                <input type="text" name="nom" placeholder="Nom de la compagnie" required>
+                <input type="email" name="email" placeholder="Email de contact" required>
+                <input type="password" name="password" placeholder="Créer un mot de passe" required>
+                <button type="submit" class="btn btn-outline">Lancer mon laboratoire</button>
+            </form>
+        </div>
+    </section>
+
+    <%- include('partials/forfy') %>
 </body>
 </html>
