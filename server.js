@@ -91,20 +91,27 @@ app.post('/api/chat', async (req, res) => {
 });
 
 // ==========================================
-// 4. ROUTES DE NAVIGATION & PAGES
+// 4. ROUTES DE NAVIGATION & PAGES (CORRECTIFS)
 // ==========================================
 app.get('/', (req, res) => res.render('index'));
-app.get('/offre-entreprise', (req, res) => res.render('offre-entreprise'));
-app.get('/espace-ambassadeur', (req, res) => res.render('espace-ambassadeur'));
 
-// Routes Questionnaires
+// Correction pour "Devenir Ambassadeur" (Bouton affiche /candidature)
+app.get('/candidature', (req, res) => res.render('espace-ambassadeur'));
+
+// Correction pour "Offre Entreprise" (Lien menu: /business-plans)
+app.get('/business-plans', (req, res) => res.render('offre-entreprise'));
+
+// Correction pour "Nos Partenaires" (Lien: /partenaires)
+app.get('/partenaires', (req, res) => res.render('index'));
+
+// Routes Questionnaires (Fixes "Cannot GET" sur Évaluer/Documenter/Améliorer)
 app.get('/survey-qualite', (req, res) => res.render('survey-qualite'));
 app.get('/survey-experience', (req, res) => res.render('survey-experience'));
 app.get('/survey-satisfaction', (req, res) => res.render('survey-satisfaction'));
 
 // Traitement des questionnaires
 app.post('/submit-survey', (req, res) => {
-    console.log("Données du formulaire reçues:", req.body);
+    console.log("Données reçues:", req.body);
     res.send('<script>alert("Rapport transmis avec succès !"); window.location.href="/dashboard";</script>');
 });
 
@@ -114,7 +121,7 @@ app.post('/submit-survey', (req, res) => {
 
 // Dashboard Client
 app.get('/dashboard', async (req, res) => {
-    const userId = req.query.id || 4;
+    const userId = req.query.id || 4; // Par défaut id=4
     try {
         const userResult = await pool.query('SELECT * FROM entreprises WHERE id = $1', [userId]);
         const missionsResult = await pool.query('SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC', [userId]);
@@ -138,7 +145,7 @@ app.post('/signup-ambassadeur', async (req, res) => {
         );
         res.send('<script>alert("Demande envoyée ! Votre compte est en cours de validation."); window.location.href="/";</script>');
     } catch (err) {
-        res.send('<script>alert("Cet email est déjà enregistré."); window.location.href="/espace-ambassadeur";</script>');
+        res.send('<script>alert("Cet email est déjà enregistré."); window.location.href="/candidature";</script>');
     }
 });
 
@@ -149,20 +156,18 @@ app.get('/portail-ambassadeur', async (req, res) => {
         const ambassResult = await pool.query('SELECT * FROM ambassadeurs WHERE id = $1', [ambassadeurId]);
         const missionsResult = await pool.query('SELECT * FROM missions WHERE ambassadeur_id = $1', [ambassadeurId]);
         
-        if (ambassResult.rows.length === 0) return res.redirect('/espace-ambassadeur');
+        if (ambassResult.rows.length === 0) return res.redirect('/candidature');
         
         res.render('portail-ambassadeur', { 
             ambassadeur: ambassResult.rows[0], 
             missions: missionsResult.rows 
         });
-    } catch (err) { res.redirect('/espace-ambassadeur'); }
+    } catch (err) { res.redirect('/candidature'); }
 });
 
 // ==========================================
 // 6. ROUTES ADMINISTRATION 🛠️
 // ==========================================
-
-// Affichage Administration
 app.get('/admin', async (req, res) => {
     try {
         const ambassadeurs = (await pool.query('SELECT * FROM ambassadeurs ORDER BY id DESC')).rows;
@@ -174,14 +179,10 @@ app.get('/admin', async (req, res) => {
             LEFT JOIN ambassadeurs a ON m.ambassadeur_id = a.id 
             ORDER BY m.id DESC
         `)).rows;
-        
         res.render('admin', { ambassadeurs, entreprises, missions });
-    } catch (err) {
-        res.send("Erreur lors du chargement de l'administration.");
-    }
+    } catch (err) { res.send("Erreur admin."); }
 });
 
-// Assigner une mission
 app.post('/admin/assign-mission', async (req, res) => {
     const { entreprise_id, ambassadeur_id, type_mission, details } = req.body;
     try {
@@ -190,12 +191,9 @@ app.post('/admin/assign-mission', async (req, res) => {
             [entreprise_id, ambassadeur_id, type_mission, details, 'Assignée']
         );
         res.redirect('/admin');
-    } catch (err) {
-        res.send("Erreur lors de l'assignation.");
-    }
+    } catch (err) { res.send("Erreur assignation."); }
 });
 
-// Valider un ambassadeur
 app.post('/admin/valider-ambassadeur', async (req, res) => {
     const { id } = req.body;
     await pool.query("UPDATE ambassadeurs SET statut = 'Actif' WHERE id = $1", [id]);
