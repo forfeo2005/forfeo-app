@@ -19,7 +19,6 @@ const pool = new Pool({
 // ==========================================
 async function initDb() {
     try {
-        // Table Entreprises
         await pool.query(`CREATE TABLE IF NOT EXISTS entreprises (
             id SERIAL PRIMARY KEY, 
             nom VARCHAR(100), 
@@ -30,7 +29,6 @@ async function initDb() {
             missions_dispo INTEGER DEFAULT 1
         )`);
         
-        // Table Ambassadeurs
         await pool.query(`CREATE TABLE IF NOT EXISTS ambassadeurs (
             id SERIAL PRIMARY KEY, 
             nom VARCHAR(100), 
@@ -41,7 +39,6 @@ async function initDb() {
             missions_completees INTEGER DEFAULT 0
         )`);
 
-        // Table Missions
         await pool.query(`CREATE TABLE IF NOT EXISTS missions (
             id SERIAL PRIMARY KEY, 
             entreprise_id INTEGER REFERENCES entreprises(id), 
@@ -91,29 +88,22 @@ app.post('/api/chat', async (req, res) => {
 // 4. NAVIGATION & PAGES (CORRECTIFS "CANNOT GET")
 // ==========================================
 app.get('/', (req, res) => res.render('index'));
-
-// Bouton "Devenir Ambassadeur"
 app.get('/candidature', (req, res) => res.render('espace-ambassadeur'));
-
-// Onglet "Offre Entreprise"
-app.get('/business-plans', (req, res) => res.render('offre-entreprise'));
-
-// Onglet "Partenaires"
+app.get('/business-plans', (req, res) => res.render('offre-entreprise')); //
 app.get('/partenaires', (req, res) => res.render('partenaires'));
-
-// Routes Questionnaires (Boutons Dashboard)
 app.get('/survey-qualite', (req, res) => res.render('survey-qualite'));
 app.get('/survey-experience', (req, res) => res.render('survey-experience'));
 app.get('/survey-satisfaction', (req, res) => res.render('survey-satisfaction'));
 
-// Envoi des rapports
 app.post('/submit-survey', (req, res) => {
     res.send('<script>alert("Rapport transmis !"); window.location.href="/dashboard";</script>');
 });
 
 // ==========================================
-// 5. PAIEMENT STRIPE (NOUVELLE MISSION)
+// 5. PAIEMENT STRIPE (MISSIONS & ABONNEMENTS)
 // ==========================================
+
+// Achat d'une mission unique (150$)
 app.post('/create-checkout-session', async (req, res) => {
     const { userId } = req.body;
     try {
@@ -123,32 +113,58 @@ app.post('/create-checkout-session', async (req, res) => {
                 price_data: {
                     currency: 'cad',
                     product_data: { name: 'Audit Qualité Forfeo', description: 'Mission d\'audit par client mystère certifié' },
-                    unit_amount: 15000, // 150.00 $
+                    unit_amount: 15000, 
                 },
                 quantity: 1,
             }],
             mode: 'payment',
-            success_url: `${req.headers.origin}/payment-success?id=${userId}`,
+            success_url: `${req.headers.origin}/payment-success?id=${userId}&type=mission`,
             cancel_url: `${req.headers.origin}/dashboard?id=${userId}`,
         });
         res.json({ id: session.id });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/payment-success', async (req, res) => {
-    const userId = req.query.id;
+// Abonnement aux Plans (Croissance / Excellence)
+app.post('/create-subscription-session', async (req, res) => {
+    const { plan, price, userId } = req.body;
     try {
-        await pool.query('UPDATE entreprises SET missions_dispo = missions_dispo + 1 WHERE id = $1', [userId]);
-        await pool.query('INSERT INTO missions (entreprise_id, type_mission, statut) VALUES ($1, $2, $3)', [userId, 'Audit Qualité (Payé)', 'En attente']);
-        res.redirect(`/dashboard?id=${userId}`);
-    } catch (err) { res.send("Erreur lors de la validation du paiement."); }
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: [{
+                price_data: {
+                    currency: 'cad',
+                    product_data: { name: `Plan Forfeo : ${plan}`, description: `Accès complet au pack ${plan}` },
+                    unit_amount: price * 100, 
+                },
+                quantity: 1,
+            }],
+            mode: 'payment',
+            success_url: `${req.headers.origin}/payment-success?id=${userId}&type=plan&plan=${plan}`,
+            cancel_url: `${req.headers.origin}/business-plans`,
+        });
+        res.json({ id: session.id });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Retour de paiement réussi
+app.get('/payment-success', async (req, res) => {
+    const { id, type, plan } = req.query;
+    try {
+        if (type === 'mission') {
+            await pool.query('UPDATE entreprises SET missions_dispo = missions_dispo + 1 WHERE id = $1', [id]);
+            await pool.query('INSERT INTO missions (entreprise_id, type_mission, statut) VALUES ($1, $2, $3)', [id, 'Audit Qualité (Payé)', 'En attente']);
+        } else if (type === 'plan') {
+            await pool.query('UPDATE entreprises SET plan = $1 WHERE id = $2', [plan, id]);
+        }
+        res.redirect(`/dashboard?id=${id}`);
+    } catch (err) { res.send("Erreur lors de la mise à jour de votre compte."); }
 });
 
 // ==========================================
 // 6. DASHBOARDS & PROFILS
 // ==========================================
 
-// Dashboard Entreprise
 app.get('/dashboard', async (req, res) => {
     const userId = req.query.id || 4;
     try {
@@ -159,7 +175,6 @@ app.get('/dashboard', async (req, res) => {
     } catch (err) { res.send("Erreur Dashboard."); }
 });
 
-// Profil Ambassadeur
 app.get('/profil-ambassadeur', async (req, res) => {
     const ambassadeurId = req.query.id || 1;
     try {
@@ -169,7 +184,6 @@ app.get('/profil-ambassadeur', async (req, res) => {
     } catch (err) { res.redirect('/candidature'); }
 });
 
-// Portail Ambassadeur (Missions)
 app.get('/portail-ambassadeur', async (req, res) => {
     const ambassadeurId = req.query.id || 1;
     try {
