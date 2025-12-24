@@ -16,18 +16,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
-    secret: 'forfeo-safe-key',
+    secret: 'forfeo-secret-key-2025',
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false }
 }));
 
-// ROUTES
+// ROUTES PRINCIPALES
 app.get('/', (req, res) => res.render('index'));
 app.get('/login', (req, res) => res.render('login'));
 app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
 
-// INSCRIPTION (Avec correction ville et email unique)
+// INSCRIPTION AMBASSADEUR (Correction ville et doublon d'email)
 app.post('/signup-ambassadeur', async (req, res) => {
     const { nom, email, ville, password } = req.body;
     try {
@@ -37,26 +37,25 @@ app.post('/signup-ambassadeur', async (req, res) => {
         );
         res.render('confirmation-ambassadeur', { nom, ville });
     } catch (err) {
-        if (err.code === '23505') return res.status(400).send("Email déjà utilisé.");
+        if (err.code === '23505') return res.status(400).send("Cet email est déjà utilisé.");
         res.status(500).send("Erreur serveur.");
     }
 });
 
-// DASHBOARD (Avec correction colonne date)
+// DASHBOARD ENTREPRISE (Correctif erreur Dashboard)
 app.get('/entreprise/dashboard', async (req, res) => {
     try {
         const missions = (await pool.query('SELECT * FROM missions WHERE entreprise_id = 4')).rows;
-        let stats = [];
-        try {
-            const resStats = await pool.query('SELECT * FROM feedback_metrics WHERE entreprise_id = 4 ORDER BY id ASC');
-            stats = resStats.rows;
-        } catch (e) { console.log("Table feedback_metrics incomplète"); }
-        res.render('dashboard', { missions, stats });
-    } catch (err) { res.status(500).send("Erreur Dashboard."); }
+        const resStats = await pool.query('SELECT * FROM feedback_metrics WHERE entreprise_id = 4 ORDER BY id ASC');
+        res.render('dashboard', { missions, stats: resStats.rows });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Erreur Dashboard : Vérifiez que la colonne date_evaluation existe.");
+    }
 });
 
 app.get('/api/forfy-message', (req, res) => {
-    res.json({ message: "Je suis Forfy, comment puis-je vous aider ?" });
+    res.json({ message: "Je suis Forfy ! Prêt à propulser votre établissement ?" });
 });
 
 const PORT = process.env.PORT || 8080;
