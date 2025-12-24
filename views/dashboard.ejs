@@ -3,153 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Espace Client - FORFEO BUSINESS</title>
+    <title>Tableau de Bord - FORFEO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
-    <script>
-        if (!localStorage.getItem('forfeo_business_logged_in')) {
-            window.location.href = '/login';
-        }
-    </script>
-    <style>.stat-card { transition: transform 0.2s; } .stat-card:hover { transform: translateY(-5px); }</style>
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark py-3">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <span class="navbar-brand fw-bold"><i class="bi bi-grid-fill me-2"></i>FORFEO DASHBOARD</span>
-            <div class="d-flex align-items-center gap-3">
-                <div class="text-end text-white d-none d-md-block">
-                    <div class="fw-bold"><%= user.nom %></div> 
-                    <small class="text-white-50"><%= user.plan %></small>
-                </div>
-                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:40px; height:40px;"><%= user.initiales %></div>
-                <button id="logoutBtn" class="btn btn-outline-light btn-sm ms-2"><i class="bi bi-box-arrow-right"></i></button>
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="bi bi-building-check"></i> FORFEO PRO
+            </a>
+            <div class="d-flex text-white align-items-center">
+                <span class="me-3 small">
+                    Connecté : <strong><%= user.nom %></strong> </span>
+                <a href="/login" class="btn btn-sm btn-outline-light rounded-pill">Déconnexion</a>
             </div>
         </div>
     </nav>
 
     <div class="container py-5">
-        <div class="d-flex justify-content-between align-items-center mb-5 flex-column flex-md-row gap-3">
-            <div>
-                <h2 class="fw-bold text-dark">Vue d'ensemble</h2>
-                <p class="text-muted mb-0">Bienvenue, <%= user.nom %>. Gérez vos audits.</p>
+        
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h1 class="fw-bold text-dark">Tableau de Bord</h1>
+                <p class="text-muted">Gérez vos missions et consultez vos scores qualité.</p>
             </div>
-            <button class="btn btn-primary rounded-pill px-4 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#orderModal">
-                <i class="bi bi-plus-lg me-2"></i>Commander une mission
-            </button>
+            <div class="col-md-4 text-md-end">
+                <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill">
+                    Plan : <%= user.plan %>
+                </span>
+            </div>
         </div>
 
         <div class="row g-4 mb-5">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm rounded-4 stat-card h-100">
-                    <div class="card-body">
-                        <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Score Global</small>
-                        <h2 class="display-4 fw-bold text-primary mb-0"><%= user.score %><span class="fs-5 text-muted">/10</span></h2>
-                        <span class="badge bg-success bg-opacity-10 text-success"><i class="bi bi-arrow-up"></i> +0.2</span>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-trophy text-warning display-4 mb-3"></i>
+                        <h5 class="text-muted text-uppercase small fw-bold">Score Qualité</h5>
+                        <h2 class="display-5 fw-bold text-dark"><%= user.score %>/10</h2>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm rounded-4 stat-card h-100">
-                     <div class="card-body">
-                        <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Missions Réalisées</small>
-                        <h2 class="display-4 fw-bold text-dark mb-0">12</h2>
-                        <small class="text-muted">Depuis Janvier</small>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-ticket-perforated text-info display-4 mb-3"></i>
+                        <h5 class="text-muted text-uppercase small fw-bold">Missions Dispo</h5>
+                        <h2 class="display-5 fw-bold text-dark"><%= user.missions_dispo %></h2>
+                        <button class="btn btn-sm btn-outline-primary mt-2">Commander +</button>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                 <div class="card border-0 shadow-sm rounded-4 stat-card h-100">
-                     <div class="card-body">
-                        <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">NPS (Net Promoter)</small>
-                        <h2 class="display-4 fw-bold text-info mb-0">72</h2>
-                        <small class="text-muted">Excellence</small>
-                    </div>
-                </div>
-            </div>
-             <div class="col-md-3">
-                 <div class="card border-0 shadow-sm rounded-4 stat-card h-100 bg-primary text-white">
-                     <div class="card-body">
-                        <small class="text-uppercase text-white-50 fw-bold" style="font-size: 0.7rem;">Crédits Restants</small>
-                        <h2 class="display-4 fw-bold mb-0"><%= user.missions_dispo %></h2>
-                        <small class="text-white-50">Mission disponible</small>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 bg-dark text-white">
+                    <div class="card-body text-center p-4 d-flex flex-column justify-content-center">
+                        <h5 class="mb-3">Besoin d'un audit ?</h5>
+                        <a href="/survey-qualite" class="btn btn-light rounded-pill fw-bold">
+                            <i class="bi bi-plus-circle me-1"></i> Nouvelle Mission
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-            <div class="card-header bg-white p-4 border-bottom"><h5 class="fw-bold mb-0">Derniers rapports reçus</h5></div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
-                        <tr><th class="ps-4 py-3">Date</th><th>Ambassadeur</th><th>Type</th><th>Note</th><th>Statut</th><th class="text-end pe-4">Action</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td class="ps-4 fw-bold">12 Oct 2025</td><td>Julie M.</td><td>Souper</td><td><span class="fw-bold text-success">9.2/10</span></td><td><span class="badge bg-success rounded-pill">Complet</span></td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-dark rounded-pill">Voir le rapport</button></td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="orderModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold">Lancer une nouvelle mission 🚀</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <form action="https://api.web3forms.com/submit" method="POST">
-                        <input type="hidden" name="access_key" value="c7c665be-ec7f-4455-9a5e-11ebb323fff9">
-                        <input type="hidden" name="subject" value="NOUVELLE COMMANDE MISSION (CLIENT)">
-                        <input type="hidden" name="redirect" id="redirectInput" value="">
-                        <input type="hidden" name="entreprise" value="<%= user.nom %>">
-
-                        <div class="mb-3">
-                            <label class="fw-bold small mb-1">Type de mission</label>
-                            <select class="form-select bg-light" name="type_mission" id="missionSelector" required onchange="checkMissionType(this)">
-                                <option value="" selected disabled>Choisir un type...</option>
-                                <optgroup label="Visites Mystères">
-                                    <option value="Client Mystère (Repas)">Client Mystère (Repas)</option>
-                                    <option value="Client Mystère (Nuitée)">Client Mystère (Nuitée)</option>
-                                </optgroup>
-                                <option value="Autre">Autre (Préciser)</option>
-                            </select>
-                        </div>
-                        <div class="mb-3 d-none" id="autreMissionDiv">
-                            <label class="fw-bold small mb-1">Précisez votre besoin</label>
-                            <input type="text" class="form-control bg-light" name="autre_mission_details">
-                        </div>
-                        <div class="mb-3"><label class="fw-bold small mb-1">Date souhaitée</label><input type="text" class="form-control bg-light" name="date_souhaitee" required></div>
-                        <div class="mb-3"><label class="fw-bold small mb-1">Instructions</label><textarea class="form-control bg-light" name="instructions" rows="3"></textarea></div>
-                        <div class="d-grid mt-4"><button type="submit" class="btn btn-primary rounded-pill py-2">Envoyer</button></div>
-                    </form>
+        <h4 class="fw-bold mb-3">Rapports Récents</h4>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item p-4 text-center text-muted">
+                        <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                        Aucune mission terminée pour le moment.
+                    </div>
                 </div>
             </div>
         </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/forfy.js"></script>
-    <script>
-        function checkMissionType(select) {
-            var autreDiv = document.getElementById('autreMissionDiv');
-            if(select.value === 'Autre') { autreDiv.classList.remove('d-none'); } else { autreDiv.classList.add('d-none'); }
-        }
-        document.addEventListener("DOMContentLoaded", function() {
-            const currentUrl = window.location.href;
-            const newUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/')) + '/confirmation';
-            const redirectInput = document.getElementById('redirectInput');
-            if(redirectInput) { redirectInput.value = newUrl; }
-            document.getElementById('logoutBtn').addEventListener('click', function() {
-                localStorage.removeItem('forfeo_business_logged_in');
-                window.location.href = '/login';
-            });
-        });
-    </script>
-</body>
+    </body>
 </html>
