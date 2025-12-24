@@ -3,71 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nos Partenaires | Forfeo Lab</title>
+    <title>Écosystème & Partenaires | Forfeo Lab</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; color: #333; margin: 0; }
-        .hero { background: #000; color: #fff; padding: 60px 20px; text-align: center; }
-        .container { max-width: 1000px; margin: -40px auto 50px; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f8fafc; color: #1a202c; margin: 0; line-height: 1.6; }
+        .hero { background: linear-gradient(135deg, #000 0%, #2d3748 100%); color: #fff; padding: 80px 20px; text-align: center; }
+        .container { max-width: 1100px; margin: -60px auto 60px; background: white; padding: 50px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
         
-        .partner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-top: 40px; }
-        .partner-card { border: 1px solid #eee; padding: 25px; border-radius: 12px; text-align: center; transition: 0.3s; }
-        .partner-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-color: #00aaff; }
+        .intro-text { text-align: center; max-width: 700px; margin: 0 auto 50px; color: #4a5568; font-size: 1.1rem; }
         
-        .logo-placeholder { width: 80px; height: 80px; background: #f0f0f0; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        .partner-card h3 { margin: 10px 0; font-size: 18px; }
-        .partner-card p { font-size: 14px; color: #666; line-height: 1.5; }
+        .partner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; }
+        .partner-card { border: 1px solid #edf2f7; padding: 35px; border-radius: 16px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; }
+        .partner-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); border-color: #00aaff; }
+        .partner-card::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #00aaff; opacity: 0; transition: 0.3s; }
+        .partner-card:hover::before { opacity: 1; }
         
-        .cta-section { margin-top: 50px; text-align: center; padding-top: 30px; border-top: 1px solid #eee; }
-        .btn-join { background: #00aaff; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; }
+        .icon-box { font-size: 40px; margin-bottom: 20px; }
+        .partner-card h3 { margin: 0 0 15px 0; font-size: 22px; color: #2d3748; }
+        .partner-card p { font-size: 15px; color: #718096; margin-bottom: 0; }
+        .tag { display: inline-block; background: #ebf8ff; color: #2b6cb0; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; }
+        
+        .cta-box { margin-top: 60px; background: #f7fafc; padding: 40px; border-radius: 15px; text-align: center; border: 1px dashed #cbd5e0; }
+        .btn-contact { background: #000; color: white; padding: 15px 35px; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block; transition: 0.3s; }
+        .btn-contact:hover { background: #00aaff; transform: scale(1.05); }
     </style>
 </head>
 <body>
 
     <div class="hero">
-        <h1>L'Écosystème Forfeo</h1>
-        <p>Nous collaborons avec les meilleurs pour garantir l'excellence de l'expérience client.</p>
+        <h1 style="font-size: 2.5rem; margin-bottom: 15px;">Nos Alliances Stratégiques</h1>
+        <p style="font-size: 1.2rem; opacity: 0.9;">Co-construire l'avenir de l'hospitalité et du service client.</p>
     </div>
 
     <div class="container">
-        <p style="text-align: center; color: #888;">Forfeo Lab s'entoure de partenaires stratégiques dans les domaines de la data, de la formation et de l'hôtellerie-restauration.</p>
+        <div class="intro-text">
+            Au <strong>Forfeo Lab</strong>, nous croyons que l'excellence ne s'atteint pas seul. Nous avons sélectionné des partenaires qui partagent notre obsession pour le détail et l'innovation technologique.
+        </div>
 
         <div class="partner-grid">
             <div class="partner-card">
-                <div class="logo-placeholder">📊</div>
+                <span class="tag">Technologie IA</span>
+                <div class="icon-box">🧠</div>
+                <h3>OpenAI Ecosystem</h3>
+                <p>Grâce à l'intégration des modèles de langage avancés, nous avons conçu <strong>Forfy</strong>. Ce partenaire nous permet de transformer des milliers de données brutes d'audits en plans d'action concrets et intelligents pour nos clients.</p>
+            </div>
+
+            <div class="partner-card">
+                <span class="tag">Fintech & Sécurité</span>
+                <div class="icon-box">💳</div>
                 <h3>Stripe Canada</h3>
-                <p>Gestion sécurisée des transactions et des paiements pour nos auditeurs et clients.</p>
+                <p>La fluidité du paiement est la première étape d'une expérience client réussie. Stripe assure la gestion sécurisée des transactions de nos clients business et garantit le versement rapide des récompenses à nos ambassadeurs certifiés.</p>
             </div>
 
             <div class="partner-card">
-                <div class="logo-placeholder">🤖</div>
-                <h3>OpenAI</h3>
-                <p>Intelligence artificielle Forfy intégrée pour l'analyse prédictive des rapports d'audit.</p>
+                <span class="tag">Standard de Qualité</span>
+                <div class="icon-box">⚖️</div>
+                <h3>Normes Qualité Québec</h3>
+                <p>Nous alignons nos protocoles d'audit sur les standards les plus rigoureux de l'industrie touristique québécoise. Ce partenariat assure que chaque "moment de vérité" documenté par nos ambassadeurs possède une valeur juridique et professionnelle.</p>
             </div>
 
             <div class="partner-card">
-                <div class="logo-placeholder">🏢</div>
-                <h3>Réseau Hôtelier QC</h3>
-                <p>Partenaire privilégié pour le déploiement de nos ambassadeurs en milieu touristique.</p>
-            </div>
-
-            <div class="partner-card">
-                <div class="logo-placeholder">🎓</div>
-                <h3>Academy Performance</h3>
-                <p>Formation continue de nos ambassadeurs aux dernières normes de service luxe.</p>
+                <span class="tag">Réseau Terrain</span>
+                <div class="icon-box">🤝</div>
+                <h3>Club Excellence Hospitalité</h3>
+                <p>Notre vivier d'ambassadeurs est issu des meilleures écoles hôtelières. Ce partenariat exclusif nous permet de recruter des profils experts capables de détecter les moindres failles de service, là où un client ordinaire ne verrait rien.</p>
             </div>
         </div>
 
-        <div class="cta-section">
-            <h3>Vous souhaitez devenir partenaire ?</h3>
-            <p>Rejoignez un réseau dédié à l'optimisation de la performance client.</p><br>
-            <a href="mailto:contact@forfeo.lab" class="btn-join">Contactez-nous</a>
+        <div class="cta-box">
+            <h2 style="margin-top: 0;">Devenir un Partenaire Forfeo</h2>
+            <p style="margin-bottom: 25px;">Vous développez une solution innovante pour le commerce de détail ou l'hôtellerie ? Intégrez notre laboratoire.</p>
+            <a href="mailto:partenaires@forfeo.ca" class="btn-contact">Proposer une collaboration</a>
         </div>
     </div>
 
     <%- include('partials/forfy') %>
 
-    <div style="text-align: center; padding-bottom: 40px;">
-        <a href="/" style="color: #999; text-decoration: none; font-size: 14px;">← Retour à l'accueil</a>
+    <div style="text-align: center; margin-bottom: 50px;">
+        <a href="/dashboard" style="color: #cbd5e0; text-decoration: none; font-weight: 500;">↩ Retour au Tableau de Bord</a>
     </div>
 
 </body>
