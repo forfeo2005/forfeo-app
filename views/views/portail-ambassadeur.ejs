@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portail Ambassadeur | Forfeo Lab</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .navbar { background: #000; color: white; padding: 15px 50px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: white; text-decoration: none; font-weight: bold; }
+        .container { max-width: 1000px; margin: 40px auto; padding: 20px; }
+        .welcome-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+        .status-badge { background: #e3f2fd; color: #1976d2; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+        
+        .mission-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .mission-card { background: white; border-radius: 12px; border: 1px solid #eee; overflow: hidden; display: flex; transition: 0.3s; }
+        .mission-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .mission-info { padding: 25px; flex: 1; }
+        .mission-actions { padding: 25px; background: #fafafa; border-left: 1px solid #eee; display: flex; flex-direction: column; justify-content: center; gap: 10px; width: 200px; }
+        
+        .btn { display: block; text-align: center; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px; }
+        .btn-start { background: #000; color: white; }
+        .btn-details { background: white; color: #333; border: 1px solid #ddd; }
+        
+        .empty-state { text-align: center; padding: 60px; background: white; border-radius: 12px; border: 2px dashed #ddd; color: #888; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div style="font-size: 20px;">⭐ Forfeo <span style="font-weight: normal;">Lab</span></div>
+        <a href="/">Quitter le portail</a>
+    </nav>
+
+    <div class="container">
+        <div class="welcome-card">
+            <div>
+                <h1 style="margin: 0;">Bonjour, <%= ambassadeur.nom %></h1>
+                <p style="color: #666; margin: 5px 0 0 0;">Ville : <%= ambassadeur.ville %> | Missions complétées : <%= ambassadeur.missions_completees %></p>
+            </div>
+            <div class="status-badge">
+                ● <%= ambassadeur.statut %>
+            </div>
+        </div>
+
+        <h2 style="margin-bottom: 25px;">Missions Assignées</h2>
+
+        <div class="mission-grid">
+            <% if (missions && missions.length > 0) { %>
+                <% missions.forEach(mission => { %>
+                    <div class="mission-card">
+                        <div class="mission-info">
+                            <div style="color: #888; font-size: 12px; font-weight: bold; text-transform: uppercase;"><%= mission.statut %></div>
+                            <h3 style="margin: 10px 0;"><%= mission.type_mission %></h3>
+                            <p style="color: #555; line-height: 1.5;"><%= mission.details %></p>
+                        </div>
+                        <div class="mission-actions">
+                            <a href="/survey-qualite" class="btn btn-start">Remplir Rapport</a>
+                            <a href="#" class="btn btn-details" onclick="alert('Détails de la mission : <%= mission.details %>')">Consignes</a>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="empty-state">
+                    <div style="font-size: 40px; margin-bottom: 20px;">🕵️‍♂️</div>
+                    <h3>Aucune mission active</h3>
+                    <p>Nous n'avons pas encore de mission à vous proposer dans votre secteur.<br>Gardez un œil sur vos emails !</p>
+                </div>
+            <% } %>
+        </div>
+
+        <div style="margin-top: 50px; padding: 30px; background: #e9ecef; border-radius: 12px; text-align: center;">
+            <h3>Besoin d'aide pour une mission ?</h3>
+            <p>Forfy est disponible 24/7 pour répondre à vos questions sur les protocoles d'audit.</p>
+        </div>
+    </div>
+
+    <%- include('partials/forfy') %>
+
+</body>
+</html>
