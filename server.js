@@ -14,13 +14,19 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
+// Middleware
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- ROUTES AUTHENTIFICATION ---
+// --- NAVIGATION ---
+app.get('/', (req, res) => res.render('index'));
+app.get('/candidature', (req, res) => res.render('espace-ambassadeur'));
+app.get('/business-plans', (req, res) => res.render('offre-entreprise'));
+app.get('/partenaires', (req, res) => res.render('partenaires'));
 
+// --- AUTHENTIFICATION ENTREPRISE ---
 app.post('/signup-entreprise', async (req, res) => {
     const { nom, email, password } = req.body;
     try {
@@ -37,45 +43,45 @@ app.post('/signup-entreprise', async (req, res) => {
 app.post('/login-entreprise', async (req, res) => {
     const { email, password } = req.body;
     try {
-        const result = await pool.query('SELECT * FROM entreprises WHERE email = $1 AND password = $2', [email, password]);
-        if (result.rows.length > 0) res.redirect(`/dashboard?id=${result.rows[0].id}`);
-        else res.send("Identifiants incorrects.");
-    } catch (err) { res.status(500).send("Erreur de connexion."); }
+        const result = await pool.query(
+            'SELECT * FROM entreprises WHERE email = $1 AND password = $2',
+            [email, password]
+        );
+        if (result.rows.length > 0) {
+            res.redirect(`/dashboard?id=${result.rows[0].id}`);
+        } else {
+            res.send("Email ou mot de passe incorrect.");
+        }
+    } catch (err) {
+        res.status(500).send("Erreur de connexion.");
+    }
 });
 
-app.post('/signup-ambassadeur', async (req, res) => {
-    const { nom, email, ville, password } = req.body;
-    try {
-        await pool.query('INSERT INTO ambassadeurs (nom, email, ville, password) VALUES ($1, $2, $3, $4)', [nom, email, ville, password]);
-        res.render('confirmation-ambassadeur', { nom: nom });
-    } catch (err) { res.status(500).send("Erreur inscription."); }
-});
-
-// --- NAVIGATION ---
-app.get('/', (req, res) => res.render('index'));
-app.get('/candidature', (req, res) => res.render('espace-ambassadeur'));
-app.get('/business-plans', (req, res) => res.render('offre-entreprise'));
-app.get('/partenaires', (req, res) => res.render('partenaires'));
-
+// --- DASHBOARD ---
 app.get('/dashboard', async (req, res) => {
     const userId = req.query.id || 4;
     try {
         const user = (await pool.query('SELECT * FROM entreprises WHERE id = $1', [userId])).rows[0];
         const missions = (await pool.query('SELECT * FROM missions WHERE entreprise_id = $1', [userId])).rows;
         res.render('dashboard', { user, missions });
-    } catch (err) { res.redirect('/'); }
+    } catch (err) {
+        res.redirect('/');
+    }
 });
 
+// --- API IA FORFY ---
 app.post('/api/chat', async (req, res) => {
     const { message } = req.body;
     try {
         const completion = await openai.chat.completions.create({
-            messages: [{ role: "system", content: "Tu es Forfy, expert client." }, { role: "user", content: message }],
+            messages: [{ role: "system", content: "Tu es Forfy, l'IA experte de Forfeo." }, { role: "user", content: message }],
             model: "gpt-3.5-turbo",
         });
         res.json({ reply: completion.choices[0].message.content });
-    } catch (error) { res.json({ reply: "Forfy est à votre écoute." }); }
+    } catch (error) {
+        res.json({ reply: "Forfy est en maintenance momentanée." });
+    }
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`🚀 Forfeo 2025 actif sur le port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Forfeo Lab 2025 actif sur le port ${PORT}`));
