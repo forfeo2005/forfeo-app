@@ -6,17 +6,18 @@ const Stripe = require('stripe');
 const OpenAI = require('openai');
 const nodemailer = require('nodemailer');
 
-// --- INITIALISATION ---
+// --- INITIALISATION DES SERVICES ---
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const app = express();
 
+// Connexion à la base de données Railway
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
 
-// --- CONFIGURATION ---
+// --- CONFIGURATION EXPRESS ---
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -29,16 +30,16 @@ app.get('/candidature', (req, res) => res.render('espace-ambassadeur'));
 app.get('/business-plans', (req, res) => res.render('offre-entreprise'));
 
 // --- FIX : ROUTES POUR LES BOUTONS DU DASHBOARD ---
-// Ces routes règlent l'erreur "Cannot GET /survey-..."
+// Ces routes affichent le formulaire de rapport d'audit pour chaque bouton
 app.get('/survey-qualite', (req, res) => res.render('rapport-audit'));
 app.get('/survey-experience', (req, res) => res.render('rapport-audit'));
 app.get('/survey-satisfaction', (req, res) => res.render('rapport-audit'));
 
 // --- RECRUTEMENT AMBASSADEURS (FIX) ---
 app.post('/signup-ambassadeur', async (req, res) => {
-    const { nom, email, ville, password } = req.body; // Récupère "quebec" depuis le formulaire
+    const { nom, email, ville, password } = req.body; 
     try {
-        // Insertion dans les colonnes ville et statut que nous avons créées
+        // Utilise les colonnes ville et statut que nous avons créées
         await pool.query(
             'INSERT INTO ambassadeurs (nom, email, ville, password, statut) VALUES ($1, $2, $3, $4, $5)',
             [nom, email, ville, password, 'En attente']
@@ -46,29 +47,30 @@ app.post('/signup-ambassadeur', async (req, res) => {
         res.render('confirmation-ambassadeur', { nom: nom });
     } catch (err) {
         console.error("Erreur Recrutement:", err);
-        res.status(500).send("Erreur lors de la candidature. Vérifiez que les colonnes existent sur Railway.");
+        res.status(500).send("Erreur lors de la candidature. Vérifiez que la colonne 'ville' existe sur Railway.");
     }
 });
 
 // --- DASHBOARD CLIENT ---
 app.get('/dashboard', async (req, res) => {
-    // Utilise l'ID 4 par défaut pour afficher vos missions existantes
+    // Affiche par défaut les missions de l'entreprise ID 4
     const userId = req.query.id || 4; 
     try {
         const userResult = await pool.query('SELECT * FROM entreprises WHERE id = $1', [userId]);
-        // Récupère les missions de l'entreprise (Audit Qualité, Consultation, etc.)
+        // Récupère les missions existantes (Audit Qualité, Consultation, etc.)
         const missionsResult = await pool.query('SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY date_creation DESC', [userId]);
         
         res.render('dashboard', { 
-            user: userResult.rows[0] || { nom: "Client Forfeo", plan: "Découverte" }, 
+            user: userResult.rows[0] || { nom: "Partenaire Forfeo", plan: "Découverte" }, 
             missions: missionsResult.rows 
         });
     } catch (err) {
+        console.error("Erreur Dashboard:", err);
         res.status(500).send("Erreur de chargement des missions.");
     }
 });
 
-// --- RAPPORTS D'AUDIT ---
+// --- SOUMISSION DE RAPPORT ---
 app.post('/submit-audit', async (req, res) => {
     const { etablissement, score_accueil, commentaires } = req.body;
     try {
@@ -90,11 +92,11 @@ app.get('/admin', async (req, res) => {
         const missions = (await pool.query('SELECT * FROM missions')).rows;
         res.render('admin', { ambassadeurs, entreprises, missions });
     } catch (err) {
-        res.status(500).send("Accès Admin indisponible.");
+        res.status(500).send("Accès Administration restreint.");
     }
 });
 
-// --- DÉMARRAGE DU LABORATOIRE ---
+// --- DÉMARRAGE DU SERVEUR ---
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`🚀 Forfeo Lab 2025 opérationnel sur le port ${PORT}`);
