@@ -14,7 +14,7 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// Middleware
+// Middleware indispensable pour lire les données des formulaires
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
@@ -25,19 +25,42 @@ app.get('/', (req, res) => res.render('index'));
 app.get('/candidature', (req, res) => res.render('espace-ambassadeur'));
 app.get('/business-plans', (req, res) => res.render('offre-entreprise'));
 
-// --- ROUTE ADMIN (Correction du Cannot GET /admin) ---
-app.get('/admin', async (req, res) => {
+// --- AUTHENTIFICATION ENTREPRISE (Correction des erreurs Cannot POST) ---
+
+// Inscription d'une nouvelle entreprise
+app.post('/signup-entreprise', async (req, res) => {
+    const { nom, email, password } = req.body;
     try {
-        const ambassadeurs = (await pool.query('SELECT * FROM ambassadeurs ORDER BY id DESC')).rows;
-        const entreprises = (await pool.query('SELECT * FROM entreprises ORDER BY id DESC')).rows;
-        const missions = (await pool.query('SELECT * FROM missions ORDER BY id DESC')).rows;
-        res.render('admin', { ambassadeurs, entreprises, missions });
+        const result = await pool.query(
+            'INSERT INTO entreprises (nom, email, password) VALUES ($1, $2, $3) RETURNING id',
+            [nom, email, password]
+        );
+        // Redirige vers le dashboard avec l'ID de la nouvelle entreprise
+        res.redirect(`/dashboard?id=${result.rows[0].id}`);
     } catch (err) {
-        res.status(500).send("Erreur lors du chargement de la console admin.");
+        res.status(500).send("Erreur : l'email est déjà utilisé pour une entreprise.");
     }
 });
 
-// --- INSCRIPTION AMBASSADEUR (Correction du Cannot POST /signup-ambassadeur) ---
+// Connexion d'une entreprise existante
+app.post('/login-entreprise', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const result = await pool.query(
+            'SELECT * FROM entreprises WHERE email = $1 AND password = $2',
+            [email, password]
+        );
+        if (result.rows.length > 0) {
+            res.redirect(`/dashboard?id=${result.rows[0].id}`);
+        } else {
+            res.send("Email ou mot de passe incorrect.");
+        }
+    } catch (err) {
+        res.status(500).send("Erreur lors de la connexion.");
+    }
+});
+
+// --- INSCRIPTION AMBASSADEUR ---
 app.post('/signup-ambassadeur', async (req, res) => {
     const { nom, email, ville, password } = req.body;
     try {
@@ -48,6 +71,18 @@ app.post('/signup-ambassadeur', async (req, res) => {
         res.render('confirmation-ambassadeur', { nom: nom });
     } catch (err) {
         res.status(500).send("Erreur : l'email est déjà utilisé.");
+    }
+});
+
+// --- ROUTE ADMIN ---
+app.get('/admin', async (req, res) => {
+    try {
+        const ambassadeurs = (await pool.query('SELECT * FROM ambassadeurs ORDER BY id DESC')).rows;
+        const entreprises = (await pool.query('SELECT * FROM entreprises ORDER BY id DESC')).rows;
+        const missions = (await pool.query('SELECT * FROM missions ORDER BY id DESC')).rows;
+        res.render('admin', { ambassadeurs, entreprises, missions });
+    } catch (err) {
+        res.status(500).send("Erreur lors du chargement de la console admin.");
     }
 });
 
