@@ -1,4 +1,4 @@
-<div id="forfy-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+<div id="forfy-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; font-family: 'Segoe UI', sans-serif;">
     
     <div id="forfy-box" style="display:none; width:320px; height:450px; background:white; border-radius:15px; box-shadow:0 10px 40px rgba(0,0,0,0.2); flex-direction:column; overflow:hidden; margin-bottom:15px; border:1px solid #eee;">
         <div style="background:#000; color:white; padding:15px; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
@@ -8,7 +8,7 @@
         
         <div id="chat-content" style="flex:1; padding:15px; overflow-y:auto; font-size:14px; background:#fdfdfd; display:flex; flex-direction:column; gap:10px;">
             <div style="background:#eee; padding:10px; border-radius:10px; align-self:flex-start; max-width:80%;">
-                Bonjour ! Je suis Forfy. Comment puis-je vous aider aujourd'hui ?
+                Bonjour ! Je suis Forfy. Je peux vous aider à analyser vos scores ou à commander de nouvelles missions d'audit.
             </div>
         </div>
 
@@ -39,15 +39,19 @@
         
         if(!msg) return;
 
-        // Afficher le message de l'utilisateur
+        // Message utilisateur
         content.innerHTML += `
             <div style="background:#00aaff; color:white; padding:10px; border-radius:10px; align-self:flex-end; max-width:80%;">
-                \${msg}
+                ${msg}
             </div>
         `;
         
         input.value = '';
         content.scrollTop = content.scrollHeight;
+
+        // Message de chargement
+        const loadingId = "loading-" + Date.now();
+        content.innerHTML += `<div id="${loadingId}" style="font-size:12px; color:#aaa; font-style:italic;">Forfy réfléchit...</div>`;
 
         try {
             const res = await fetch('/api/chat', {
@@ -57,22 +61,20 @@
             });
             const data = await res.json();
             
-            // Afficher la réponse de Forfy
+            // Retirer chargement et afficher réponse
+            document.getElementById(loadingId).remove();
             content.innerHTML += `
                 <div style="background:#eee; color:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:80%;">
-                    \${data.reply}
+                    ${data.reply}
                 </div>
             `;
             content.scrollTop = content.scrollHeight;
         } catch (err) {
-            content.innerHTML += `<div style="color:red; font-size:12px; text-align:center;">Erreur de connexion avec l'IA.</div>`;
+            document.getElementById(loadingId).innerHTML = "Erreur de connexion avec l'IA Forfeo.";
         }
     }
 
-    // Envoyer avec la touche Entrée
     document.getElementById('chat-input').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            sendChat();
-        }
+        if (e.key === 'Enter') sendChat();
     });
 </script>
