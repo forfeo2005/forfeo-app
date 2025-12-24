@@ -3,37 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de bord | Forfeo Business</title>
+    <title>Dashboard Forfeo | <%= user.nom %></title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9f9f9; color: #333; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f9f9f9; color: #333; margin: 0; }
         .container { max-width: 1100px; margin: 50px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
         
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
         .nav-links { display: flex; align-items: center; gap: 20px; }
         .nav-links a { text-decoration: none; color: #666; font-weight: 500; font-size: 14px; }
-        
-        /* Bouton Admin Discret */
         .admin-link { color: #e53e3e !important; font-weight: bold !important; border: 1px solid #fed7d7; padding: 5px 10px; border-radius: 5px; background: #fff5f5; }
-        .admin-link:hover { background: #feb2b2; }
 
-        .btn-logout { background: #eee; color: #333; padding: 8px 15px; border-radius: 5px; }
-
-        /* Stats & Score Bar */
+        /* Stats Cards */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
         .stat-card { background: #fdfdfd; border: 1px solid #eee; padding: 25px; border-radius: 12px; text-align: center; }
-        .stat-card h3 { margin: 0; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-        .progress-container { position: relative; height: 10px; background: #eee; border-radius: 10px; margin: 15px 0 10px 0; overflow: hidden; }
+        .progress-container { height: 10px; background: #eee; border-radius: 10px; margin: 15px 0 10px 0; overflow: hidden; }
         #score-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00aaff, #0044ff); transition: width 1.5s ease-in-out; border-radius: 10px; }
 
         /* Actions */
         .grid-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 50px; }
-        .action-card { border: 1px solid #eee; padding: 30px; border-radius: 12px; text-align: center; transition: 0.3s; }
-        .action-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
+        .action-card { border: 1px solid #eee; padding: 30px; border-radius: 12px; text-align: center; }
         .btn-link { color: #00aaff; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 15px; }
 
-        /* Missions Table */
+        /* Table */
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn-buy { background: #000; color: #fff; padding: 12px 25px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-buy { background: #000; color: #fff; padding: 12px 25px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-buy:hover { background: #333; }
         
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; padding: 15px; border-bottom: 2px solid #eee; color: #888; font-size: 13px; }
@@ -45,31 +39,27 @@
 
     <div class="container">
         <header>
-            <h1 style="margin:0;">Bonjour, <%= user.nom %></h1>
+            <h1>Bonjour, <%= user.nom %></h1>
             <div class="nav-links">
-                <% if (user.id === 4) { %>
-                    <a href="/admin" class="admin-link">⚙️ Administration</a>
-                <% } %>
-                
+                <% if (user.id === 4) { %><a href="/admin" class="admin-link">⚙️ Administration</a><% } %>
                 <a href="/business-plans">Nos Offres</a>
-                <a href="/candidature" style="color:#00aaff; font-weight: bold;">🚀 Devenir Ambassadeur</a>
-                <a href="/" class="btn-logout">Déconnexion</a>
+                <a href="/" style="background: #eee; padding: 8px 15px; border-radius: 5px; color: #333;">Déconnexion</a>
             </div>
         </header>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>Score Forfeo</h3>
+                <h3 style="font-size: 12px; color: #888; text-transform: uppercase;">Score Forfeo</h3>
                 <div class="progress-container"><div id="score-bar"></div></div>
-                <p style="font-size: 24px; margin:0;"><%= user.score %>/10</p>
+                <p style="font-size: 24px; font-weight: bold;"><%= user.score %>/10</p>
             </div>
             <div class="stat-card">
-                <h3>Missions Disponibles</h3>
-                <p style="margin-top:10px; font-size: 32px; font-weight: bold;"><%= user.missions_dispo %></p>
+                <h3 style="font-size: 12px; color: #888; text-transform: uppercase;">Missions Disponibles</h3>
+                <p style="font-size: 32px; font-weight: bold; margin: 10px 0;"><%= user.missions_dispo %></p>
             </div>
             <div class="stat-card">
-                <h3>Plan Forfeo</h3>
-                <p style="margin-top:10px; font-size: 24px; font-weight: bold;"><%= user.plan %></p>
+                <h3 style="font-size: 12px; color: #888; text-transform: uppercase;">Plan Actuel</h3>
+                <p style="font-size: 24px; font-weight: bold; margin: 10px 0;"><%= user.plan %></p>
             </div>
         </div>
 
@@ -89,7 +79,7 @@
         </div>
 
         <div class="section-header">
-            <h2 style="margin:0;">Suivi des Missions</h2>
+            <h2>Suivi des Missions</h2>
             <button id="checkout-button" class="btn-buy">+ Acheter une Mission (150$)</button>
         </div>
 
@@ -113,7 +103,7 @@
                         </tr>
                     <% }) %>
                 <% } else { %>
-                    <tr><td colspan="4" style="text-align:center; padding:40px; color:#aaa;">Aucune mission active.</td></tr>
+                    <tr><td colspan="4" style="text-align:center; padding:40px; color:#aaa;">Aucune mission pour le moment.</td></tr>
                 <% } %>
             </tbody>
         </table>
@@ -123,13 +113,15 @@
 
     <script src="https://js.stripe.com/v3/"></script>
     <script>
-        // Animation Score
+        // 1. Animation Score Bar
         window.addEventListener('DOMContentLoaded', () => {
             const score = parseFloat("<%= user.score %>");
-            document.getElementById('score-bar').style.width = (score / 10 * 100) + "%";
+            setTimeout(() => {
+                document.getElementById('score-bar').style.width = (score / 10 * 100) + "%";
+            }, 300);
         });
 
-        // Stripe Checkout
+        // 2. Paiement Stripe
         const stripe = Stripe('<%= process.env.STRIPE_PUBLISHABLE_KEY %>');
         document.getElementById('checkout-button').addEventListener('click', function () {
             fetch('/create-checkout-session', {
@@ -138,7 +130,10 @@
                 body: JSON.stringify({ userId: '<%= user.id %>' })
             })
             .then(res => res.json())
-            .then(session => stripe.redirectToCheckout({ sessionId: session.id }));
+            .then(session => {
+                if(session.id) return stripe.redirectToCheckout({ sessionId: session.id });
+                alert("Erreur Stripe : Clé manquante dans Railway.");
+            });
         });
     </script>
 </body>
