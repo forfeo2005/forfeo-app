@@ -20,10 +20,10 @@
     </nav>
 
     <div class="container py-5">
-        <div class="row mb-4">
+        <div class="row mb-4 align-items-end">
             <div class="col-md-8">
                 <h1 class="fw-bold text-dark">Tableau de Bord</h1>
-                <p class="text-muted">Gérez vos audits et suivez vos performances.</p>
+                <p class="text-muted mb-0">Bienvenue dans votre espace de gestion.</p>
             </div>
             <div class="col-md-4 text-md-end">
                 <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill">Plan : <%= user.plan %></span>
@@ -43,7 +43,7 @@
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body text-center p-4">
-                        <i class="bi bi-ticket-perforated text-info display-4 mb-3"></i>
+                        <i class="bi bi-clipboard-check text-info display-4 mb-3"></i>
                         <h5 class="text-muted text-uppercase small fw-bold">Missions Commandées</h5>
                         <h2 class="display-5 fw-bold text-dark"><%= missions.length %></h2>
                     </div>
@@ -69,22 +69,47 @@
                     <% if (missions.length === 0) { %>
                         <div class="list-group-item p-5 text-center text-muted">
                             <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                            <p>Aucune mission pour le moment.<br>Cliquez sur "Nouvelle Mission" pour commencer.</p>
+                            <p>Aucune mission pour le moment.<br>Cliquez sur le bouton noir pour commencer.</p>
                         </div>
                     <% } else { %>
-                        <% missions.forEach(function(mission) { %>
-                            <div class="list-group-item p-4">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h5 class="fw-bold mb-1"><%= mission.type_mission %></h5>
-                                        <p class="text-muted small mb-2">Prévu pour le : <%= mission.date_souhaitee %></p>
-                                        <p class="mb-0 text-muted"><i class="bi bi-info-circle me-1"></i> <%= mission.details %></p>
-                                    </div>
-                                    <div class="text-end">
-                                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><%= mission.statut %></span>
-                                    </div>
+                        
+                        <% missions.forEach(function(mission) { 
+                            // --- LOGIQUE DES COULEURS (ICI !) ---
+                            let badgeClass = 'bg-secondary';
+                            let iconClass = 'bi-circle';
+                            
+                            if (mission.statut === 'En attente') {
+                                badgeClass = 'bg-warning text-dark';
+                                iconClass = 'bi-hourglass-split';
+                            } else if (mission.statut === 'En cours') {
+                                badgeClass = 'bg-info text-dark';
+                                iconClass = 'bi-play-circle';
+                            } else if (mission.statut === 'Terminée') {
+                                badgeClass = 'bg-success';
+                                iconClass = 'bi-check-circle-fill';
+                            } else if (mission.statut === 'Annulée') {
+                                badgeClass = 'bg-danger';
+                                iconClass = 'bi-x-circle';
+                            }
+                        %>
+
+                        <div class="list-group-item p-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="fw-bold mb-1"><%= mission.type_mission %></h5>
+                                    <p class="text-muted small mb-2">
+                                        <i class="bi bi-calendar-event me-1"></i> Prévu le : <%= mission.date_souhaitee %>
+                                    </p>
+                                    <p class="mb-0 text-muted fst-italic">"<%= mission.details %>"</p>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge <%= badgeClass %> px-3 py-2 rounded-pill d-flex align-items-center gap-2">
+                                        <i class="bi <%= iconClass %>"></i> <%= mission.statut %>
+                                    </span>
                                 </div>
                             </div>
+                        </div>
+
                         <% }); %>
                     <% } %>
 
@@ -93,5 +118,7 @@
         </div>
 
     </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
