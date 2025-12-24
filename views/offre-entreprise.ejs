@@ -6,84 +6,56 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #fff; }
         .hero { background: #000; color: #fff; padding: 60px 20px; text-align: center; }
-        .stats-container { display: flex; justify-content: center; gap: 30px; padding: 40px; background: #f9f9f9; }
-        .stat-box { background: #fff; padding: 30px; border-radius: 10px; width: 300px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; }
-        
         .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; max-width: 1100px; margin: 50px auto; padding: 0 20px; }
         .plan-card { border: 1px solid #eee; padding: 40px 25px; border-radius: 15px; text-align: center; transition: 0.3s; }
-        .plan-card:hover { transform: translateY(-10px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .plan-card.featured { border: 2px solid #00aaff; position: relative; }
         .badge { background: #00aaff; color: #fff; padding: 5px 15px; border-radius: 20px; font-size: 12px; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); }
-        
-        .price { font-size: 36px; font-weight: bold; margin: 20px 0; }
-        .features { list-style: none; padding: 0; margin: 30px 0; text-align: left; height: 120px; }
-        .features li { margin-bottom: 10px; color: #555; font-size: 14px; }
-        .features li::before { content: "✓"; color: #00aaff; margin-right: 10px; }
-        
-        .btn-pay { display: block; padding: 15px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: 0.3s; text-align: center; }
-        .btn-black { background: #000; color: #fff; }
-        .btn-blue { background: #00aaff; color: #fff; }
+        .price { font-size: 32px; font-weight: bold; margin: 20px 0; }
+        .btn-pay { display: block; padding: 15px; border-radius: 8px; text-decoration: none; font-weight: bold; background: #000; color: #fff; }
+        .btn-blue { background: #00aaff; }
     </style>
 </head>
 <body>
-
     <div class="hero">
         <h1>Investissez dans l'Excellence Client</h1>
-        <p>70% de l'expérience d'achat dépend de la perception du traitement client.</p>
-    </div>
-
-    <div class="stats-container">
-        <div class="stat-box">
-            <h2 style="color:#00aaff; margin:0;">92%</h2>
-            <p style="font-size:14px; color:#666;">De rétention client après audit.</p>
-        </div>
-        <div class="stat-box">
-            <h2 style="color:#00aaff; margin:0;">+15%</h2>
-            <p style="font-size:14px; color:#666;">D'augmentation du panier moyen.</p>
-        </div>
+        <p>Le succès de votre entreprise passe par le regard de vos clients.</p>
     </div>
 
     <div class="pricing-grid">
         <div class="plan-card">
             <h3>Découverte</h3>
-            <div class="price">Gratuit</div>
-            <ul class="features">
-                <li>1 Audit mystère d'essai</li>
-                <li>Accès au dashboard Forfeo</li>
-                <li>Assistant Forfy Basic</li>
+            <div class="price">49,99 $ <span>/mois</span></div>
+            <ul style="text-align:left; font-size:14px; color:#666; list-style:none; padding:0;">
+                <li>✓ 1 Audit mystère d'essai</li>
+                <li>✓ Accès au dashboard Forfeo</li>
+                <li>✓ Assistant Forfy Basic</li>
             </ul>
-            <a href="https://buy.stripe.com/7sY4gA06K1NZ6Eg3Xwd7q00" target="_blank" class="btn-pay btn-black">Activer gratuitement</a>
+            <a href="https://buy.stripe.com/7sY4gA06K1NZ6Eg3Xwd7q00" class="btn-pay">Activer maintenant</a>
         </div>
 
         <div class="plan-card featured">
             <div class="badge">RECOMMANDÉ</div>
             <h3>Croissance</h3>
-            <div class="price">199 $ <span>/mois</span></div>
-            <ul class="features">
-                <li>3 Audits complets / mois</li>
-                <li>Forfy IA Illimitée</li>
-                <li>Analyses de friction client</li>
+            <div class="price">249 $ <span>/mois</span></div>
+            <ul style="text-align:left; font-size:14px; color:#666; list-style:none; padding:0;">
+                <li>✓ 3 Audits complets / mois</li>
+                <li>✓ Forfy IA Illimitée</li>
+                <li>✓ Analyses de friction client</li>
             </ul>
-            <a href="https://buy.stripe.com/6oUbJ2bPs3W79QsalUd7q02" target="_blank" class="btn-pay btn-blue">S'abonner maintenant</a>
+            <a href="https://buy.stripe.com/6oUbJ2bPs3W79QsalUd7q02" class="btn-pay btn-blue">S'abonner maintenant</a>
         </div>
 
         <div class="plan-card">
             <h3>Excellence</h3>
             <div class="price">499 $ <span>/mois</span></div>
-            <ul class="features">
-                <li>Audits illimités</li>
-                <li>Analyses prédictives IA</li>
-                <li>Consultant Forfeo dédié</li>
+            <ul style="text-align:left; font-size:14px; color:#666; list-style:none; padding:0;">
+                <li>✓ Audits illimités</li>
+                <li>✓ Analyses prédictives IA</li>
+                <li>✓ Consultant Forfeo dédié</li>
             </ul>
-            <a href="https://buy.stripe.com/5kQ5kE7zcgIT0fS1Pod7q01" target="_blank" class="btn-pay btn-black">Choisir Excellence</a>
+            <a href="https://buy.stripe.com/5kQ5kE7zcgIT0fS1Pod7q01" class="btn-pay">Choisir Excellence</a>
         </div>
     </div>
-
     <%- include('partials/forfy') %>
-
-    <div style="text-align:center; padding: 40px;">
-        <a href="/dashboard" style="color:#888; text-decoration:none;">← Retour au tableau de bord</a>
-    </div>
-
 </body>
 </html>
