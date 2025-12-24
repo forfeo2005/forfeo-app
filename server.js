@@ -22,12 +22,11 @@ app.use(session({
     cookie: { secure: false }
 }));
 
-// ROUTES PRINCIPALES
+// ROUTES PUBLIQUES
 app.get('/', (req, res) => res.render('index'));
-app.get('/login', (req, res) => res.render('login'));
 app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
 
-// INSCRIPTION AMBASSADEUR (Correction ville et doublon d'email)
+// INSCRIPTION AMBASSADEUR (Correction variable ville)
 app.post('/signup-ambassadeur', async (req, res) => {
     const { nom, email, ville, password } = req.body;
     try {
@@ -37,12 +36,12 @@ app.post('/signup-ambassadeur', async (req, res) => {
         );
         res.render('confirmation-ambassadeur', { nom, ville });
     } catch (err) {
-        if (err.code === '23505') return res.status(400).send("Cet email est déjà utilisé.");
-        res.status(500).send("Erreur serveur.");
+        if (err.code === '23505') return res.status(400).send("Email déjà enregistré.");
+        res.status(500).send("Erreur lors de l'inscription.");
     }
 });
 
-// DASHBOARD ENTREPRISE (Correctif erreur Dashboard)
+// DASHBOARD ENTREPRISE (Correction erreur SQL)
 app.get('/entreprise/dashboard', async (req, res) => {
     try {
         const missions = (await pool.query('SELECT * FROM missions WHERE entreprise_id = 4')).rows;
@@ -50,13 +49,14 @@ app.get('/entreprise/dashboard', async (req, res) => {
         res.render('dashboard', { missions, stats: resStats.rows });
     } catch (err) {
         console.error(err);
-        res.status(500).send("Erreur Dashboard : Vérifiez que la colonne date_evaluation existe.");
+        res.status(500).send("Erreur Dashboard : Assurez-vous que la colonne date_evaluation existe dans Railway.");
     }
 });
 
+// API FORFY
 app.get('/api/forfy-message', (req, res) => {
-    res.json({ message: "Je suis Forfy ! Prêt à propulser votre établissement ?" });
+    res.json({ message: "Bienvenue chez Forfeo Canada ! Comment puis-je vous aider ?" });
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`🚀 Serveur actif sur ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Forfeo Canada opérationnel sur le port ${PORT}`));
