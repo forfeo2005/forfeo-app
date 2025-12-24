@@ -2,50 +2,159 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard | <%= user.nom %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Lab | <%= user.nom %></title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; background: #f9f9f9; }
-        .container { max-width: 1000px; margin: 50px auto; background: #fff; padding: 30px; border-radius: 10px; }
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 20px; }
-        .admin-btn { background: #fff5f5; color: #e53e3e; border: 1px solid #fed7d7; padding: 5px 10px; border-radius: 5px; text-decoration: none; font-weight: bold; }
-        .btn-buy { background: #000; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        :root { --primary: #00aaff; --dark: #050505; --glass: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.08); }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--dark); color: white; overflow-x: hidden; }
+
+        /* Loader Scanner Futuriste */
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
+        .scanner { width: 280px; height: 2px; background: var(--primary); box-shadow: 0 0 30px var(--primary); animation: scan 2.5s infinite ease-in-out; }
+        @keyframes scan { 0%, 100% { transform: translateY(-70px); opacity: 0.1; } 50% { transform: translateY(70px); opacity: 1; } }
+
+        nav { position: fixed; top: 0; width: 100%; padding: 20px; display: flex; justify-content: center; gap: 40px; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 1000; border-bottom: 1px solid var(--border); }
+        nav a { color: white; text-decoration: none; font-weight: 500; font-size: 13px; letter-spacing: 1px; opacity: 0.6; transition: 0.3s; }
+        nav a:hover { opacity: 1; color: var(--primary); }
+        .admin-tag { color: #ff4d4d !important; border: 1px solid rgba(255, 77, 77, 0.3); padding: 4px 10px; border-radius: 5px; background: rgba(255, 77, 77, 0.05); }
+
+        .container { max-width: 1200px; margin: 120px auto 60px; padding: 0 20px; }
+        
+        /* Header Dashboard */
+        .welcome-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; }
+        .welcome-header h1 { font-size: 3rem; margin: 0; font-weight: 800; background: linear-gradient(to right, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 50px; }
+        .stat-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 20px; padding: 30px; text-align: center; transition: 0.3s; }
+        .stat-card:hover { border-color: var(--primary); transform: translateY(-5px); }
+        .stat-card p { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.5; margin: 0 0 10px 0; }
+        .stat-card h2 { font-size: 2.5rem; margin: 0; color: #fff; }
+        
+        /* Progress Bar Animation */
+        .progress-box { width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-top: 15px; overflow: hidden; }
+        .progress-fill { width: 0%; height: 100%; background: var(--primary); box-shadow: 0 0 15px var(--primary); transition: width 2s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Quick Actions Grid */
+        .actions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 60px; }
+        .action-card { background: var(--glass); border: 1px solid var(--border); border-radius: 20px; padding: 40px 20px; text-align: center; transition: 0.3s; cursor: pointer; text-decoration: none; color: white; }
+        .action-card:hover { background: rgba(255,255,255,0.06); border-color: var(--primary); }
+        .action-card h3 { margin: 0 0 10px 0; font-size: 1.2rem; }
+        .action-card span { color: var(--primary); font-size: 13px; font-weight: 600; }
+
+        /* Missions Table */
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .btn-buy { background: var(--primary); color: white; border: none; padding: 14px 25px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(0, 170, 255, 0.2); }
+        .btn-buy:hover { filter: brightness(1.2); transform: scale(1.05); }
+
+        .table-container { background: var(--glass); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--primary); background: rgba(255,255,255,0.02); }
+        td { padding: 20px; border-top: 1px solid var(--border); font-size: 14px; }
+        .status-tag { background: rgba(0, 255, 136, 0.1); color: #00ff88; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Bonjour, <%= user.nom %></h1>
-            <div>
-                <% if (user.id === 4) { %>
-                    <a href="/admin" class="admin-btn">⚙️ Administration</a>
-                <% } %>
-                <a href="/business-plans" style="margin-left: 15px; text-decoration: none; color: #666;">Nos Offres</a>
-            </div>
-        </header>
 
-        <div style="margin: 40px 0; display: flex; justify-content: space-between; align-items: center;">
-            <h2>Suivi des Missions</h2>
+    <div id="loader"><div class="scanner"></div><p style="margin-top: 50px; letter-spacing: 6px; font-size: 10px; opacity: 0.5;">CHARGEMENT DES DONNÉES...</p></div>
+
+    <nav>
+        <a href="/">ACCUEIL</a>
+        <a href="/business-plans">NOS OFFRES</a>
+        <% if (user.id === 4) { %>
+            <a href="/admin" class="admin-tag">SYSTÈME ADMIN</a>
+        <% } %>
+        <a href="/" style="opacity:0.4;">DÉCONNEXION</a>
+    </nav>
+
+    <div class="container">
+        <div class="welcome-header">
+            <div>
+                <p style="color:var(--primary); font-weight:bold; letter-spacing:2px; margin-bottom:5px;">FORFEO LAB v2.5</p>
+                <h1>Bonjour, <%= user.nom %></h1>
+            </div>
+            <div style="text-align: right; opacity:0.5; font-size: 12px;">ID SESSION: #<%= user.id %>00X25</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <p>Score Forfeo</p>
+                <h2><%= user.score %>/10</h2>
+                <div class="progress-box"><div class="progress-fill" style="width: <%= (user.score/10)*100 %>%"></div></div>
+            </div>
+            <div class="stat-card">
+                <p>Audits Disponibles</p>
+                <h2><%= user.missions_dispo %></h2>
+                <div style="margin-top:15px; font-size:12px; opacity:0.4;">Prochain renouvellement: 01/01/2026</div>
+            </div>
+            <div class="stat-card">
+                <p>Plan Actif</p>
+                <h2 style="color: var(--primary);"><%= user.plan %></h2>
+                <div style="margin-top:15px; font-size:12px; opacity:0.4;">Statut: Certifié</div>
+            </div>
+        </div>
+
+        <div class="actions-grid">
+            <a href="/survey-qualite" class="action-card">
+                <h3>Évaluer</h3>
+                <span>Lancer un audit →</span>
+            </a>
+            <a href="/survey-experience" class="action-card">
+                <h3>Documenter</h3>
+                <span>Rédiger le rapport →</span>
+            </a>
+            <a href="/survey-satisfaction" class="action-card">
+                <h3>Améliorer</h3>
+                <span>Optimiser l'UX →</span>
+            </a>
+        </div>
+
+        <div class="section-header">
+            <h2 style="margin:0; font-size: 1.8rem;">Suivi des Missions d'Audit</h2>
             <button id="checkout-button" class="btn-buy">+ Acheter une Mission (150$)</button>
         </div>
 
-        <table style="width: 100%; border-collapse: collapse;">
-            <tr style="color: #888; border-bottom: 1px solid #eee;">
-                <th style="text-align: left; padding: 10px;">ID</th>
-                <th style="text-align: left; padding: 10px;">Audit</th>
-                <th style="text-align: left; padding: 10px;">Statut</th>
-            </tr>
-            <% missions.forEach(m => { %>
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td style="padding: 10px;">#<%= m.id %></td>
-                    <td style="padding: 10px;"><%= m.type_mission %></td>
-                    <td style="padding: 10px;"><span style="background: #e8f5e9; color: #2e7d32; padding: 5px 10px; border-radius: 15px; font-size: 12px;"><%= m.statut %></span></td>
-                </tr>
-            <% }) %>
-        </table>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID Mission</th>
+                        <th>Type d'Audit</th>
+                        <th>Date de Rapport</th>
+                        <th>État du Lab</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (missions && missions.length > 0) { %>
+                        <% missions.forEach(m => { %>
+                            <tr>
+                                <td style="font-family: monospace; opacity:0.7;">#F<%= m.id %>-2025</td>
+                                <td style="font-weight:600;"><%= m.type_mission %></td>
+                                <td style="opacity:0.6;"><%= new Date(m.date_creation).toLocaleDateString('fr-FR') %></td>
+                                <td><span class="status-tag"><%= m.statut %></span></td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="4" style="text-align:center; padding:50px; opacity:0.3;">Aucune mission active détectée dans le laboratoire.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    <%- include('partials/forfy') %>
 
     <script src="https://js.stripe.com/v3/"></script>
     <script>
+        // Gestion du loader
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader');
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 500);
+        });
+
+        // Stripe Checkout
         const stripe = Stripe('<%= process.env.STRIPE_PUBLISHABLE_KEY %>');
         document.getElementById('checkout-button').addEventListener('click', function () {
             fetch('/create-checkout-session', {
