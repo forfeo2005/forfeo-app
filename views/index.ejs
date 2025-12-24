@@ -2,92 +2,131 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Forfeo Lab | Excellence & Audit Canada</title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
-        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin: 3rem 0; }
-        .price { font-size: 2.2rem; font-weight: bold; color: var(--primary); margin: 10px 0; }
-        .currency { font-size: 1rem; vertical-align: super; }
+        /* Restauration du design épuré et du bouton dégradé */
+        .hero-clean {
+            padding: 100px 20px;
+            text-align: center;
+            background: #0b0f19; /* Fond sombre élégant */
+            color: white;
+        }
+        .badge-vip {
+            background: rgba(0, 82, 255, 0.2);
+            color: #00d1ff;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        .btn-gradient {
+            background: linear-gradient(90deg, #0052cc 0%, #00d1ff 100%);
+            color: white;
+            padding: 15px 35px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0, 82, 204, 0.4);
+            transition: transform 0.2s;
+        }
+        .btn-gradient:hover { transform: translateY(-3px); }
+        .link-portal {
+            display: block;
+            margin-top: 20px;
+            color: #a0aec0;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin: 50px 0;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 60px 0;
+            text-align: center;
+        }
+        .icon-box { font-size: 3rem; margin-bottom: 15px; }
     </style>
 </head>
 <body>
     <nav>
         <div class="logo">FORFEO LAB</div>
         <div class="nav-links">
-            <a href="#concept">Concept</a>
-            <a href="#tarifs">Tarifs Business</a>
-            <a href="/login" class="btn-outline">Connexion</a>
+            <a href="#concept">Le Concept</a>
+            <a href="#tarifs">Nos Offres</a>
+            <a href="/login" class="btn-outline">Connexion Admin</a>
         </div>
     </nav>
 
-    <header class="hero">
-        <div class="container text-center">
-            <h1>L'Audit de Luxe au Canada</h1>
-            <p>La plateforme d'élite connectant les établissements de prestige et les ambassadeurs de l'excellence.</p>
-            <div class="hero-btns" style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
-                <a href="/ambassadeur/inscription" class="btn-primary">Devenir Ambassadeur</a>
-                <a href="#tarifs" class="btn-outline" style="color:white; border-color:white;">Solutions Entreprises</a>
+    <header class="hero-clean">
+        <div class="container">
+            <span class="badge-vip">✨ Espace Ambassadeur Officiel</span>
+            <h1>Vivez l'expérience Forfeo en VIP</h1>
+            <p>Rejoignez notre cercle d'élite. Testez gratuitement les meilleures adresses du Québec.</p>
+            
+            <div class="hero-actions">
+                <a href="/ambassadeur/inscription" class="btn-gradient">
+                    <span>★</span> DEVENIR AMBASSADEUR
+                </a>
+                <a href="/entreprise/dashboard" class="link-portal">Déjà membre ? Accéder au portail →</a>
             </div>
         </div>
     </header>
 
-    <section id="concept" class="container reveal active">
-        <div class="portal-grid">
-            <div class="card">
-                <h2>Côté Ambassadeur</h2>
-                <p>Intégrez un réseau sélectif. Testez gratuitement des hôtels et restaurants de haut standing en échange de vos critiques constructives.</p>
-                <ul>
-                    <li>✨ Expériences VIP offertes</li>
-                    <li>💰 Système de récompenses</li>
-                </ul>
-                <a href="/ambassadeur/inscription" class="btn-primary" style="width:100%; text-align:center; margin-top:15px;">Postuler</a>
+    <section id="concept" class="container">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="icon-box">📋</div>
+                <h3>Évaluer</h3>
+                <p>Analysez objectivement la qualité des services lors de vos visites mystères.</p>
             </div>
-            <div class="card">
-                <h2>Côté Entreprise</h2>
-                <p>Mesurez votre performance réelle. Accédez à des rapports d'experts et un dashboard de suivi en temps réel.</p>
-                <ul>
-                    <li>📊 Dashboard Analytique</li>
-                    <li>🔍 Audits impartiaux</li>
-                </ul>
-                <a href="#tarifs" class="btn-primary" style="width:100%; text-align:center; margin-top:15px;">Voir les forfaits</a>
+            <div class="feature-card">
+                <div class="icon-box">✍️</div>
+                <h3>Documenter</h3>
+                <p>Rédigez des rapports détaillés pour aider les établissements à viser l'excellence.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-box">📈</div>
+                <h3>Améliorer</h3>
+                <p>Contribuez directement à l'évolution des standards du luxe au Canada.</p>
             </div>
         </div>
     </section>
 
     <section id="tarifs" class="container">
-        <h2 class="text-center">Nos Forfaits de Services</h2>
+        <h2 style="text-align: center;">Nos Forfaits Entreprise</h2>
         <div class="pricing-grid">
             <div class="card text-center">
                 <h3>Forfait Découverte</h3>
-                <div class="price">49 <span class="currency">$ CAD</span></div>
-                <p>Parfait pour débuter.</p>
-                <ul style="text-align: left; min-height: 100px;">
-                    <li>✓ 1 Audit complet / mois</li>
-                    <li>✓ Dashboard Standard</li>
-                </ul>
-                <a href="https://buy.stripe.com/6oUbJ2bPs3W79QsalUd7q02" class="btn-primary" style="display:block;">Souscrire</a>
+                <div style="font-size: 2rem; font-weight: bold;">49 <small>$ CAD</small></div>
+                <p>1 Audit complet / mois</p>
+                <a href="https://buy.stripe.com/6oUbJ2bPs3W79QsalUd7q02" class="btn-primary" style="display:block; margin-top:15px;">Souscrire</a>
             </div>
 
-            <div class="card text-center" style="border: 2px solid var(--primary);">
+            <div class="card text-center" style="border: 2px solid #0052cc;">
                 <h3>Forfait Croissance</h3>
-                <div class="price">99 <span class="currency">$ CAD</span></div>
-                <p>Le meilleur rapport qualité/prix.</p>
-                <ul style="text-align: left; min-height: 100px;">
-                    <li>✓ 3 Audits complets / mois</li>
-                    <li>✓ Support prioritaire</li>
-                </ul>
-                <a href="https://buy.stripe.com/7sY4gA06K1NZ6Eg3Xwd7q00" class="btn-primary" style="display:block;">Souscrire</a>
+                <div style="font-size: 2rem; font-weight: bold;">99 <small>$ CAD</small></div>
+                <p>3 Audits complets / mois</p>
+                <a href="https://buy.stripe.com/7sY4gA06K1NZ6Eg3Xwd7q00" class="btn-primary" style="display:block; margin-top:15px;">Souscrire</a>
             </div>
 
             <div class="card text-center">
                 <h3>Forfait Excellence</h3>
-                <div class="price">149 <span class="currency">$ CAD</span></div>
-                <p>Pour un suivi premium complet.</p>
-                <ul style="text-align: left; min-height: 100px;">
-                    <li>✓ 5 Audits complets / mois</li>
-                    <li>✓ Dashboard Analytique Avancé</li>
-                </ul>
-                <a href="https://buy.stripe.com/5kQ5kE7zcgIT0fS1Pod7q01" class="btn-primary" style="display:block;">Souscrire</a>
+                <div style="font-size: 2rem; font-weight: bold;">149 <small>$ CAD</small></div>
+                <p>5 Audits complets / mois</p>
+                <a href="https://buy.stripe.com/5kQ5kE7zcgIT0fS1Pod7q01" class="btn-primary" style="display:block; margin-top:15px;">Souscrire</a>
             </div>
         </div>
     </section>
@@ -96,5 +135,11 @@
         <div class="forfy-bubble" id="forfyText">Besoin d'aide ?</div>
         <video class="forfy-video" src="/videos/GifForfy.MP4" autoplay loop muted playsinline></video>
     </div>
+
+    <script>
+        fetch('/api/forfy-message?page=' + window.location.pathname)
+            .then(res => res.json())
+            .then(data => document.getElementById('forfyText').innerText = data.message);
+    </script>
 </body>
 </html>
