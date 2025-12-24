@@ -2,49 +2,91 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forfeo Lab | Excellence Client</title>
+    <title>Forfeo Lab | Plateforme d'Audit & Excellence</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin: 4rem 0; }
+        .price { font-size: 2.5rem; font-weight: bold; color: var(--primary); margin: 1rem 0; }
+        .badge-pro { background: #e3f2fd; color: #0052cc; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; }
+    </style>
 </head>
 <body>
     <nav>
         <div class="logo">FORFEO LAB</div>
         <div class="nav-links">
-            <a href="/">Accueil</a>
-            <a href="/entreprise/dashboard">Portail Business</a>
-            <a href="/login" class="btn-outline">Administration</a>
+            <a href="#concept">Concept</a>
+            <a href="#entreprises">Entreprises</a>
+            <a href="/ambassadeur/inscription">Ambassadeurs</a>
+            <a href="/login" class="btn-outline">Connexion Admin</a>
         </div>
     </nav>
 
     <header class="hero">
-        <div class="container reveal active">
-            <h1>L'Audit au Service du Prestige</h1>
-            <p>Rejoignez le réseau n°1 des ambassadeurs de l'excellence.</p>
+        <div class="container">
+            <h1>L'Élite de l'Audit Mystère</h1>
+            <p>Nous connectons les établissements de luxe aux experts du service pour garantir une expérience client irréprochable.</p>
             <div class="hero-btns">
-                <a href="/ambassadeur/inscription" class="btn-primary">Postuler au Programme</a>
-                <a href="/entreprise/dashboard" class="btn-outline">Espace Entreprise</a>
+                <a href="/ambassadeur/inscription" class="btn-primary">S'inscrire comme Ambassadeur</a>
+                <a href="#entreprises" class="btn-outline" style="color:white; border-color:white;">Solutions Entreprises</a>
             </div>
         </div>
     </header>
 
-    <section class="container">
+    <section id="concept" class="container reveal active">
+        <h2 class="text-center">Comment ça marche ?</h2>
         <div class="portal-grid">
-            <div class="card reveal">
-                <h2>Solutions Partenaires</h2>
-                <p>Accédez à vos indicateurs de performance en temps réel.</p>
-                <a href="/entreprise/dashboard" class="btn-primary" style="display:block; text-align:center;">Voir mon Dashboard</a>
+            <div class="card">
+                <h3><span class="badge-pro">Pour les Talents</span></h3>
+                <p>Rejoignez un réseau sélectif. Testez des établissements (Hôtels, Restaurants, Spas) gratuitement en échange de rapports d'audit rigoureux.</p>
+                <ul>
+                    <li>✨ Expériences prestigieuses offertes</li>
+                    <li>🎁 Système de récompenses Forfeo</li>
+                    <li>📈 Développez votre expertise critique</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3><span class="badge-pro">Pour les Business</span></h3>
+                <p>Obtenez une vision réelle de votre qualité de service. Nos ambassadeurs certifiés analysent chaque point de contact client.</p>
+                <ul>
+                    <li>📊 Dashboard de performance temps réel</li>
+                    <li>🔍 Audits mystères impartiaux</li>
+                    <li>🚀 Amélioration continue du ROI</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section id="entreprises" class="container">
+        <h2 class="text-center">Nos Forfaits Entreprises</h2>
+        <div class="pricing-grid">
+            <div class="card text-center">
+                <h3>Pack Découverte</h3>
+                <div class="price">49€ <small>/mois</small></div>
+                <p>Idéal pour tester notre méthode d'audit.</p>
+                <ul style="text-align: left; margin-bottom: 2rem;">
+                    <li>✓ 1 Audit mystère complet par mois</li>
+                    <li>✓ Accès Dashboard Standard</li>
+                    <li>✓ Support Forfy 24/7</li>
+                </ul>
+                <a href="VOTRE_LIEN_STRIPE_1" class="btn-primary">Choisir ce forfait</a>
             </div>
 
-            <div class="card reveal" style="border-top: 5px solid var(--primary);">
-                <h2>Devenir Ambassadeur</h2>
-                <p>Transformez vos sorties en missions d'audit exclusives.</p>
-                <a href="/ambassadeur/inscription" class="btn-primary" style="display:block; text-align:center;">Déposer ma Candidature</a>
+            <div class="card text-center" style="border: 2px solid var(--primary);">
+                <h3>Pack Excellence</h3>
+                <div class="price">149€ <small>/mois</small></div>
+                <p>Le choix des établissements de prestige.</p>
+                <ul style="text-align: left; margin-bottom: 2rem;">
+                    <li>✓ 5 Audits mystères par mois</li>
+                    <li>✓ Dashboard Analytique Avancé</li>
+                    <li>✓ Rapports PDF exportables</li>
+                </ul>
+                <a href="VOTRE_LIEN_STRIPE_2" class="btn-primary">Choisir ce forfait</a>
             </div>
         </div>
     </section>
 
     <div class="forfy-container">
-        <div class="forfy-bubble" id="forfyText">Chargement...</div>
+        <div class="forfy-bubble" id="forfyText">Besoin d'aide ?</div>
         <video class="forfy-video" src="/videos/GifForfy.MP4" autoplay loop muted playsinline></video>
     </div>
 
