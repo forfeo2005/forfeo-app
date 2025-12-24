@@ -1,124 +1,183 @@
 <!DOCTYPE html>
-<html lang="fr-CA">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Tableau de Bord - FORFEO</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Forfeo</title>
+    <link rel="stylesheet" href="/css/style.css"> <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .container { max-width: 1000px; margin: 50px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+        .stats { display: flex; gap: 20px; margin: 20px 0; }
+        .stat-card { background: #f9f9f9; padding: 15px; border-radius: 8px; flex: 1; text-align: center; border: 1px solid #ddd; }
+        .stat-card h3 { margin: 0; color: #666; font-size: 14px; }
+        .stat-card p { font-size: 24px; font-weight: bold; margin: 10px 0 0 0; color: #000; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f8f8; color: #333; }
+        .status { padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-terminée { background: #d4edda; color: #155724; }
+        .status-en-attente { background: #fff3cd; color: #856404; }
+        .status-non-payé { background: #f8d7da; color: #721c24; }
+        .btn { background: #000; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .btn:hover { background: #333; }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">FORFEO PRO</a>
-            <div class="d-flex text-white align-items-center">
-                <span class="me-3 small">Connecté : <strong><%= user.nom %></strong></span>
-                <a href="/login" class="btn btn-sm btn-outline-light rounded-pill">Déconnexion</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container py-5">
-        <div class="row mb-4 align-items-end">
-            <div class="col-md-8">
-                <h1 class="fw-bold text-dark">Tableau de Bord</h1>
-                <p class="text-muted mb-0">Bienvenue dans votre espace de gestion.</p>
-            </div>
-            <div class="col-md-4 text-md-end">
-                <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill">Plan : <%= user.plan %></span>
-            </div>
-        </div>
-
-        <div class="row g-4 mb-5">
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body text-center p-4">
-                        <i class="bi bi-trophy text-warning display-4 mb-3"></i>
-                        <h5 class="text-muted text-uppercase small fw-bold">Score Qualité</h5>
-                        <h2 class="display-5 fw-bold text-dark"><%= user.score %>/10</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body text-center p-4">
-                        <i class="bi bi-clipboard-check text-info display-4 mb-3"></i>
-                        <h5 class="text-muted text-uppercase small fw-bold">Missions Commandées</h5>
-                        <h2 class="display-5 fw-bold text-dark"><%= missions.length %></h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100 bg-dark text-white">
-                    <div class="card-body text-center p-4 d-flex flex-column justify-content-center">
-                        <h5 class="mb-3">Besoin d'un audit ?</h5>
-                        <a href="/new-mission?id=<%= user.id %>" class="btn btn-light rounded-pill fw-bold">
-                            <i class="bi bi-plus-circle me-1"></i> Nouvelle Mission
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <h4 class="fw-bold mb-3">Historique des Missions</h4>
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush">
-                    
-                    <% if (missions.length === 0) { %>
-                        <div class="list-group-item p-5 text-center text-muted">
-                            <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                            <p>Aucune mission pour le moment.<br>Cliquez sur le bouton noir pour commencer.</p>
-                        </div>
-                    <% } else { %>
-                        
-                        <% missions.forEach(function(mission) { 
-                            // --- LOGIQUE DES COULEURS (ICI !) ---
-                            let badgeClass = 'bg-secondary';
-                            let iconClass = 'bi-circle';
-                            
-                            if (mission.statut === 'En attente') {
-                                badgeClass = 'bg-warning text-dark';
-                                iconClass = 'bi-hourglass-split';
-                            } else if (mission.statut === 'En cours') {
-                                badgeClass = 'bg-info text-dark';
-                                iconClass = 'bi-play-circle';
-                            } else if (mission.statut === 'Terminée') {
-                                badgeClass = 'bg-success';
-                                iconClass = 'bi-check-circle-fill';
-                            } else if (mission.statut === 'Annulée') {
-                                badgeClass = 'bg-danger';
-                                iconClass = 'bi-x-circle';
-                            }
-                        %>
-
-                        <div class="list-group-item p-4">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h5 class="fw-bold mb-1"><%= mission.type_mission %></h5>
-                                    <p class="text-muted small mb-2">
-                                        <i class="bi bi-calendar-event me-1"></i> Prévu le : <%= mission.date_souhaitee %>
-                                    </p>
-                                    <p class="mb-0 text-muted fst-italic">"<%= mission.details %>"</p>
-                                </div>
-                                <div class="text-end">
-                                    <span class="badge <%= badgeClass %> px-3 py-2 rounded-pill d-flex align-items-center gap-2">
-                                        <i class="bi <%= iconClass %>"></i> <%= mission.statut %>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <% }); %>
-                    <% } %>
-
-                </div>
-            </div>
-        </div>
-
+<div class="container">
+    <div class="header">
+        <h1>Bienvenue, <%= user.nom %></h1>
+        <a href="/login" class="btn" style="background: #ccc; color: #333;">Déconnexion</a>
     </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <h3>Score Forfeo</h3>
+            <p><%= user.score %>/10</p>
+        </div>
+        <div class="stat-card">
+            <h3>Missions Disponibles</h3>
+            <p><%= user.missions_dispo %></p>
+        </div>
+        <div class="stat-card">
+            <h3>Plan Actuel</h3>
+            <p><%= user.plan %></p>
+        </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px;">
+        <h2>Mes Missions d'Audit</h2>
+        <a href="/new-mission?id=<%= user.id %>" class="btn">+ Nouvelle Mission (150$)</a>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Type de Mission</th>
+                <th>Date souhaitée</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (missions.length > 0) { %>
+                <% missions.forEach(mission => { %>
+                    <tr>
+                        <td>#<%= mission.id %></td>
+                        <td><%= mission.type_mission %></td>
+                        <td><%= mission.date_souhaitee %></td>
+                        <td>
+                            <span class="status status-<%= mission.statut.toLowerCase().replace(/\s/g, '-') %>">
+                                <%= mission.statut %>
+                            </span>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } else { %>
+                <tr>
+                    <td colspan="4" style="text-align: center; color: #888;">Aucune mission pour le moment.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+<div id="forfy-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; font-family: 'Segoe UI', sans-serif;">
     
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <div id="forfy-chat-box" style="display: none; background: white; width: 320px; height: 450px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); flex-direction: column; overflow: hidden; margin-bottom: 15px; border: 1px solid #eee;">
+        <div style="background: #000; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 20px;">🤖</span>
+                <span>Forfy Assistant</span>
+            </div>
+            <span onclick="toggleForfy()" style="cursor: pointer; font-size: 20px; opacity: 0.8;">&times;</span>
+        </div>
+
+        <div id="forfy-messages" style="flex: 1; padding: 15px; overflow-y: auto; background: #fdfdfd; font-size: 14px; line-height: 1.5;">
+            <div style="margin-bottom: 15px; background: #eee; padding: 10px; border-radius: 10px 10px 10px 0; max-width: 85%;">
+                Bonjour <strong><%= user.nom %></strong> ! Je suis Forfy. Je connais tout sur Forfeo. Comment puis-je vous aider ?
+            </div>
+        </div>
+
+        <div style="padding: 12px; border-top: 1px solid #eee; display: flex; background: white;">
+            <input type="text" id="forfy-input" placeholder="Posez une question..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 14px;">
+            <button onclick="askForfy()" style="background: #000; color: white; border: none; width: 35px; height: 35px; margin-left: 8px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s;">
+                ➤
+            </button>
+        </div>
+    </div>
+
+    <button onclick="toggleForfy()" style="background: #000; color: white; width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 28px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; transition: transform 0.3s;">
+        🤖
+    </button>
+</div>
+
+<script>
+    // Ouvrir/Fermer la fenêtre
+    function toggleForfy() {
+        const box = document.getElementById('forfy-chat-box');
+        box.style.display = box.style.display === 'none' ? 'flex' : 'none';
+        document.getElementById('forfy-input').focus();
+    }
+
+    // Gérer la touche "Entrée"
+    document.getElementById('forfy-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') askForfy();
+    });
+
+    async function askForfy() {
+        const input = document.getElementById('forfy-input');
+        const messages = document.getElementById('forfy-messages');
+        const question = input.value.trim();
+        
+        if (!question) return;
+
+        // 1. Afficher le message de l'utilisateur
+        messages.innerHTML += `
+            <div style="text-align: right; margin-bottom: 15px;">
+                <div style="display: inline-block; background: #000; color: white; padding: 10px; border-radius: 10px 10px 0 10px; max-width: 85%;">
+                    ${question}
+                </div>
+            </div>
+        `;
+        
+        input.value = '';
+        messages.scrollTop = messages.scrollHeight;
+
+        // 2. Afficher "Forfy réfléchit..."
+        const loadingId = 'loading-' + Date.now();
+        messages.innerHTML += `
+            <div id="${loadingId}" style="margin-bottom: 15px; color: #888; font-style: italic; font-size: 12px;">
+                Forfy est en train de réfléchir...
+            </div>
+        `;
+        messages.scrollTop = messages.scrollHeight;
+
+        try {
+            // 3. Envoyer la question au serveur
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: question })
+            });
+            
+            const data = await response.json();
+
+            // 4. Supprimer l'indicateur de chargement et afficher la réponse
+            document.getElementById(loadingId).remove();
+            messages.innerHTML += `
+                <div style="margin-bottom: 15px; background: #eee; padding: 10px; border-radius: 10px 10px 10px 0; max-width: 85%;">
+                    ${data.reply}
+                </div>
+            `;
+            messages.scrollTop = messages.scrollHeight;
+
+        } catch (error) {
+            document.getElementById(loadingId).innerHTML = "Désolé, j'ai un problème de connexion. 🔌";
+        }
+    }
+</script>
+
 </body>
 </html>
