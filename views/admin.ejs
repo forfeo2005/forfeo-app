@@ -2,21 +2,114 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Console Admin | Forfeo Lab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratoire de Contrôle | Forfeo</title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
-        body { background: #0a0a0a; color: white; font-family: sans-serif; padding: 40px; }
-        .admin-grid { display: grid; grid-template-columns: 1fr; gap: 30px; }
-        .section-card { background: #151515; border: 1px solid #333; padding: 20px; border-radius: 15px; }
-        h2 { color: #00d4ff; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; color: #888; padding: 12px; border-bottom: 2px solid #222; }
-        td { padding: 12px; border-bottom: 1px solid #222; }
-        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; background: #333; }
-        .btn-validate { background: #00d4ff; color: black; padding: 5px 12px; border-radius: 5px; text-decoration: none; font-weight: bold; }
+        :root {
+            --primary: #00d4ff;
+            --bg-dark: #0a0a0a;
+            --card-bg: #151515;
+            --text-dim: #888;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            padding: 40px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+
+        .section-card {
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        h2 {
+            color: var(--primary);
+            font-size: 1.4rem;
+            margin-top: 0;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #222;
+            padding-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 15px;
+            border-bottom: 2px solid #222;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #222;
+            font-size: 0.95rem;
+        }
+
+        .status-badge {
+            background: #222;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+
+        .status-validated {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .btn-approve {
+            background: var(--primary);
+            color: black;
+            padding: 8px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+
+        .btn-approve:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
     </style>
 </head>
 <body>
+
     <h1>🚀 Laboratoire de Contrôle Forfeo</h1>
 
     <div class="admin-grid">
@@ -35,11 +128,19 @@
                 <tbody>
                     <% ambassadeurs.forEach(amb => { %>
                     <tr>
-                        <td><%= amb.nom %></td>
+                        <td><strong><%= amb.nom %></strong></td>
                         <td><%= amb.ville %></td>
                         <td><%= amb.email %></td>
-                        <td><span class="status-badge"><%= amb.statut %></span></td>
-                        <td><a href="#" class="btn-validate">Approuver</a></td>
+                        <td>
+                            <span class="status-badge"><%= amb.statut %></span>
+                        </td>
+                        <td>
+                            <% if (amb.statut === 'En attente') { %>
+                                <a href="/admin/approuver/<%= amb.id %>" class="btn-approve">Approuver</a>
+                            <% } else { %>
+                                <span class="status-validated">✓ Approuvé</span>
+                            <% } %>
+                        </td>
                     </tr>
                     <% }) %>
                 </tbody>
@@ -63,12 +164,15 @@
                         <td>#<%= m.id %></td>
                         <td><%= m.type_mission %></td>
                         <td><%= m.details %></td>
-                        <td><strong><%= m.statut %></strong></td>
+                        <td>
+                            <strong style="color: #00d4ff;"><%= m.statut %></strong>
+                        </td>
                     </tr>
                     <% }) %>
                 </tbody>
             </table>
         </div>
     </div>
+
 </body>
 </html>
