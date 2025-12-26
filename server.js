@@ -1,62 +1,119 @@
-require('dotenv').config();
 const express = require('express');
 const { Pool } = require('pg');
-const path = require('path');
+const bcrypt = require('bcryptjs');
 const session = require('express-session');
-const app = express();
+const path = require('path');
+require('dotenv').config();
 
+const app = express();
+const port = process.env.PORT || 8080;
+
+// Configuration de la base de données PostgreSQL Render
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
 
+// Middleware
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 app.use(session({
-    secret: 'forfeo-secret-key-2025',
+    secret: 'forfeo_secret_key_2025',
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false }
+    saveUninitialized: false,
+    cookie: { secure: false } // Mettre à true si vous passez en HTTPS complet
 }));
 
-// ROUTES PUBLIQUES
-app.get('/', (req, res) => res.render('index'));
-app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
+// --- ROUTES DE NAVIGATION ---
 
-// INSCRIPTION AMBASSADEUR (Correction variable ville)
+app.get('/', (req, res) => {
+    res.render('index');
+});
+
+app.get('/ambassadeur/inscription', (req, res) => {
+    res.render('espace-ambassadeur');
+});
+
+app.get('/entreprise/inscription', (req, res) => {
+    res.render('inscription-entreprise');
+});
+
+app.get('/login', (req, res) => {
+    res.render('login');
+});
+
+// --- LOGIQUE D'INSCRIPTION AMBASSADEUR ---
+
 app.post('/signup-ambassadeur', async (req, res) => {
     const { nom, email, ville, password } = req.body;
     try {
+        const hashedPassword = await bcrypt.hash(password, 10);
         await pool.query(
-            'INSERT INTO ambassadeurs (nom, email, ville, password, statut) VALUES ($1, $2, $3, $4, $5)',
-            [nom, email, ville, password, 'En attente']
+            'INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)',
+            [nom, email, ville, hashedPassword, 'ambassadeur']
         );
-        res.render('confirmation-ambassadeur', { nom, ville });
-    } catch (err) {
-        if (err.code === '23505') return res.status(400).send("Email déjà enregistré.");
-        res.status(500).send("Erreur lors de l'inscription.");
-    }
-});
-
-// DASHBOARD ENTREPRISE (Correction erreur SQL)
-app.get('/entreprise/dashboard', async (req, res) => {
-    try {
-        const missions = (await pool.query('SELECT * FROM missions WHERE entreprise_id = 4')).rows;
-        const resStats = await pool.query('SELECT * FROM feedback_metrics WHERE entreprise_id = 4 ORDER BY id ASC');
-        res.render('dashboard', { missions, stats: resStats.rows });
+        res.redirect('/login?success=account_created');
     } catch (err) {
         console.error(err);
-        res.status(500).send("Erreur Dashboard : Assurez-vous que la colonne date_evaluation existe dans Railway.");
+        res.send("Erreur lors de l'inscription. L'email est peut-être déjà utilisé.");
     }
 });
 
-// API FORFY
-app.get('/api/forfy-message', (req, res) => {
-    res.json({ message: "Bienvenue chez Forfeo Canada ! Comment puis-je vous aider ?" });
+// --- LOGIQUE D'INSCRIPTION ENTREPRISE ---
+
+app.post('/signup-entreprise', async (req, res) => {
+    const { nom_entreprise, email, ville, password } = req.body;
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        // On enregistre l'entreprise dans la table users avec le rôle 'entreprise'
+        await pool.query(
+            'INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)',
+            [nom_entreprise, email, ville, hashedPassword, 'entreprise']
+        );
+        res.redirect('/login?success=pro_account_created');
+    } catch (err) {
+        console.error(err);
+        res.send("Erreur lors de l'inscription entreprise.");
+    }
 });
 
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`🚀 Forfeo Canada opérationnel sur le port ${PORT}`));
+// --- LOGIQUE DE CONNEXION (LOGIN) ---
+
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (result.rows.length > 0) {
+            const user = result.rows[0];
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (isMatch) {
+                req.session.userId = user.id;
+                req.session.userRole = user.role;
+                
+                // Redirection selon le rôle
+                if (user.role === 'admin') res.redirect('/admin/dashboard');
+                else if (user.role === 'entreprise') res.redirect('/entreprise/dashboard');
+                else res.redirect('/ambassadeur/dashboard');
+            } else {
+                res.send("Mot de passe incorrect.");
+            }
+        } else {
+            res.send("Utilisateur non trouvé.");
+        }
+    } catch (err) {
+        console.error(err);
+        res.send("Erreur de connexion.");
+    }
+});
+
+// --- LOGOUT ---
+app.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/');
+});
+
+// Lancement du serveur
+app.listen(port, () => {
+    console.log(`🚀 Forfeo Canada opérationnel sur le port ${port}`);
+});
