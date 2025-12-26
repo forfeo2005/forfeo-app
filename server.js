@@ -8,12 +8,13 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 8080;
 
+// Connexion à la base de données Render
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
 
-// INITIALISATION DES TABLES ET ADMIN
+// Initialisation automatique des tables
 const initDb = async () => {
     try {
         await pool.query(`
@@ -35,17 +36,23 @@ const initDb = async () => {
                 date_envoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        // Promotion automatique de votre compte
+        // Promotion de votre compte admin
         await pool.query("UPDATE users SET role = 'admin' WHERE email = $1", ['forfeo2005@gmail.com']);
-        console.log("✅ Système Forfeo prêt.");
+        console.log("✅ Système initialisé.");
     } catch (err) { console.error(err); }
 };
 initDb();
 
+// Configuration Middleware
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
-app.use(session({ secret: 'forfeo_secret_2025', resave: false, saveUninitialized: false }));
+app.use(session({
+    secret: 'forfeo_secure_2025',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false }
+}));
 
 // --- ROUTES DE NAVIGATION ---
 app.get('/', (req, res) => res.render('index'));
@@ -53,14 +60,14 @@ app.get('/login', (req, res) => res.render('login'));
 app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
 app.get('/entreprise/inscription', (req, res) => res.render('inscription-entreprise'));
 
-// --- LOGIQUE D'INSCRIPTION (CORRECTION DES ERREURS CANNOT POST) ---
+// --- LOGIQUE D'INSCRIPTION ---
 app.post('/signup-ambassadeur', async (req, res) => {
     const { nom, email, ville, password } = req.body;
     try {
         const hash = await bcrypt.hash(password, 10);
         await pool.query('INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)', [nom, email, ville, hash, 'ambassadeur']);
-        res.redirect('/login?success=created');
-    } catch (err) { res.send("Erreur inscription ambassadeur"); }
+        res.redirect('/login');
+    } catch (err) { res.send("Erreur d'inscription."); }
 });
 
 app.post('/signup-entreprise', async (req, res) => {
@@ -68,8 +75,8 @@ app.post('/signup-entreprise', async (req, res) => {
     try {
         const hash = await bcrypt.hash(password, 10);
         await pool.query('INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)', [nom_entreprise, email, ville, hash, 'entreprise']);
-        res.redirect('/login?success=created');
-    } catch (err) { res.send("Erreur inscription entreprise"); }
+        res.redirect('/login');
+    } catch (err) { res.send("Erreur d'inscription entreprise."); }
 });
 
 // --- CONNEXION ---
@@ -86,7 +93,7 @@ app.post('/login', async (req, res) => {
             return res.redirect('/ambassadeur/dashboard');
         }
         res.send("Email ou mot de passe incorrect.");
-    } catch (err) { res.send("Erreur serveur lors de la connexion."); }
+    } catch (err) { res.status(500).send("Erreur serveur."); }
 });
 
 // --- DASHBOARDS ---
@@ -103,7 +110,7 @@ app.get('/entreprise/dashboard', async (req, res) => {
         const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1", [req.session.userId]);
         const rapports = await pool.query(`SELECT r.*, m.titre, u.nom as ambassadeur FROM rapports r JOIN missions m ON r.mission_id = m.id JOIN users u ON r.ambassadeur_id = u.id WHERE m.entreprise_id = $1`, [req.session.userId]);
         res.render('entreprise-dashboard', { missions: missions.rows, rapports: rapports.rows });
-    } catch (err) { res.status(500).send("Erreur Entreprise"); }
+    } catch (err) { res.status(500).send("Erreur Dashboard Entreprise"); }
 });
 
 app.get('/ambassadeur/dashboard', async (req, res) => {
@@ -137,4 +144,4 @@ app.post('/admin/approuver', async (req, res) => {
 });
 
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
-app.listen(port, () => console.log(`🚀 Forfeo actif sur port ${port}`));
+app.listen(port, () => console.log(`🚀 Port ${port} actif`));
