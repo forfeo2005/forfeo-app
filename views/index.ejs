@@ -5,146 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FORFEO LAB - L'Élite de l'Audit</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2563eb; --dark: #0f172a; --gold: #f59e0b; }
-        body { background-color: #ffffff; color: #000000; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .navbar { background: white; border-bottom: 1px solid #e2e8f0; padding: 15px 0; }
-        .navbar-brand { font-weight: 800; color: var(--primary) !important; }
-        .btn-premium { background: var(--primary); color: white; border: none; border-radius: 50px; font-weight: 700; padding: 12px 30px; }
-        .hero-section { padding: 120px 0 80px; background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); }
-        .feature-icon { font-size: 2rem; color: var(--primary); margin-bottom: 1rem; }
-        .card-plan { border-radius: 24px; border: 1px solid #e2e8f0; transition: 0.3s; background: white; height: 100%; }
-        .card-plan:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .ambassador-badge { background: #fef3c7; color: #92400e; padding: 5px 15px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .hero { padding: 100px 0; background: #f8fafc; }
+        .card-plan { border-radius: 20px; border: 1px solid #e2e8f0; transition: 0.3s; }
+        .card-plan.featured { border: 2px solid #2563eb; transform: scale(1.05); }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg fixed-top shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="/">FORFEO LAB</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center gap-3">
-                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="#forfaits">Nos Forfaits</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="#ambassadeur">Devenir Ambassadeur</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="/login">Portail</a></li>
-                    <li class="nav-item"><a href="/ambassadeur/inscription" class="btn btn-premium">Rejoindre l'Élite</a></li>
-                </ul>
+            <a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a>
+            <div class="ms-auto">
+                <a href="/login" class="btn btn-outline-dark rounded-pill me-2">Connexion</a>
+                <a href="/entreprise/inscription" class="btn btn-primary rounded-pill">Essai Gratuit</a>
             </div>
         </div>
     </nav>
 
-    <header class="hero-section text-center">
+    <header class="hero text-center">
         <div class="container">
-            <span class="ambassador-badge mb-3 d-inline-block text-uppercase">Réseau d'auditeurs VIP</span>
-            <h1 class="display-3 fw-800 mb-4">L'excellence mérite un <span class="text-primary">regard expert.</span></h1>
-            <p class="lead text-muted mb-5 mx-auto" style="max-width: 700px;">
-                FORFEO LAB connecte les établissements les plus prestigieux avec une communauté d'ambassadeurs sélectionnés pour leur sens du détail et leur exigence.
-            </p>
-            <div class="d-flex justify-content-center gap-3">
-                <a href="/entreprise/inscription" class="btn btn-dark btn-lg rounded-pill px-4">Je suis une entreprise</a>
-                <a href="/ambassadeur/inscription" class="btn btn-primary btn-lg rounded-pill px-4">Je suis un ambassadeur</a>
-            </div>
+            <h1 class="display-4 fw-bold mb-4">Mesurez l'excellence de votre service.</h1>
+            <p class="lead text-muted mb-5">Commandez votre premier audit gratuitement et découvrez la puissance de FORFEO LAB.</p>
         </div>
     </header>
 
-    <section id="ambassadeur" class="py-5">
+    <section id="forfaits" class="py-5">
         <div class="container">
-            <div class="row align-items-center mb-5">
-                <div class="col-lg-6">
-                    <h2 class="fw-800 mb-4">C'est quoi être un <span class="text-primary">Ambassadeur Forfeo ?</span></h2>
-                    <p class="text-muted">Un ambassadeur n'est pas un simple client. C'est un partenaire stratégique de l'excellence. Vous êtes l'œil critique qui permet aux entreprises de se surpasser.</p>
-                    
-                    <ul class="list-unstyled mt-4">
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="bi bi-check-circle-fill text-primary me-3 mt-1"></i>
-                            <div><strong>Expériences Privilégiées :</strong> Accédez à des établissements de renom et testez leurs services en avant-première.</div>
-                        </li>
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="bi bi-check-circle-fill text-primary me-3 mt-1"></i>
-                            <div><strong>Impact Réel :</strong> Vos rapports détaillés influencent directement la stratégie de qualité des gérants.</div>
-                        </li>
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="bi bi-check-circle-fill text-primary me-3 mt-1"></i>
-                            <div><strong>Récompenses Exclusives :</strong> Chaque audit complété vous donne droit à des avantages (repas offerts, accès VIP, cadeaux).</div>
-                        </li>
-                    </ul>
+            <div class="row g-4 align-items-center">
+                <div class="col-md-4">
+                    <div class="card card-plan p-4 text-center">
+                        <h3 class="fw-bold">Découverte</h3>
+                        <div class="display-6 fw-bold my-3 text-success">GRATUIT</div>
+                        <p class="small text-muted mb-4">Testez notre service sans engagement.</p>
+                        <ul class="list-unstyled mb-4 small">
+                            <li>✓ 1 Mission d'audit offerte</li>
+                            <li>✓ Rapport d'ambassadeur détaillé</li>
+                        </ul>
+                        <a href="/entreprise/inscription" class="btn btn-dark w-100 rounded-pill">Commander ma mission</a>
+                    </div>
                 </div>
-                <div class="col-lg-5 offset-lg-1">
-                    <div class="p-5 bg-light rounded-5 shadow-sm">
-                        <h4 class="fw-bold mb-3 text-center">Comment ça marche ?</h4>
-                        <div class="timeline small">
-                            <div class="mb-4">
-                                <span class="badge bg-primary rounded-circle mb-2">1</span>
-                                <h6 class="fw-bold">Inscrivez-vous</h6>
-                                <p>Rejoignez la plateforme et créez votre profil d'auditeur.</p>
-                            </div>
-                            <div class="mb-4">
-                                <span class="badge bg-primary rounded-circle mb-2">2</span>
-                                <h6 class="fw-bold">Postulez aux Audits</h6>
-                                <p>Choisissez les missions disponibles dans votre ville.</p>
-                            </div>
-                            <div>
-                                <span class="badge bg-primary rounded-circle mb-2">3</span>
-                                <h6 class="fw-bold">Évaluez & Gagnez</h6>
-                                <p>Remplissez votre rapport après votre visite et profitez de votre récompense.</p>
-                            </div>
-                        </div>
+                <div class="col-md-4">
+                    <div class="card card-plan featured p-4 text-center">
+                        <div class="badge bg-primary mb-2 rounded-pill">PLUS POPULAIRE</div>
+                        <h3 class="fw-bold">Croissance</h3>
+                        <div class="display-6 fw-bold my-3 text-primary">39$/mois</div>
+                        <p class="small text-muted mb-4">Pour une qualité irréprochable toute l'année.</p>
+                        <ul class="list-unstyled mb-4 small">
+                            <li>✓ Audits illimités</li>
+                            <li>✓ Support prioritaire 24/7</li>
+                        </ul>
+                        <a href="https://buy.stripe.com/aFa3cwbPs3W7aUw8dMd7q04" class="btn btn-primary w-100 rounded-pill">S'abonner</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-plan p-4 text-center">
+                        <h3 class="fw-bold">Excellence</h3>
+                        <div class="display-6 fw-bold my-3 text-primary">Annuel</div>
+                        <p class="small text-muted mb-4">Économisez avec notre forfait annuel d'élite.</p>
+                        <ul class="list-unstyled mb-4 small">
+                            <li>✓ Audits illimités</li>
+                            <li>✓ Gestion multi-sites</li>
+                        </ul>
+                        <a href="https://buy.stripe.com/28E00kbPs50bd2E51Ad7q05" class="btn btn-outline-primary w-100 rounded-pill">Choisir l'annuel</a>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-
-    <section id="forfaits" class="py-5 bg-light">
-        <div class="container text-center">
-            <h2 class="fw-bold mb-2">Solutions pour Entreprises</h2>
-            <p class="text-muted mb-5">Mesurez la satisfaction de vos clients avec précision.</p>
-            <div class="row g-4 justify-content-center">
-                <div class="col-md-4">
-                    <div class="card card-plan p-4 border-0 shadow-sm">
-                        <h3 class="h5 fw-bold">Découverte</h3>
-                        <div class="display-5 fw-bold my-3 text-primary">49$</div>
-                        <ul class="list-unstyled mb-4 small">
-                            <li class="mb-2">1 Audit ciblé</li>
-                            <li class="mb-2">Rapport complet</li>
-                        </ul>
-                        <a href="/entreprise/inscription" class="btn btn-outline-primary rounded-pill mt-auto">Commencer</a>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card card-plan p-4 border-primary shadow">
-                        <h3 class="h5 fw-bold">Croissance</h3>
-                        <div class="display-5 fw-bold my-3 text-primary">99$</div>
-                        <ul class="list-unstyled mb-4 small">
-                            <li class="mb-2">Audits mensuels illimités</li>
-                            <li class="mb-2">Support prioritaire</li>
-                        </ul>
-                        <a href="/entreprise/inscription" class="btn btn-primary rounded-pill mt-auto">Le plus populaire</a>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card card-plan p-4 border-0 shadow-sm">
-                        <h3 class="h5 fw-bold">Excellence</h3>
-                        <div class="display-5 fw-bold my-3 text-primary">149$</div>
-                        <ul class="list-unstyled mb-4 small">
-                            <li class="mb-2">Gestion multi-établissements</li>
-                            <li class="mb-2">Tableau de bord expert</li>
-                        </ul>
-                        <a href="/entreprise/inscription" class="btn btn-outline-primary rounded-pill mt-auto">S'équiper</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <footer class="py-5 text-center border-top">
-        <p class="text-muted small">© 2025 FORFEO LAB - Tous droits réservés.</p>
-    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
