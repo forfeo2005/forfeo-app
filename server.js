@@ -8,10 +8,47 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 8080;
 
+// Configuration de la base de données PostgreSQL Render
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
+
+// --- INITIALISATION AUTOMATIQUE (INDISPENSABLE POUR VERSION FREE) ---
+const initDb = async () => {
+    try {
+        // Création des tables si elles n'existent pas
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                nom TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                ville TEXT,
+                password TEXT NOT NULL,
+                role TEXT DEFAULT 'ambassadeur',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS missions (
+                id SERIAL PRIMARY KEY,
+                entreprise_id INTEGER REFERENCES users(id),
+                titre TEXT NOT NULL,
+                description TEXT,
+                recompense TEXT,
+                statut TEXT DEFAULT 'disponible',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // AUTO-PROMOTION ADMIN POUR VOTRE COMPTE
+        const monEmailAdmin = 'forfeo2005@gmail.com'; 
+        await pool.query("UPDATE users SET role = 'admin' WHERE email = $1", [monEmailAdmin]);
+        
+        console.log("✅ Système Forfeo initialisé. Admin reconnu :", monEmailAdmin);
+    } catch (err) {
+        console.error("❌ Erreur d'initialisation :", err);
+    }
+};
+initDb();
 
 // Middleware
 app.set('view engine', 'ejs');
@@ -30,9 +67,9 @@ app.get('/login', (req, res) => res.render('login'));
 app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
 app.get('/entreprise/inscription', (req, res) => res.render('inscription-entreprise'));
 
-// --- ROUTE ADMIN (SÉCURISÉE) ---
+// --- PORTAIL ADMIN (SÉCURISÉ) ---
 app.get('/admin/dashboard', async (req, res) => {
-    if (req.session.userRole !== 'admin') {
+    if (!req.session.userId || req.session.userRole !== 'admin') {
         return res.redirect('/login');
     }
     try {
@@ -43,12 +80,34 @@ app.get('/admin/dashboard', async (req, res) => {
             ambassadeurs: ambassadeurs.rows 
         });
     } catch (err) {
-        console.error(err);
-        res.send("Erreur lors du chargement du dashboard admin.");
+        res.status(500).send("Erreur de chargement du dashboard admin.");
     }
 });
 
-// --- LOGIN AVEC REDIRECTION PAR RÔLE ---
+// --- PORTAIL ENTREPRISE (À VENIR) ---
+app.get('/entreprise/dashboard', async (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'entreprise') {
+        return res.redirect('/login');
+    }
+    res.render('entreprise-dashboard'); 
+});
+
+// --- LOGIQUE D'INSCRIPTION ---
+app.post('/signup-entreprise', async (req, res) => {
+    const { nom_entreprise, email, ville, password } = req.body;
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await pool.query(
+            'INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)',
+            [nom_entreprise, email, ville, hashedPassword, 'entreprise']
+        );
+        res.redirect('/login?success=pro_account_created');
+    } catch (err) {
+        res.send("Erreur lors de l'inscription.");
+    }
+});
+
+// --- LOGIQUE DE CONNEXION ---
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -59,6 +118,8 @@ app.post('/login', async (req, res) => {
             if (isMatch) {
                 req.session.userId = user.id;
                 req.session.userRole = user.role;
+                
+                // Redirection intelligente selon le rôle
                 if (user.role === 'admin') res.redirect('/admin/dashboard');
                 else if (user.role === 'entreprise') res.redirect('/entreprise/dashboard');
                 else res.redirect('/ambassadeur/dashboard');
@@ -67,4 +128,9 @@ app.post('/login', async (req, res) => {
     } catch (err) { res.send("Erreur de connexion."); }
 });
 
-app.listen(port, () => console.log(`🚀 Forfeo sur port ${port}`));
+app.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/');
+});
+
+app.listen(port, () => console.log(`🚀 Serveur actif sur port ${port}`));
