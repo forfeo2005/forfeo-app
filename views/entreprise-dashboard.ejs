@@ -2,50 +2,83 @@
 <html lang="fr-CA">
 <head>
     <meta charset="UTF-8">
-    <title>FORFEO LAB - Dashboard Entreprise</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FORFEO LAB - Tableau de Bord Pro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #f8fafc; font-family: 'Inter', sans-serif; padding: 40px; }
-        .card { border-radius: 15px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .badge-note { background: #fef3c7; color: #92400e; font-weight: bold; }
+        :root { --primary: #2563eb; --bg: #f8fafc; }
+        body { background-color: var(--bg); font-family: 'Plus Jakarta Sans', sans-serif; }
+        .navbar-pro { background: white; border-bottom: 1px solid #e2e8f0; padding: 15px 0; mb-5; }
+        .card-stat { border-radius: 20px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .mission-item { background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #e2e8f0; }
+        .badge-premium { background: #dcfce7; color: #166534; font-weight: bold; border-radius: 50px; padding: 5px 15px; }
+        .badge-free { background: #fef3c7; color: #92400e; font-weight: bold; border-radius: 50px; padding: 5px 15px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="d-flex justify-content-between mb-5 align-items-center">
-            <h2 class="fw-bold text-primary">Tableau de Bord Pro</h2>
-            <a href="/logout" class="btn btn-outline-danger btn-sm">Déconnexion</a>
-        </div>
 
-        <div class="row">
-            <div class="col-md-5">
-                <button class="btn btn-primary w-100 mb-4 py-2 fw-bold shadow" data-bs-toggle="modal" data-bs-target="#modalMission">
-                    CRÉER UN NOUVEL AUDIT
-                </button>
-                <h5 class="fw-bold mb-3 text-muted small uppercase">Mes Missions</h5>
-                <% missions.forEach(m => { %>
-                    <div class="card p-3 bg-white">
-                        <div class="d-flex justify-content-between">
-                            <strong><%= m.titre %></strong>
+    <nav class="navbar navbar-pro shadow-sm mb-5">
+        <div class="container d-flex justify-content-between align-items-center">
+            <h4 class="fw-bold text-primary mb-0">Tableau de Bord Pro</h4>
+            <div class="d-flex align-items-center gap-3">
+                <% if (isPremium) { %>
+                    <span class="badge badge-premium"><i class="bi bi-gem me-1"></i> Premium</span>
+                <% } else { %>
+                    <span class="badge badge-free"><i class="bi bi-star me-1"></i> Essai Gratuit</span>
+                <% } %>
+                <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-4 fw-bold">Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="d-grid mb-4">
+                    <button class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalMission">
+                        <i class="bi bi-plus-circle me-2"></i>CRÉER UN NOUVEL AUDIT
+                    </button>
+                </div>
+
+                <h5 class="fw-bold mb-3">Mes Missions</h5>
+                <div class="mission-list">
+                    <% if (missions.length === 0) { %>
+                        <div class="text-center p-4 bg-white rounded-4 border border-dashed">
+                            <p class="text-muted small mb-0">Aucune mission créée pour le moment.</p>
+                        </div>
+                    <% } %>
+                    <% missions.forEach(m => { %>
+                        <div class="mission-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="fw-bold mb-1"><%= m.titre %></h6>
+                                <small class="text-muted">Statut : <%= m.statut %></small>
+                            </div>
                             <span class="badge bg-light text-primary border"><%= m.statut %></span>
                         </div>
-                    </div>
-                <% }) %>
+                    <% }) %>
+                </div>
             </div>
 
-            <div class="col-md-7">
-                <h5 class="fw-bold mb-3 text-muted small uppercase">Rapports d'Audits Reçus</h5>
+            <div class="col-lg-7">
+                <h5 class="fw-bold mb-3">Rapports d'Audits Reçus</h5>
                 <% if (rapports.length === 0) { %>
-                    <div class="card p-5 text-center bg-white text-muted">Aucun rapport reçu pour le moment.</div>
+                    <div class="card card-stat p-5 text-center bg-white">
+                        <i class="bi bi-file-earmark-text display-4 text-light mb-3"></i>
+                        <p class="text-muted">Aucun rapport reçu pour le moment.</p>
+                    </div>
                 <% } %>
                 <% rapports.forEach(r => { %>
-                    <div class="card p-4 bg-white">
-                        <div class="d-flex justify-content-between mb-2">
-                            <h6 class="fw-bold mb-0"><%= r.titre %></h6>
-                            <span class="badge badge-note">Note : <%= r.note %>/5</span>
+                    <div class="card card-stat p-4 mb-3 bg-white">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="fw-bold text-primary mb-1"><%= r.titre %></h6>
+                                <small class="text-muted">Par l'ambassadeur : <strong><%= r.ambassadeur %></strong></small>
+                            </div>
+                            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Note : <%= r.note %>/5</span>
                         </div>
-                        <p class="small text-dark mt-2 mb-3"><%= r.contenu %></p>
-                        <div class="small text-muted border-top pt-2">Audit par : <strong><%= r.ambassadeur %></strong></div>
+                        <p class="small text-dark mb-0 bg-light p-3 rounded-3"><%= r.contenu %></p>
                     </div>
                 <% }) %>
             </div>
@@ -53,16 +86,31 @@
     </div>
 
     <div class="modal fade" id="modalMission" tabindex="-1">
-        <div class="modal-dialog">
-            <form action="/creer-mission" method="POST" class="modal-content p-4 rounded-4 shadow">
-                <h5 class="fw-bold mb-3 text-primary">Nouvelle Mission</h5>
-                <input type="text" name="titre" class="form-control mb-2" placeholder="Titre de la mission (ex: Audit Resto)" required>
-                <textarea name="description" class="form-control mb-2" placeholder="Instructions détaillées" rows="4" required></textarea>
-                <input type="text" name="recompense" class="form-control mb-3" placeholder="Récompense (ex: Repas offert)" required>
-                <button class="btn btn-primary w-100 py-2 fw-bold">PUBLIER</button>
+        <div class="modal-dialog modal-dialog-centered">
+            <form action="/creer-mission" method="POST" class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header bg-primary text-white border-0 py-3">
+                    <h5 class="modal-title fw-bold">Configurer un audit</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Titre de la mission</label>
+                        <input type="text" name="titre" class="form-control bg-light border-0" placeholder="Ex: Audit Qualité Service" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Description et instructions</label>
+                        <textarea name="description" class="form-control bg-light border-0" rows="4" placeholder="Détaillez ce que l'ambassadeur doit vérifier..." required></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Récompense promise</label>
+                        <input type="text" name="recompense" class="form-control bg-light border-0" placeholder="Ex: Un repas complet offert" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold rounded-pill">PUBLIER L'AUDIT</button>
+                </div>
             </form>
         </div>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
