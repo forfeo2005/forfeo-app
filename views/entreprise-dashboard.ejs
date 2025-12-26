@@ -2,35 +2,46 @@
 <html lang="fr-CA">
 <head>
     <meta charset="UTF-8">
-    <title>FORFEO - Espace Entreprise</title>
+    <title>FORFEO LAB - Dashboard Entreprise</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>body { background: #f8fafc; padding: 40px; }</style>
+    <style>
+        body { background-color: #f8fafc; font-family: 'Inter', sans-serif; padding: 40px; }
+        .card { border-radius: 15px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    </style>
 </head>
 <body>
     <div class="container">
-        <div class="d-flex justify-content-between mb-5">
-            <h2 class="fw-bold text-primary">Tableau de Bord Pro</h2>
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <h2 class="fw-bold text-primary">Tableau de Bord Entreprise</h2>
             <a href="/logout" class="btn btn-outline-danger btn-sm">Déconnexion</a>
         </div>
 
         <div class="row">
             <div class="col-md-5">
-                <button class="btn btn-primary w-100 mb-4" data-bs-toggle="modal" data-bs-target="#modalMission">Nouvel Audit</button>
-                <h5>Mes Missions</h5>
+                <button class="btn btn-primary w-100 mb-4 fw-bold py-2" data-bs-toggle="modal" data-bs-target="#modalMission">
+                    CRÉER UN NOUVEL AUDIT
+                </button>
+                <h5 class="fw-bold mb-3">Mes Missions</h5>
                 <% missions.forEach(m => { %>
-                    <div class="card p-2 mb-2 small"><%= m.titre %> - <strong><%= m.statut %></strong></div>
+                    <div class="card p-3 mb-2 bg-white small">
+                        <strong><%= m.titre %></strong> - Status: <%= m.statut %>
+                    </div>
                 <% }) %>
             </div>
+
             <div class="col-md-7">
-                <h5>Rapports d'Audit Reçus</h5>
+                <h5 class="fw-bold mb-3">Rapports d'Audits Reçus</h5>
+                <% if (rapports.length === 0) { %>
+                    <div class="card p-5 text-center bg-white text-muted small">Aucun rapport reçu pour le moment.</div>
+                <% } %>
                 <% rapports.forEach(r => { %>
-                    <div class="card p-4 mb-3 shadow-sm border-0">
+                    <div class="card p-4 mb-3 bg-white">
                         <div class="d-flex justify-content-between">
-                            <h6 class="fw-bold"><%= r.titre %></h6>
-                            <span class="badge bg-warning text-dark">Note : <%= r.note %>/5</span>
+                            <h6 class="fw-bold mb-1"><%= r.titre %></h6>
+                            <span class="badge bg-warning text-dark px-3">Note : <%= r.note %>/5</span>
                         </div>
-                        <p class="small text-muted mt-2"><%= r.contenu %></p>
-                        <div class="small fw-bold">Par : <%= r.ambassadeur %></div>
+                        <p class="small text-muted mt-2 mb-2"><%= r.contenu %></p>
+                        <div class="small fw-bold">Ambassadeur : <%= r.ambassadeur %></div>
                     </div>
                 <% }) %>
             </div>
@@ -39,12 +50,12 @@
 
     <div class="modal fade" id="modalMission" tabindex="-1">
         <div class="modal-dialog">
-            <form action="/creer-mission" method="POST" class="modal-content p-4">
-                <h5>Nouvelle Mission</h5>
-                <input type="text" name="titre" class="form-control mb-2" placeholder="Titre" required>
-                <textarea name="description" class="form-control mb-2" placeholder="Description"></textarea>
-                <input type="text" name="recompense" class="form-control mb-3" placeholder="Récompense">
-                <button class="btn btn-primary">Publier</button>
+            <form action="/creer-mission" method="POST" class="modal-content p-4 rounded-4 shadow">
+                <h5 class="fw-bold mb-3">Nouvelle Mission</h5>
+                <input type="text" name="titre" class="form-control mb-2" placeholder="Titre de la mission" required>
+                <textarea name="description" class="form-control mb-2" placeholder="Description détaillée" required></textarea>
+                <input type="text" name="recompense" class="form-control mb-3" placeholder="Récompense (ex: Repas offert)" required>
+                <button class="btn btn-primary w-100">PUBLIER</button>
             </form>
         </div>
     </div>
