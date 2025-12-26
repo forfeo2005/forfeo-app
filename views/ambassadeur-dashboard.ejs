@@ -2,56 +2,54 @@
 <html lang="fr-CA">
 <head>
     <meta charset="UTF-8">
-    <title>FORFEO - Espace Ambassadeur</title>
+    <title>FORFEO LAB - Dashboard Ambassadeur</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>body { background: #f1f5f9; font-family: 'Inter', sans-serif; padding: 30px; }</style>
+    <style>
+        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; padding: 40px; }
+        .card { border-radius: 15px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    </style>
 </head>
 <body>
     <div class="container">
-        <div class="d-flex justify-content-between mb-4">
+        <div class="d-flex justify-content-between mb-5">
             <h2 class="fw-bold">Mon Espace Ambassadeur</h2>
             <a href="/logout" class="btn btn-outline-danger btn-sm">Déconnexion</a>
         </div>
 
         <div class="row">
             <div class="col-md-6">
-                <h4 class="mb-3">Missions Disponibles</h4>
+                <h5 class="fw-bold mb-3">Audits Disponibles</h5>
                 <% missions.forEach(m => { %>
-                    <div class="card p-3 mb-2 shadow-sm border-0">
-                        <h6><%= m.titre %></h6>
+                    <div class="card p-4 mb-3 bg-white">
+                        <h6 class="fw-bold"><%= m.titre %></h6>
+                        <p class="small text-muted"><%= m.description %></p>
                         <form action="/postuler-mission" method="POST">
                             <input type="hidden" name="missionId" value="<%= m.id %>">
-                            <button class="btn btn-primary btn-sm mt-2">Postuler</button>
+                            <button class="btn btn-primary btn-sm px-4">Postuler</button>
                         </form>
                     </div>
                 <% }) %>
             </div>
 
             <div class="col-md-6">
-                <h4 class="mb-3">Mes Audits en Cours</h4>
+                <h5 class="fw-bold mb-3">Mes Candidatures & Rapports</h5>
                 <% mes_missions.forEach(m => { %>
-                    <div class="card p-3 mb-2 shadow-sm border-0">
-                        <div class="d-flex justify-content-between">
-                            <strong><%= m.titre %></strong>
+                    <div class="card p-4 mb-3 bg-white">
+                        <div class="d-flex justify-content-between mb-2">
+                            <h6 class="fw-bold mb-0"><%= m.titre %></h6>
                             <span class="badge <%= m.etat_cand === 'approuvée' ? 'bg-success' : 'bg-warning' %>"><%= m.etat_cand %></span>
                         </div>
                         <% if (m.etat_cand === 'approuvée') { %>
-                            <button class="btn btn-dark btn-sm mt-3" data-bs-toggle="modal" data-bs-target="#modalRapport<%= m.id %>">Remplir le Rapport</button>
+                            <button class="btn btn-dark btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalRapport<%= m.id %>">REMPLIR LE RAPPORT</button>
                             
                             <div class="modal fade" id="modalRapport<%= m.id %>" tabindex="-1">
                                 <div class="modal-dialog">
                                     <form action="/soumettre-rapport" method="POST" class="modal-content p-4">
-                                        <h5>Rapport d'audit : <%= m.titre %></h5>
+                                        <h5 class="fw-bold mb-3">Rapport final : <%= m.titre %></h5>
                                         <input type="hidden" name="mission_id" value="<%= m.id %>">
-                                        <div class="mb-3">
-                                            <label>Note globale (1 à 5)</label>
-                                            <input type="number" name="note" min="1" max="5" class="form-control" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label>Commentaires détaillés</label>
-                                            <textarea name="contenu" class="form-control" rows="5" required></textarea>
-                                        </div>
-                                        <button class="btn btn-success">Envoyer le rapport</button>
+                                        <input type="number" name="note" min="1" max="5" class="form-control mb-2" placeholder="Note /5" required>
+                                        <textarea name="contenu" class="form-control mb-3" rows="5" placeholder="Votre audit détaillé..." required></textarea>
+                                        <button class="btn btn-success w-100">ENVOYER</button>
                                     </form>
                                 </div>
                             </div>
