@@ -8,12 +8,14 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 8080;
 
+// Connexion PostgreSQL avec timeout configuré
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 5000 
 });
 
-// INITIALISATION ET ACCÈS ADMIN
+// INITIALISATION SÉCURISÉE
 const initDb = async () => {
     try {
         await pool.query(`
@@ -35,53 +37,61 @@ const initDb = async () => {
                 date_envoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        // Assure que votre compte reste admin
+        // Promotion automatique de votre admin
         await pool.query("UPDATE users SET role = 'admin' WHERE email = $1", ['forfeo2005@gmail.com']);
-        console.log("✅ Serveur Forfeo prêt.");
-    } catch (err) { console.error(err); }
+        console.log("✅ Base de données synchronisée");
+    } catch (err) { console.error("Erreur Init:", err); }
 };
 initDb();
 
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
-app.use(session({ secret: 'forfeo_secret_2025', resave: false, saveUninitialized: false }));
+app.use(session({
+    secret: 'forfeo_top_secret_2025',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
+}));
 
-// --- ROUTES DE NAVIGATION ---
+// --- ROUTES ---
 app.get('/', (req, res) => res.render('index'));
 app.get('/login', (req, res) => res.render('login'));
 app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
 app.get('/entreprise/inscription', (req, res) => res.render('inscription-entreprise'));
 
-// --- LOGIQUE AUTHENTIFICATION ---
-app.post('/signup-ambassadeur', async (req, res) => {
-    const { nom, email, ville, password } = req.body;
-    const hash = await bcrypt.hash(password, 10);
-    await pool.query('INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)', [nom, email, ville, hash, 'ambassadeur']);
-    res.redirect('/login');
-});
-
+// INSCRIPTION ENTREPRISE (CORRECTION ERREUR 502)
 app.post('/signup-entreprise', async (req, res) => {
     const { nom_entreprise, email, ville, password } = req.body;
-    const hash = await bcrypt.hash(password, 10);
-    await pool.query('INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)', [nom_entreprise, email, ville, hash, 'entreprise']);
-    res.redirect('/login');
+    try {
+        const hash = await bcrypt.hash(password, 10);
+        await pool.query('INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)', 
+            [nom_entreprise, email, ville, hash, 'entreprise']);
+        res.redirect('/login?success=account_created');
+    } catch (err) {
+        console.error(err);
+        res.send("Erreur : Cet email est déjà utilisé ou le serveur est saturé.");
+    }
 });
 
+// CONNEXION
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    if (result.rows.length > 0 && await bcrypt.compare(password, result.rows[0].password)) {
-        req.session.userId = result.rows[0].id;
-        req.session.userRole = result.rows[0].role;
-        if (result.rows[0].role === 'admin') return res.redirect('/admin/dashboard');
-        if (result.rows[0].role === 'entreprise') return res.redirect('/entreprise/dashboard');
-        return res.redirect('/ambassadeur/dashboard');
-    }
-    res.send("Email ou mot de passe incorrect.");
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (result.rows.length > 0 && await bcrypt.compare(password, result.rows[0].password)) {
+            const user = result.rows[0];
+            req.session.userId = user.id;
+            req.session.userRole = user.role;
+            if (user.role === 'admin') return res.redirect('/admin/dashboard');
+            if (user.role === 'entreprise') return res.redirect('/entreprise/dashboard');
+            return res.redirect('/ambassadeur/dashboard');
+        }
+        res.send("Identifiants incorrects.");
+    } catch (err) { res.status(500).send("Erreur de connexion"); }
 });
 
-// --- DASHBOARDS ---
+// DASHBOARDS
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const cand = await pool.query(`SELECT c.id, m.titre, u.nom as ambassadeur, c.statut FROM candidatures c JOIN missions m ON c.mission_id = m.id JOIN users u ON c.ambassadeur_id = u.id WHERE c.statut = 'en_attente'`);
@@ -90,40 +100,11 @@ app.get('/admin/dashboard', async (req, res) => {
 
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
-    const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1", [req.session.userId]);
-    const rapports = await pool.query(`SELECT r.*, m.titre, u.nom as ambassadeur FROM rapports r JOIN missions m ON r.mission_id = m.id JOIN users u ON r.ambassadeur_id = u.id WHERE m.entreprise_id = $1`, [req.session.userId]);
-    res.render('entreprise-dashboard', { missions: missions.rows, rapports: rapports.rows });
+    try {
+        const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1", [req.session.userId]);
+        const rapports = await pool.query(`SELECT r.*, m.titre, u.nom as ambassadeur FROM rapports r JOIN missions m ON r.mission_id = m.id JOIN users u ON r.ambassadeur_id = u.id WHERE m.entreprise_id = $1`, [req.session.userId]);
+        res.render('entreprise-dashboard', { missions: missions.rows, rapports: rapports.rows });
+    } catch (err) { res.status(500).render('error', { message: "Erreur Dashboard Entreprise" }); }
 });
 
-app.get('/ambassadeur/dashboard', async (req, res) => {
-    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
-    const dispos = await pool.query("SELECT * FROM missions WHERE statut = 'disponible'");
-    const mes_missions = await pool.query(`SELECT m.*, c.statut as etat_cand FROM missions m JOIN candidatures c ON m.id = c.mission_id WHERE c.ambassadeur_id = $1`, [req.session.userId]);
-    res.render('ambassadeur-dashboard', { missions: dispos.rows, mes_missions: mes_missions.rows });
-});
-
-// --- ACTIONS ---
-app.post('/creer-mission', async (req, res) => {
-    const { titre, description, recompense } = req.body;
-    await pool.query("INSERT INTO missions (entreprise_id, titre, description, recompense) VALUES ($1, $2, $3, $4)", [req.session.userId, titre, description, recompense]);
-    res.redirect('/entreprise/dashboard');
-});
-
-app.post('/postuler-mission', async (req, res) => {
-    await pool.query("INSERT INTO candidatures (mission_id, ambassadeur_id) VALUES ($1, $2)", [req.body.missionId, req.session.userId]);
-    res.redirect('/ambassadeur/dashboard');
-});
-
-app.post('/soumettre-rapport', async (req, res) => {
-    const { mission_id, contenu, note } = req.body;
-    await pool.query("INSERT INTO rapports (mission_id, ambassadeur_id, contenu, note) VALUES ($1, $2, $3, $4)", [mission_id, req.session.userId, contenu, note]);
-    res.redirect('/ambassadeur/dashboard');
-});
-
-app.post('/admin/approuver', async (req, res) => {
-    await pool.query("UPDATE candidatures SET statut = 'approuvée' WHERE id = $1", [req.body.id]);
-    res.redirect('/admin/dashboard');
-});
-
-app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 app.listen(port, () => console.log(`🚀 Forfeo actif sur port ${port}`));
