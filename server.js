@@ -14,10 +14,10 @@ const pool = new Pool({
     connectionTimeoutMillis: 10000 
 });
 
-// INITIALISATION ET RÉPARATION DE LA BASE DE DONNÉES
+// INITIALISATION ET RÉPARATION DE LA STRUCTURE
 const initDb = async () => {
     try {
-        // 1. Création des tables de base si elles n'existent pas
+        // 1. Création des tables de base si inexistantes
         await pool.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY, nom TEXT NOT NULL, email TEXT UNIQUE NOT NULL,
@@ -38,7 +38,7 @@ const initDb = async () => {
             );
         `);
 
-        // 2. RÉPARATION : Ajout de la colonne manquante entreprise_id si nécessaire
+        // 2. RÉPARATION : Ajout forcé de la colonne entreprise_id si elle manque
         await pool.query(`
             DO $$ 
             BEGIN 
@@ -49,15 +49,15 @@ const initDb = async () => {
             END $$;
         `);
 
-        // 3. RÉINITIALISATION ADMIN (Accès : forfeo2005@gmail.com / admin123)
-        const tempPass = await bcrypt.hash('admin123', 10);
+        // 3. MISE À JOUR ADMIN (Mot de passe : admin123)
+        const hash = await bcrypt.hash('admin123', 10);
         await pool.query(`
             INSERT INTO users (nom, email, ville, password, role) 
             VALUES ('Admin Forfeo', 'forfeo2005@gmail.com', 'Montréal', $1, 'admin')
             ON CONFLICT (email) DO UPDATE SET role = 'admin', password = $1
-        `, [tempPass]);
+        `, [hash]);
 
-        console.log("✅ Base de données réparée. Admin prêt avec le mot de passe : admin123");
+        console.log("✅ Base de données synchronisée et réparée.");
     } catch (err) { console.error("❌ Erreur d'initialisation :", err); }
 };
 initDb();
@@ -78,14 +78,14 @@ app.get('/login', (req, res) => res.render('login'));
 app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
 app.get('/entreprise/inscription', (req, res) => res.render('inscription-entreprise'));
 
-// --- LOGIQUE D'INSCRIPTION ---
+// Inscriptions
 app.post('/signup-ambassadeur', async (req, res) => {
     const { nom, email, ville, password } = req.body;
     try {
         const hash = await bcrypt.hash(password, 10);
         await pool.query('INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)', [nom, email, ville, hash, 'ambassadeur']);
         res.redirect('/login');
-    } catch (err) { res.status(500).send("Erreur d'inscription."); }
+    } catch (err) { res.status(500).send("Erreur inscription"); }
 });
 
 app.post('/signup-entreprise', async (req, res) => {
@@ -94,10 +94,10 @@ app.post('/signup-entreprise', async (req, res) => {
         const hash = await bcrypt.hash(password, 10);
         await pool.query('INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)', [nom_entreprise, email, ville, hash, 'entreprise']);
         res.redirect('/login');
-    } catch (err) { res.status(500).send("Erreur d'inscription entreprise."); }
+    } catch (err) { res.status(500).send("Erreur inscription entreprise"); }
 });
 
-// --- CONNEXION ---
+// Connexion
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -111,7 +111,7 @@ app.post('/login', async (req, res) => {
             return res.redirect('/ambassadeur/dashboard');
         }
         res.send("Email ou mot de passe incorrect.");
-    } catch (err) { res.status(500).send("Erreur serveur."); }
+    } catch (err) { res.status(500).send("Erreur de connexion"); }
 });
 
 // --- DASHBOARDS ---
@@ -119,7 +119,12 @@ app.get('/entreprise/dashboard', async (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'entreprise') return res.redirect('/login');
     try {
         const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1", [req.session.userId]);
-        const rapports = await pool.query(`SELECT r.*, m.titre, u.nom as ambassadeur FROM rapports r JOIN missions m ON r.mission_id = m.id JOIN users u ON r.ambassadeur_id = u.id WHERE m.entreprise_id = $1`, [req.session.userId]);
+        const rapports = await pool.query(`
+            SELECT r.*, m.titre, u.nom as ambassadeur 
+            FROM rapports r 
+            JOIN missions m ON r.mission_id = m.id 
+            JOIN users u ON r.ambassadeur_id = u.id 
+            WHERE m.entreprise_id = $1`, [req.session.userId]);
         res.render('entreprise-dashboard', { missions: missions.rows, rapports: rapports.rows });
     } catch (err) { res.status(500).send("Erreur lors du chargement du tableau de bord."); }
 });
@@ -133,5 +138,36 @@ app.post('/creer-mission', async (req, res) => {
     } catch (err) { res.status(500).send("Erreur création mission"); }
 });
 
+app.get('/admin/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'admin') return res.redirect('/login');
+    try {
+        const cand = await pool.query(`
+            SELECT c.id, m.titre, u.nom as ambassadeur, c.statut 
+            FROM candidatures c 
+            JOIN missions m ON c.mission_id = m.id 
+            JOIN users u ON c.ambassadeur_id = u.id 
+            WHERE c.statut = 'en_attente'`);
+        res.render('admin-dashboard', { candidatures: cand.rows });
+    } catch (err) { res.status(500).send("Erreur Admin"); }
+});
+
+app.get('/ambassadeur/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
+    try {
+        const dispos = await pool.query("SELECT * FROM missions WHERE statut = 'disponible'");
+        const mes_missions = await pool.query(`
+            SELECT m.*, c.statut as etat_cand 
+            FROM missions m 
+            JOIN candidatures c ON m.id = c.mission_id 
+            WHERE c.ambassadeur_id = $1`, [req.session.userId]);
+        res.render('ambassadeur-dashboard', { missions: dispos.rows, mes_missions: mes_missions.rows });
+    } catch (err) { res.status(500).send("Erreur Ambassadeur"); }
+});
+
+app.post('/admin/approuver', async (req, res) => {
+    await pool.query("UPDATE candidatures SET statut = 'approuvée' WHERE id = $1", [req.body.id]);
+    res.redirect('/admin/dashboard');
+});
+
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
-app.listen(port, () => console.log(`🚀 Serveur actif`));
+app.listen(port, () => console.log(`🚀 Serveur actif sur port ${port}`));
