@@ -1,12 +1,19 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr-CA">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recrutement Élite | Forfeo Lab</title>
+    <title>Recrutement Élite | Forfeo Lab Canada</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #00aaff; --dark: #050505; --glass: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.08); }
+        :root { 
+            /* On utilise le bleu électrique de votre bouton d'accueil */
+            --primary: #2563eb; 
+            --accent: #06b6d4;
+            --dark: #050505; 
+            --glass: rgba(255, 255, 255, 0.03); 
+            --border: rgba(255, 255, 255, 0.08); 
+        }
         body { margin: 0; font-family: 'Inter', sans-serif; background: var(--dark); color: white; overflow-x: hidden; }
 
         /* Loader Scanner Futuriste */
@@ -15,66 +22,76 @@
         @keyframes scan { 0%, 100% { transform: translateY(-70px); opacity: 0.1; } 50% { transform: translateY(70px); opacity: 1; } }
 
         nav { position: fixed; top: 0; width: 100%; padding: 25px; display: flex; justify-content: center; gap: 40px; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); z-index: 1000; border-bottom: 1px solid var(--border); }
-        nav a { color: white; text-decoration: none; font-weight: 500; font-size: 13px; letter-spacing: 2px; opacity: 0.6; transition: 0.3s; text-transform: uppercase; }
+        nav a { color: white; text-decoration: none; font-weight: 500; font-size: 11px; letter-spacing: 2px; opacity: 0.6; transition: 0.3s; text-transform: uppercase; }
         nav a:hover { opacity: 1; color: var(--primary); }
 
         .container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 120px 20px 60px; background: radial-gradient(circle at top right, #111 0%, #050505 100%); }
         
         .ambassador-hero { text-align: center; max-width: 600px; }
-        .ambassador-hero h1 { font-size: 3.5rem; font-weight: 800; margin: 0 0 10px 0; background: linear-gradient(to bottom, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .ambassador-hero p { font-size: 1.1rem; opacity: 0.6; line-height: 1.6; margin-bottom: 40px; }
+        .ambassador-hero h1 { font-size: 3rem; font-weight: 800; margin: 0 0 10px 0; background: linear-gradient(to bottom, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .ambassador-hero p { font-size: 1rem; opacity: 0.6; line-height: 1.6; margin-bottom: 40px; }
 
         /* Formulaire Glassmorphism */
-        .glass-form { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid var(--border); border-radius: 30px; padding: 50px; width: 100%; max-width: 450px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); margin: 0 auto; transition: 0.4s; }
-        .glass-form:hover { border-color: var(--primary); }
+        .glass-form { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid var(--border); border-radius: 30px; padding: 40px; width: 100%; max-width: 400px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); margin: 0 auto; transition: 0.4s; }
+        .glass-form:hover { border-color: var(--primary); box-shadow: 0 0 30px rgba(37, 99, 235, 0.1); }
 
         .input-group { margin-bottom: 20px; text-align: left; }
-        .input-group label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.4; margin-bottom: 8px; margin-left: 5px; }
+        .input-group label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.4; margin-bottom: 8px; margin-left: 5px; }
         
-        input { width: 100%; padding: 16px; background: rgba(0,0,0,0.4); border: 1px solid #222; color: white; border-radius: 12px; font-size: 14px; outline: none; transition: 0.3s; box-sizing: border-box; }
-        input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(0,170,255,0.1); }
+        input { width: 100%; padding: 14px; background: rgba(0,0,0,0.4); border: 1px solid #222; color: white; border-radius: 12px; font-size: 14px; outline: none; transition: 0.3s; box-sizing: border-box; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(37, 99, 235, 0.2); }
 
-        .btn-submit { width: 100%; padding: 20px; background: #fff; color: #000; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; letter-spacing: 1px; transition: 0.3s; font-size: 14px; text-transform: uppercase; margin-top: 10px; }
-        .btn-submit:hover { background: var(--primary); color: white; transform: scale(1.02); box-shadow: 0 10px 25px rgba(0, 170, 255, 0.3); }
+        /* Bouton Flash cohérent avec la Home */
+        .btn-submit { 
+            width: 100%; padding: 18px; 
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            color: white; border: none; border-radius: 12px; 
+            cursor: pointer; font-weight: 800; letter-spacing: 1px; 
+            transition: 0.3s; font-size: 13px; text-transform: uppercase; 
+            margin-top: 10px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+        .btn-submit:hover { transform: scale(1.02); box-shadow: 0 10px 25px rgba(37, 99, 235, 0.5); }
 
-        .info-footer { margin-top: 40px; font-size: 12px; opacity: 0.4; text-align: center; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.5; }
+        .info-footer { margin-top: 40px; font-size: 11px; opacity: 0.4; text-align: center; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.5; }
     </style>
 </head>
 <body>
 
-    <div id="loader"><div class="scanner"></div><p style="margin-top: 50px; letter-spacing: 6px; font-size: 10px; opacity: 0.5;">ANALYSE DU PROFIL...</p></div>
+    <div id="loader">
+        <div class="scanner"></div>
+        <p style="margin-top: 50px; letter-spacing: 6px; font-size: 10px; opacity: 0.5;">ANALYSE DU PROFIL...</p>
+    </div>
 
     <nav>
         <a href="/">ACCUEIL</a>
-        <a href="/business-plans">SOLUTIONS</a>
-        <a href="/partenaires">ÉCOSYSTÈME</a>
-        <a href="/candidature" style="color:var(--primary); opacity:1;">RECRUTEMENT</a>
+        <a href="/#forfaits">NOS OFFRES</a> <a href="/entreprise/dashboard">PORTAIL</a>
     </nav>
 
     <div class="container">
         <div class="ambassador-hero">
+            <span style="color: var(--primary); font-weight: 800; font-size: 12px; letter-spacing: 3px; text-transform: uppercase;">Recrutement 2025</span>
             <h1>Devenez l'Élite</h1>
-            <p>Rejoignez notre réseau sélectif d'ambassadeurs et transformez l'industrie du luxe et du service par votre expertise critique.</p>
+            <p>Rejoignez notre réseau sélectif d'ambassadeurs et transformez l'industrie du luxe au Québec par votre expertise critique.</p>
 
             <div class="glass-form">
                 <form action="/signup-ambassadeur" method="POST">
                     <div class="input-group">
                         <label>Identité Complète</label>
-                        <input type="text" name="nom" placeholder="Ex: Mathieu Forfeo" required>
+                        <input type="text" name="nom" placeholder="Ex: Ibrahim Forfeo" required>
                     </div>
                     
                     <div class="input-group">
-                        <label>Canal de Communication</label>
+                        <label>Courriel Professionnel</label>
                         <input type="email" name="email" placeholder="votre@email.com" required>
                     </div>
 
                     <div class="input-group">
-                        <label>Localisation Géographique</label>
-                        <input type="text" name="ville" placeholder="Ex: Québec, CA" required>
+                        <label>Ville (Québec)</label>
+                        <input type="text" name="ville" placeholder="Ex: Montréal, QC" required>
                     </div>
 
                     <div class="input-group">
-                        <label>Code d'Accès Sécurisé</label>
+                        <label>Mot de passe sécurisé</label>
                         <input type="password" name="password" placeholder="••••••••" required>
                     </div>
 
@@ -83,32 +100,16 @@
             </div>
 
             <p class="info-footer">
-                Vos missions assignées apparaîtront dans votre interface personnelle après validation rigoureuse de votre profil par nos modérateurs.
+                Une fois soumis, votre profil passera par notre scanner de validation. Les accès au dashboard vous seront envoyés après approbation.
             </p>
         </div>
     </div>
 
     <script>
-        // Gestion du loader
         window.addEventListener('load', () => {
             const loader = document.getElementById('loader');
             loader.style.opacity = '0';
             setTimeout(() => loader.style.display = 'none', 500);
-        });
-
-        document.querySelectorAll('a, form').forEach(el => {
-            el.addEventListener('submit', () => {
-                const loader = document.getElementById('loader');
-                loader.style.display = 'flex';
-                loader.style.opacity = '1';
-            });
-            if(el.tagName === 'A') {
-                el.addEventListener('click', () => {
-                    const loader = document.getElementById('loader');
-                    loader.style.display = 'flex';
-                    loader.style.opacity = '1';
-                });
-            }
         });
     </script>
 </body>
