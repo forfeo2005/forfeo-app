@@ -14,18 +14,17 @@ const pool = new Pool({
     connectionTimeoutMillis: 10000 
 });
 
-// INITIALISATION AVEC RÉPARATION DE TABLE
+// INITIALISATION ET RÉPARATION DE LA BASE DE DONNÉES
 const initDb = async () => {
     try {
-        // 1. Création des tables de base
+        // 1. Création/Vérification des tables de base
         await pool.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY, nom TEXT NOT NULL, email TEXT UNIQUE NOT NULL,
                 ville TEXT, password TEXT NOT NULL, role TEXT DEFAULT 'ambassadeur'
             );
             CREATE TABLE IF NOT EXISTS missions (
-                id SERIAL PRIMARY KEY,
-                titre TEXT NOT NULL, description TEXT, 
+                id SERIAL PRIMARY KEY, titre TEXT NOT NULL, description TEXT, 
                 recompense TEXT, statut TEXT DEFAULT 'disponible'
             );
             CREATE TABLE IF NOT EXISTS candidatures (
@@ -39,7 +38,7 @@ const initDb = async () => {
             );
         `);
 
-        // 2. RÉPARATION : Ajoute entreprise_id si la table existait sans elle
+        // 2. RÉPARATION : Ajout de la colonne manquante entreprise_id
         await pool.query(`
             DO $$ 
             BEGIN 
@@ -50,13 +49,20 @@ const initDb = async () => {
             END $$;
         `);
 
-        // Promotion Admin automatique
-        await pool.query("UPDATE users SET role = 'admin' WHERE email = $1", ['forfeo2005@gmail.com']);
-        console.log("✅ Base de données initialisée et réparée.");
+        // 3. RÉINITIALISATION ADMIN (Mot de passe : admin123)
+        const tempPass = await bcrypt.hash('admin123', 10);
+        await pool.query(`
+            INSERT INTO users (nom, email, ville, password, role) 
+            VALUES ('Admin Forfeo', 'forfeo2005@gmail.com', 'Montréal', $1, 'admin')
+            ON CONFLICT (email) DO UPDATE SET role = 'admin', password = $1
+        `, [tempPass]);
+
+        console.log("✅ Base de données réparée et Admin prêt (admin123).");
     } catch (err) { console.error("❌ Erreur d'initialisation :", err); }
 };
 initDb();
 
+// Middlewares
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
@@ -73,6 +79,7 @@ app.get('/login', (req, res) => res.render('login'));
 app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
 app.get('/entreprise/inscription', (req, res) => res.render('inscription-entreprise'));
 
+// Inscriptions
 app.post('/signup-ambassadeur', async (req, res) => {
     const { nom, email, ville, password } = req.body;
     try {
@@ -91,6 +98,7 @@ app.post('/signup-entreprise', async (req, res) => {
     } catch (err) { res.status(500).send("Erreur inscription entreprise"); }
 });
 
+// Connexion
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -103,25 +111,26 @@ app.post('/login', async (req, res) => {
             if (user.role === 'entreprise') return res.redirect('/entreprise/dashboard');
             return res.redirect('/ambassadeur/dashboard');
         }
-        res.send("Identifiants incorrects.");
+        res.send("Email ou mot de passe incorrect.");
     } catch (err) { res.status(500).send("Erreur de connexion"); }
 });
 
+// Dashboards
 app.get('/entreprise/dashboard', async (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'entreprise') return res.redirect('/login');
     try {
         const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1", [req.session.userId]);
         const rapports = await pool.query(`
-            SELECT r.*, m.titre, u.nom as ambassadeur 
-            FROM rapports r 
+            SELECT r.*, m.titre, u.nom as ambassadeur FROM rapports r 
             JOIN missions m ON r.mission_id = m.id 
             JOIN users u ON r.ambassadeur_id = u.id 
             WHERE m.entreprise_id = $1`, [req.session.userId]);
         res.render('entreprise-dashboard', { missions: missions.rows, rapports: rapports.rows });
-    } catch (err) { res.status(500).send("Erreur Dashboard"); }
+    } catch (err) { res.status(500).send("Erreur lors du chargement du tableau de bord."); }
 });
 
 app.post('/creer-mission', async (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'entreprise') return res.status(403).send("Non autorisé");
     const { titre, description, recompense } = req.body;
     try {
         await pool.query("INSERT INTO missions (entreprise_id, titre, description, recompense) VALUES ($1, $2, $3, $4)", [req.session.userId, titre, description, recompense]);
@@ -130,4 +139,4 @@ app.post('/creer-mission', async (req, res) => {
 });
 
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
-app.listen(port, () => console.log(`🚀 Serveur actif sur le port ${port}`));
+app.listen(port, () => console.log(`🚀 Serveur actif`));
