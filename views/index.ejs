@@ -1,109 +1,145 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr-CA">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forfeo - Impact Local & Excellence</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <style>
-        /* Fusion de vos styles originaux avec le design VIP */
-        html { scroll-behavior: smooth; }
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background-color: #0a192f; color: #ccd6f6; line-height: 1.6; overflow-x: hidden; }
-        
-        /* BANNIERE & HEADER ORIGINAUX */
-        .top-banner { background: linear-gradient(90deg, #112240, #0d1f3a); color: #ccd6f6; text-align: center; padding: 12px; font-size: 0.9em; border-bottom: 1px solid #233554; display: flex; justify-content: center; gap: 15px; align-items: center; }
-        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 50px; background-color: rgba(10, 25, 47, 0.95); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #1f2f4d; }
-        nav { display: flex; gap: 20px; align-items: center; }
-        nav a { color: #a8b2d1; text-decoration: none; font-weight: 500; }
-        
-        /* DESIGN VIP AMBASSADEUR (BOUTON DEGRADÉ) */
-        .hero-section { padding: 80px 20px; text-align: center; }
-        .btn-gradient { 
-            background: linear-gradient(90deg, #64ffda 0%, #00bcd4 100%); 
-            color: #0a192f; padding: 15px 35px; border-radius: 8px; text-decoration: none; 
-            font-weight: bold; display: inline-flex; align-items: center; gap: 10px;
-            box-shadow: 0 4px 15px rgba(100, 255, 218, 0.3);
+    <title>FORFEO LAB - Portail Ambassadeurs & Entreprises</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css"> <style>
+        @keyframes flashPulse {
+            0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(37, 99, 235, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
         }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .btn-flash {
+            background: linear-gradient(45deg, #2563eb, #06b6d4, #2563eb);
+            background-size: 200% 200%;
+            color: white;
+            border: none;
+            font-weight: 800;
+            animation: gradientMove 3s ease infinite, flashPulse 2s infinite;
+            transition: all 0.3s;
+        }
+        .btn-flash:hover { transform: scale(1.05); color: white; }
+        .hero-animate { animation: float 6s ease-in-out infinite; }
+        @keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        
+        .social-img-container { overflow: hidden; border-radius: 12px; }
+        .social-img-container img { transition: transform 0.3s ease; }
+        .social-img-container:hover img { transform: scale(1.1); }
 
-        /* SECTION TARIFS STRIPE CAD */
-        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin: 50px auto; max-width: 1100px; }
-        .card-price { background: #112240; padding: 30px; border-radius: 12px; border: 1px solid #233554; text-align: center; }
-        .price { font-size: 2.2rem; font-weight: bold; color: #64ffda; }
-        
-        /* CARTE MAP SECTION */
-        #map { height: 500px; width: 100%; max-width: 1000px; border-radius: 15px; border: 2px solid #64ffda; margin: 20px auto; }
-        
-        /* FORFY */
-        .forfy-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
-        .forfy-video { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #64ffda; background: #000; }
+        /* Ajouts pour les tarifs Stripe */
+        .pricing-card { border: 1px solid #e5e7eb; border-radius: 20px; transition: all 0.3s; }
+        .pricing-card:hover { border-color: #2563eb; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+
+        /* Style Forfy */
+        .forfy-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; cursor: pointer; }
+        .forfy-video { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #2563eb; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
-
-    <div class="top-banner">
-        <span>✨ <span class="highlight-neon">1 % pour le Québec !</span></span>
-        <span style="background: #ffbd2e; color: #0a192f; padding: 4px 8px; border-radius: 4px; font-weight: bold;">VISION 2026</span>
-    </div>
-
-    <header>
-        <img src="/logo.png" alt="Logo" height="50">
-        <nav>
-            <a href="#tarifs">Nos Offres</a>
-            <a href="/ambassadeur/inscription">Devenir Ambassadeur</a>
-            <a href="/entreprise/dashboard">Tableau de Bord</a>
-            <a href="/login" style="border: 1px solid #64ffda; color: #64ffda; padding: 5px 15px; border-radius: 4px;">Connexion</a>
+    <div class="main-container">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
+            <div class="container">
+                <a class="navbar-brand fw-bold text-primary" href="/">
+                    <i class="bi bi-stars"></i> FORFEO LAB
+                </a>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto gap-2 align-items-center">
+                        <li class="nav-item"><a class="nav-link fw-semibold" href="#forfaits">Nos Forfaits</a></li>
+                        <li class="nav-item"><a class="nav-link fw-semibold" href="/entreprise/dashboard">Portail</a></li>
+                        <li class="nav-item ms-md-2">
+                            <a class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" href="/ambassadeur/inscription">
+                                <i class="bi bi-person-plus-fill me-1"></i> S'inscrire
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </nav>
-    </header>
 
-    <main>
-        <section class="hero-section">
-            <h1>Vivez l'expérience Forfeo en <span style="color:#64ffda;">VIP</span></h1>
-            <p style="font-size: 1.2em; color: #8892b0; max-width: 700px; margin: 0 auto 30px;">
-                Rejoignez l'élite du Québec. Testez les meilleures adresses tout en soutenant l'impact local.
-            </p>
-            <a href="/ambassadeur/inscription" class="btn-gradient">★ DEVENIR AMBASSADEUR</a>
-        </section>
-
-        <section id="tarifs" class="container" style="padding: 40px 20px;">
-            <h2 style="text-align: center; color: #e6f1ff;">Nos Forfaits Corporate Canada</h2>
-            <div class="pricing-grid">
-                <div class="card-price">
-                    <h3>Découverte</h3>
-                    <div class="price">49$ <small>CAD</small></div>
-                    <p>1 Audit / mois</p>
-                    <a href="https://buy.stripe.com/6oUbJ2bPs3W79QsalUd7q02" class="btn-gradient" style="padding: 10px 20px; font-size: 0.9em;">Souscrire</a>
-                </div>
-                <div class="card-price" style="border-color: #64ffda;">
-                    <h3>Croissance</h3>
-                    <div class="price">99$ <small>CAD</small></div>
-                    <p>3 Audits / mois</p>
-                    <a href="https://buy.stripe.com/7sY4gA06K1NZ6Eg3Xwd7q00" class="btn-gradient" style="padding: 10px 20px; font-size: 0.9em;">Souscrire</a>
-                </div>
-                <div class="card-price">
-                    <h3>Excellence</h3>
-                    <div class="price">149$ <small>CAD</small></div>
-                    <p>5 Audits / mois</p>
-                    <a href="https://buy.stripe.com/5kQ5kE7zcgIT0fS1Pod7q01" class="btn-gradient" style="padding: 10px 20px; font-size: 0.9em;">Souscrire</a>
+        <section class="py-5 text-center mt-5">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-9 hero-animate">
+                        <span class="badge bg-white text-primary border border-primary-subtle rounded-pill px-3 py-2 mb-4 shadow-sm">
+                            ✨ Espace Ambassadeur Officiel
+                        </span>
+                        <h1 class="display-4 mb-3 fw-extrabold">Vivez l'expérience Forfeo en VIP</h1>
+                        <p class="lead text-muted mb-4 px-md-5">Rejoignez notre cercle d'élite. Testez gratuitement les meilleures adresses du Québec.</p>
+                        <div class="d-flex justify-content-center align-items-center gap-3 flex-column flex-md-row mb-5">
+                            <a href="/ambassadeur/inscription" class="btn btn-flash btn-lg px-5 py-3 rounded-pill shadow-lg text-decoration-none">
+                                <i class="bi bi-star-fill me-2"></i> DEVENIR AMBASSADEUR
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section class="map-section" style="text-align: center;">
-            <h2 style="color:#e6f1ff;">Carte de l'Impact Social</h2>
-            <div id="map"></div>
+        <section id="forfaits" class="py-5 bg-light">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <h2 class="fw-bold">Solutions Entreprise</h2>
+                    <p class="text-muted">Boostez votre visibilité et votre qualité de service au Canada.</p>
+                </div>
+                <div class="row g-4 justify-content-center">
+                    <div class="col-md-4">
+                        <div class="pricing-card bg-white p-4 text-center h-100">
+                            <h3 class="h5 fw-bold">Découverte</h3>
+                            <div class="display-5 fw-bold my-3">49$ <small class="fs-6 text-muted">CAD</small></div>
+                            <ul class="list-unstyled mb-4 text-muted">
+                                <li>✓ 1 Audit complet / mois</li>
+                                <li>✓ Accès Dashboard standard</li>
+                            </ul>
+                            <a href="https://buy.stripe.com/6oUbJ2bPs3W79QsalUd7q02" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Souscrire</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="pricing-card bg-white p-4 text-center h-100 shadow-sm border-primary">
+                            <h3 class="h5 fw-bold text-primary">Croissance</h3>
+                            <div class="display-5 fw-bold my-3">99$ <small class="fs-6 text-muted">CAD</small></div>
+                            <ul class="list-unstyled mb-4 text-muted">
+                                <li>✓ 3 Audits complets / mois</li>
+                                <li>✓ Support prioritaire</li>
+                            </ul>
+                            <a href="https://buy.stripe.com/7sY4gA06K1NZ6Eg3Xwd7q00" class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm">Souscrire</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="pricing-card bg-white p-4 text-center h-100">
+                            <h3 class="h5 fw-bold">Excellence</h3>
+                            <div class="display-5 fw-bold my-3">149$ <small class="fs-6 text-muted">CAD</small></div>
+                            <ul class="list-unstyled mb-4 text-muted">
+                                <li>✓ 5 Audits complets / mois</li>
+                                <li>✓ Analyses avancées</li>
+                            </ul>
+                            <a href="https://buy.stripe.com/5kQ5kE7zcgIT0fS1Pod7q01" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Souscrire</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
-    </main>
+
+        <footer class="text-center py-4 bg-white border-top">
+            <div class="container">
+                <p class="mb-0 fw-semibold text-dark">&copy; 2025 FORFEO LAB</p>
+            </div>
+        </footer>
+    </div>
 
     <div class="forfy-container">
         <video class="forfy-video" src="/videos/GifForfy.MP4" autoplay loop muted playsinline></video>
     </div>
 
-    <script>
-        // Code de la carte originale
-        var map = L.map('map').setView([46.8139, -71.2080], 6); 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-        // Ajoutez vos points d'impact ici comme dans votre code original
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
