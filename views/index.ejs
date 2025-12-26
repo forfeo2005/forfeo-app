@@ -3,143 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forfeo Lab | Excellence & Audit Canada</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <title>Forfeo - Impact Local & Excellence</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        /* Restauration du design épuré et du bouton dégradé */
-        .hero-clean {
-            padding: 100px 20px;
-            text-align: center;
-            background: #0b0f19; /* Fond sombre élégant */
-            color: white;
+        /* Fusion de vos styles originaux avec le design VIP */
+        html { scroll-behavior: smooth; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background-color: #0a192f; color: #ccd6f6; line-height: 1.6; overflow-x: hidden; }
+        
+        /* BANNIERE & HEADER ORIGINAUX */
+        .top-banner { background: linear-gradient(90deg, #112240, #0d1f3a); color: #ccd6f6; text-align: center; padding: 12px; font-size: 0.9em; border-bottom: 1px solid #233554; display: flex; justify-content: center; gap: 15px; align-items: center; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 50px; background-color: rgba(10, 25, 47, 0.95); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #1f2f4d; }
+        nav { display: flex; gap: 20px; align-items: center; }
+        nav a { color: #a8b2d1; text-decoration: none; font-weight: 500; }
+        
+        /* DESIGN VIP AMBASSADEUR (BOUTON DEGRADÉ) */
+        .hero-section { padding: 80px 20px; text-align: center; }
+        .btn-gradient { 
+            background: linear-gradient(90deg, #64ffda 0%, #00bcd4 100%); 
+            color: #0a192f; padding: 15px 35px; border-radius: 8px; text-decoration: none; 
+            font-weight: bold; display: inline-flex; align-items: center; gap: 10px;
+            box-shadow: 0 4px 15px rgba(100, 255, 218, 0.3);
         }
-        .badge-vip {
-            background: rgba(0, 82, 255, 0.2);
-            color: #00d1ff;
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
-        .btn-gradient {
-            background: linear-gradient(90deg, #0052cc 0%, #00d1ff 100%);
-            color: white;
-            padding: 15px 35px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 15px rgba(0, 82, 204, 0.4);
-            transition: transform 0.2s;
-        }
-        .btn-gradient:hover { transform: translateY(-3px); }
-        .link-portal {
-            display: block;
-            margin-top: 20px;
-            color: #a0aec0;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin: 50px 0;
-        }
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin: 60px 0;
-            text-align: center;
-        }
-        .icon-box { font-size: 3rem; margin-bottom: 15px; }
+
+        /* SECTION TARIFS STRIPE CAD */
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin: 50px auto; max-width: 1100px; }
+        .card-price { background: #112240; padding: 30px; border-radius: 12px; border: 1px solid #233554; text-align: center; }
+        .price { font-size: 2.2rem; font-weight: bold; color: #64ffda; }
+        
+        /* CARTE MAP SECTION */
+        #map { height: 500px; width: 100%; max-width: 1000px; border-radius: 15px; border: 2px solid #64ffda; margin: 20px auto; }
+        
+        /* FORFY */
+        .forfy-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+        .forfy-video { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #64ffda; background: #000; }
     </style>
 </head>
 <body>
-    <nav>
-        <div class="logo">FORFEO LAB</div>
-        <div class="nav-links">
-            <a href="#concept">Le Concept</a>
-            <a href="#tarifs">Nos Offres</a>
-            <a href="/login" class="btn-outline">Connexion Admin</a>
-        </div>
-    </nav>
 
-    <header class="hero-clean">
-        <div class="container">
-            <span class="badge-vip">✨ Espace Ambassadeur Officiel</span>
-            <h1>Vivez l'expérience Forfeo en VIP</h1>
-            <p>Rejoignez notre cercle d'élite. Testez gratuitement les meilleures adresses du Québec.</p>
-            
-            <div class="hero-actions">
-                <a href="/ambassadeur/inscription" class="btn-gradient">
-                    <span>★</span> DEVENIR AMBASSADEUR
-                </a>
-                <a href="/entreprise/dashboard" class="link-portal">Déjà membre ? Accéder au portail →</a>
-            </div>
-        </div>
+    <div class="top-banner">
+        <span>✨ <span class="highlight-neon">1 % pour le Québec !</span></span>
+        <span style="background: #ffbd2e; color: #0a192f; padding: 4px 8px; border-radius: 4px; font-weight: bold;">VISION 2026</span>
+    </div>
+
+    <header>
+        <img src="/logo.png" alt="Logo" height="50">
+        <nav>
+            <a href="#tarifs">Nos Offres</a>
+            <a href="/ambassadeur/inscription">Devenir Ambassadeur</a>
+            <a href="/entreprise/dashboard">Tableau de Bord</a>
+            <a href="/login" style="border: 1px solid #64ffda; color: #64ffda; padding: 5px 15px; border-radius: 4px;">Connexion</a>
+        </nav>
     </header>
 
-    <section id="concept" class="container">
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="icon-box">📋</div>
-                <h3>Évaluer</h3>
-                <p>Analysez objectivement la qualité des services lors de vos visites mystères.</p>
-            </div>
-            <div class="feature-card">
-                <div class="icon-box">✍️</div>
-                <h3>Documenter</h3>
-                <p>Rédigez des rapports détaillés pour aider les établissements à viser l'excellence.</p>
-            </div>
-            <div class="feature-card">
-                <div class="icon-box">📈</div>
-                <h3>Améliorer</h3>
-                <p>Contribuez directement à l'évolution des standards du luxe au Canada.</p>
-            </div>
-        </div>
-    </section>
+    <main>
+        <section class="hero-section">
+            <h1>Vivez l'expérience Forfeo en <span style="color:#64ffda;">VIP</span></h1>
+            <p style="font-size: 1.2em; color: #8892b0; max-width: 700px; margin: 0 auto 30px;">
+                Rejoignez l'élite du Québec. Testez les meilleures adresses tout en soutenant l'impact local.
+            </p>
+            <a href="/ambassadeur/inscription" class="btn-gradient">★ DEVENIR AMBASSADEUR</a>
+        </section>
 
-    <section id="tarifs" class="container">
-        <h2 style="text-align: center;">Nos Forfaits Entreprise</h2>
-        <div class="pricing-grid">
-            <div class="card text-center">
-                <h3>Forfait Découverte</h3>
-                <div style="font-size: 2rem; font-weight: bold;">49 <small>$ CAD</small></div>
-                <p>1 Audit complet / mois</p>
-                <a href="https://buy.stripe.com/6oUbJ2bPs3W79QsalUd7q02" class="btn-primary" style="display:block; margin-top:15px;">Souscrire</a>
+        <section id="tarifs" class="container" style="padding: 40px 20px;">
+            <h2 style="text-align: center; color: #e6f1ff;">Nos Forfaits Corporate Canada</h2>
+            <div class="pricing-grid">
+                <div class="card-price">
+                    <h3>Découverte</h3>
+                    <div class="price">49$ <small>CAD</small></div>
+                    <p>1 Audit / mois</p>
+                    <a href="https://buy.stripe.com/6oUbJ2bPs3W79QsalUd7q02" class="btn-gradient" style="padding: 10px 20px; font-size: 0.9em;">Souscrire</a>
+                </div>
+                <div class="card-price" style="border-color: #64ffda;">
+                    <h3>Croissance</h3>
+                    <div class="price">99$ <small>CAD</small></div>
+                    <p>3 Audits / mois</p>
+                    <a href="https://buy.stripe.com/7sY4gA06K1NZ6Eg3Xwd7q00" class="btn-gradient" style="padding: 10px 20px; font-size: 0.9em;">Souscrire</a>
+                </div>
+                <div class="card-price">
+                    <h3>Excellence</h3>
+                    <div class="price">149$ <small>CAD</small></div>
+                    <p>5 Audits / mois</p>
+                    <a href="https://buy.stripe.com/5kQ5kE7zcgIT0fS1Pod7q01" class="btn-gradient" style="padding: 10px 20px; font-size: 0.9em;">Souscrire</a>
+                </div>
             </div>
+        </section>
 
-            <div class="card text-center" style="border: 2px solid #0052cc;">
-                <h3>Forfait Croissance</h3>
-                <div style="font-size: 2rem; font-weight: bold;">99 <small>$ CAD</small></div>
-                <p>3 Audits complets / mois</p>
-                <a href="https://buy.stripe.com/7sY4gA06K1NZ6Eg3Xwd7q00" class="btn-primary" style="display:block; margin-top:15px;">Souscrire</a>
-            </div>
-
-            <div class="card text-center">
-                <h3>Forfait Excellence</h3>
-                <div style="font-size: 2rem; font-weight: bold;">149 <small>$ CAD</small></div>
-                <p>5 Audits complets / mois</p>
-                <a href="https://buy.stripe.com/5kQ5kE7zcgIT0fS1Pod7q01" class="btn-primary" style="display:block; margin-top:15px;">Souscrire</a>
-            </div>
-        </div>
-    </section>
+        <section class="map-section" style="text-align: center;">
+            <h2 style="color:#e6f1ff;">Carte de l'Impact Social</h2>
+            <div id="map"></div>
+        </section>
+    </main>
 
     <div class="forfy-container">
-        <div class="forfy-bubble" id="forfyText">Besoin d'aide ?</div>
         <video class="forfy-video" src="/videos/GifForfy.MP4" autoplay loop muted playsinline></video>
     </div>
 
     <script>
-        fetch('/api/forfy-message?page=' + window.location.pathname)
-            .then(res => res.json())
-            .then(data => document.getElementById('forfyText').innerText = data.message);
+        // Code de la carte originale
+        var map = L.map('map').setView([46.8139, -71.2080], 6); 
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+        // Ajoutez vos points d'impact ici comme dans votre code original
     </script>
 </body>
 </html>
