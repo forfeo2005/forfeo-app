@@ -8,14 +8,14 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 8080;
 
-// Connexion PostgreSQL avec timeout configuré
+// Configuration de la base de données avec gestion des délais
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
-    connectionTimeoutMillis: 5000 
+    connectionTimeoutMillis: 10000 // Augmente le délai pour éviter l'erreur 502
 });
 
-// INITIALISATION SÉCURISÉE
+// Initialisation des tables et de l'administrateur
 const initDb = async () => {
     try {
         await pool.query(`
@@ -37,10 +37,10 @@ const initDb = async () => {
                 date_envoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        // Promotion automatique de votre admin
+        // Promotion forcée de votre compte admin
         await pool.query("UPDATE users SET role = 'admin' WHERE email = $1", ['forfeo2005@gmail.com']);
-        console.log("✅ Base de données synchronisée");
-    } catch (err) { console.error("Erreur Init:", err); }
+        console.log("✅ Base de données initialisée.");
+    } catch (err) { console.error("Erreur Init DB:", err); }
 };
 initDb();
 
@@ -48,7 +48,7 @@ app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
-    secret: 'forfeo_top_secret_2025',
+    secret: 'forfeo_secret_2025',
     resave: false,
     saveUninitialized: false,
     cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
@@ -60,21 +60,21 @@ app.get('/login', (req, res) => res.render('login'));
 app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
 app.get('/entreprise/inscription', (req, res) => res.render('inscription-entreprise'));
 
-// INSCRIPTION ENTREPRISE (CORRECTION ERREUR 502)
+// Inscription Entreprise
 app.post('/signup-entreprise', async (req, res) => {
     const { nom_entreprise, email, ville, password } = req.body;
     try {
         const hash = await bcrypt.hash(password, 10);
         await pool.query('INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)', 
             [nom_entreprise, email, ville, hash, 'entreprise']);
-        res.redirect('/login?success=account_created');
+        res.redirect('/login');
     } catch (err) {
         console.error(err);
-        res.send("Erreur : Cet email est déjà utilisé ou le serveur est saturé.");
+        res.status(500).send("Erreur lors de l'inscription.");
     }
 });
 
-// CONNEXION
+// Connexion
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -87,24 +87,31 @@ app.post('/login', async (req, res) => {
             if (user.role === 'entreprise') return res.redirect('/entreprise/dashboard');
             return res.redirect('/ambassadeur/dashboard');
         }
-        res.send("Identifiants incorrects.");
-    } catch (err) { res.status(500).send("Erreur de connexion"); }
+        res.send("Email ou mot de passe incorrect.");
+    } catch (err) { res.status(500).send("Erreur de connexion."); }
 });
 
-// DASHBOARDS
-app.get('/admin/dashboard', async (req, res) => {
-    if (req.session.userRole !== 'admin') return res.redirect('/login');
-    const cand = await pool.query(`SELECT c.id, m.titre, u.nom as ambassadeur, c.statut FROM candidatures c JOIN missions m ON c.mission_id = m.id JOIN users u ON c.ambassadeur_id = u.id WHERE c.statut = 'en_attente'`);
-    res.render('admin-dashboard', { candidatures: cand.rows });
-});
-
+// Dashboards
 app.get('/entreprise/dashboard', async (req, res) => {
-    if (req.session.userRole !== 'entreprise') return res.redirect('/login');
+    if (!req.session.userId || req.session.userRole !== 'entreprise') return res.redirect('/login');
     try {
         const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1", [req.session.userId]);
         const rapports = await pool.query(`SELECT r.*, m.titre, u.nom as ambassadeur FROM rapports r JOIN missions m ON r.mission_id = m.id JOIN users u ON r.ambassadeur_id = u.id WHERE m.entreprise_id = $1`, [req.session.userId]);
         res.render('entreprise-dashboard', { missions: missions.rows, rapports: rapports.rows });
-    } catch (err) { res.status(500).render('error', { message: "Erreur Dashboard Entreprise" }); }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Erreur lors du chargement du tableau de bord.");
+    }
 });
 
-app.listen(port, () => console.log(`🚀 Forfeo actif sur port ${port}`));
+app.get('/admin/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'admin') return res.redirect('/login');
+    try {
+        const cand = await pool.query(`SELECT c.id, m.titre, u.nom as ambassadeur, c.statut FROM candidatures c JOIN missions m ON c.mission_id = m.id JOIN users u ON c.ambassadeur_id = u.id WHERE c.statut = 'en_attente'`);
+        res.render('admin-dashboard', { candidatures: cand.rows });
+    } catch (err) { res.status(500).send("Erreur Admin."); }
+});
+
+app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
+
+app.listen(port, () => console.log(`🚀 Serveur actif sur le port ${port}`));
