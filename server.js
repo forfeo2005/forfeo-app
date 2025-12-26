@@ -8,40 +8,10 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 8080;
 
-// Configuration de la base de données PostgreSQL Render
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
-
-// --- FONCTION D'AUTO-CRÉATION DES TABLES ---
-// Cette fonction crée vos tables manuellement au démarrage du serveur
-const initDb = async () => {
-    try {
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                nom TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                ville TEXT,
-                password TEXT NOT NULL,
-                role TEXT DEFAULT 'ambassadeur',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-            CREATE TABLE IF NOT EXISTS missions (
-                id SERIAL PRIMARY KEY,
-                titre TEXT NOT NULL,
-                description TEXT,
-                statut TEXT DEFAULT 'disponible',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-        console.log("✅ Base de données initialisée avec succès.");
-    } catch (err) {
-        console.error("❌ Erreur lors de l'initialisation de la base :", err);
-    }
-};
-initDb();
 
 // Middleware
 app.set('view engine', 'ejs');
@@ -54,56 +24,47 @@ app.use(session({
     cookie: { secure: false }
 }));
 
-// --- ROUTES ---
+// --- ROUTES DE NAVIGATION ---
+app.get('/', (req, res) => res.render('index'));
+app.get('/login', (req, res) => res.render('login'));
+app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
+app.get('/entreprise/inscription', (req, res) => res.render('inscription-entreprise'));
 
-app.get('/', (req, res) => {
-    res.render('index');
-});
-
-app.get('/ambassadeur/inscription', (req, res) => {
-    res.render('espace-ambassadeur');
-});
-
-app.get('/entreprise/inscription', (req, res) => {
-    res.render('inscription-entreprise');
-});
-
-app.get('/login', (req, res) => {
-    res.render('login');
-});
-
-// Inscription Ambassadeur
-app.post('/signup-ambassadeur', async (req, res) => {
-    const { nom, email, ville, password } = req.body;
+// --- ROUTE ADMIN (SÉCURISÉE) ---
+app.get('/admin/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'admin') {
+        return res.redirect('/login');
+    }
     try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await pool.query(
-            'INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)',
-            [nom, email, ville, hashedPassword, 'ambassadeur']
-        );
-        res.redirect('/login?success=account_created');
+        const entreprises = await pool.query("SELECT id, nom, email, ville FROM users WHERE role = 'entreprise'");
+        const ambassadeurs = await pool.query("SELECT id, nom, email, ville FROM users WHERE role = 'ambassadeur'");
+        res.render('admin-dashboard', { 
+            entreprises: entreprises.rows, 
+            ambassadeurs: ambassadeurs.rows 
+        });
     } catch (err) {
         console.error(err);
-        res.send("Erreur : l'email est peut-être déjà utilisé.");
+        res.send("Erreur lors du chargement du dashboard admin.");
     }
 });
 
-// Inscription Entreprise
-app.post('/signup-entreprise', async (req, res) => {
-    const { nom_entreprise, email, ville, password } = req.body;
+// --- LOGIN AVEC REDIRECTION PAR RÔLE ---
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
     try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await pool.query(
-            'INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)',
-            [nom_entreprise, email, ville, hashedPassword, 'entreprise']
-        );
-        res.redirect('/login?success=pro_account_created');
-    } catch (err) {
-        console.error(err);
-        res.send("Erreur lors de l'inscription entreprise.");
-    }
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (result.rows.length > 0) {
+            const user = result.rows[0];
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (isMatch) {
+                req.session.userId = user.id;
+                req.session.userRole = user.role;
+                if (user.role === 'admin') res.redirect('/admin/dashboard');
+                else if (user.role === 'entreprise') res.redirect('/entreprise/dashboard');
+                else res.redirect('/ambassadeur/dashboard');
+            } else { res.send("Mot de passe incorrect."); }
+        } else { res.send("Utilisateur non trouvé."); }
+    } catch (err) { res.send("Erreur de connexion."); }
 });
 
-app.listen(port, () => {
-    console.log(`🚀 Forfeo Canada opérationnel sur le port ${port}`);
-});
+app.listen(port, () => console.log(`🚀 Forfeo sur port ${port}`));
