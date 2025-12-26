@@ -34,6 +34,7 @@
         .forfy-trigger:hover { transform: scale(1.1); }
         .forfy-video-circle { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #2563eb; background: #000; object-fit: cover; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         
+        /* Bulle Besoin d'aide */
         .forfy-hint {
             position: absolute; top: -45px; right: 0;
             background: #2563eb; color: white; padding: 5px 15px;
@@ -177,7 +178,7 @@
         <div class="forfy-chat-box" id="forfyChat">
             <div class="chat-header">Forfy AI 🐾</div>
             <div class="chat-content" id="chatContent">
-                Bienvenue ! Je suis Forfy. Je connais tout sur nos audits et nos tarifs. Comment puis-je vous aider ?
+                Bienvenue ! Je suis Forfy. Je connais tout sur Forfeo Lab. Posez-moi vos questions sur les missions d'ambassadeur ou nos solutions entreprise !
             </div>
             <div class="chat-options" id="chatOptions">
                 <button onclick="handleForfy('ambassadeur')">C'est quoi un Ambassadeur ? 🤝</button>
@@ -205,14 +206,14 @@
             const options = document.getElementById('chatOptions');
             
             if (action === 'ambassadeur') {
-                content.innerHTML = "Un Ambassadeur est un client mystère VIP. Vous testez des services (resto, spa) gratuitement et vous remplissez un rapport de qualité. C'est simple et excitant ! ✨";
-                options.innerHTML = `<button onclick="window.location.href='/ambassadeur/inscription'">Je veux m'inscrire ! 🚀</button><button onclick="handleForfy('start')">Retour</button>`;
+                content.innerHTML = "Un Ambassadeur est un client mystère VIP. Votre rôle est d'évaluer anonymement la qualité (accueil, propreté, service). En échange, l'expérience est gratuite ! ✨";
+                options.innerHTML = `<button onclick="window.location.href='/ambassadeur/inscription'">S'inscrire comme Ambassadeur 🚀</button><button onclick="handleForfy('start')">Retour</button>`;
             } else if (action === 'tarifs') {
-                content.innerHTML = "Nous avons 3 forfaits : Découverte (49$), Croissance (99$) et Excellence (149$). Ils permettent aux entreprises de recevoir des audits réguliers pour rester au top ! 🇨🇦";
-                options.innerHTML = `<button onclick="window.location.href='#forfaits'">Voir le tableau 💰</button><button onclick="handleForfy('start')">Retour</button>`;
+                content.innerHTML = "Nous proposons 3 forfaits pour les entreprises : Découverte (1 audit), Croissance (3 audits) et Excellence (5 audits). Ils aident à piloter la performance. 🇨🇦";
+                options.innerHTML = `<button onclick="window.location.href='#forfaits'">Voir les tarifs 💰</button><button onclick="handleForfy('start')">Retour</button>`;
             } else if (action === 'audit') {
-                content.innerHTML = "L'audit se fait via notre application. Vous suivez une liste de critères (accueil, propreté, service) et vous prenez des photos. Tout est anonyme ! 🕵️";
-                options.innerHTML = `<button onclick="handleForfy('start')">D'accord, compris !</button>`;
+                content.innerHTML = "L'audit se fait via une liste de critères précis. Tout est anonyme. Vous soumettez votre rapport et vos photos sur votre portail sécurisé. 🕵️";
+                options.innerHTML = `<button onclick="handleForfy('start')">Compris !</button>`;
             } else {
                 content.innerHTML = "Comment puis-je vous aider ?";
                 options.innerHTML = `
