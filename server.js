@@ -13,7 +13,7 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// INITIALISATION COMPLÈTE DES TABLES
+// INITIALISATION DES TABLES ET ADMIN
 const initDb = async () => {
     try {
         await pool.query(`
@@ -35,8 +35,9 @@ const initDb = async () => {
                 date_envoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
+        // Promotion automatique de votre compte
         await pool.query("UPDATE users SET role = 'admin' WHERE email = $1", ['forfeo2005@gmail.com']);
-        console.log("✅ Système Forfeo initialisé.");
+        console.log("✅ Système Forfeo prêt.");
     } catch (err) { console.error(err); }
 };
 initDb();
@@ -52,55 +53,71 @@ app.get('/login', (req, res) => res.render('login'));
 app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
 app.get('/entreprise/inscription', (req, res) => res.render('inscription-entreprise'));
 
-// --- PORTAIL ADMIN ---
+// --- LOGIQUE D'INSCRIPTION (CORRECTION DES ERREURS CANNOT POST) ---
+app.post('/signup-ambassadeur', async (req, res) => {
+    const { nom, email, ville, password } = req.body;
+    try {
+        const hash = await bcrypt.hash(password, 10);
+        await pool.query('INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)', [nom, email, ville, hash, 'ambassadeur']);
+        res.redirect('/login?success=created');
+    } catch (err) { res.send("Erreur inscription ambassadeur"); }
+});
+
+app.post('/signup-entreprise', async (req, res) => {
+    const { nom_entreprise, email, ville, password } = req.body;
+    try {
+        const hash = await bcrypt.hash(password, 10);
+        await pool.query('INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)', [nom_entreprise, email, ville, hash, 'entreprise']);
+        res.redirect('/login?success=created');
+    } catch (err) { res.send("Erreur inscription entreprise"); }
+});
+
+// --- CONNEXION ---
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (result.rows.length > 0 && await bcrypt.compare(password, result.rows[0].password)) {
+            const user = result.rows[0];
+            req.session.userId = user.id;
+            req.session.userRole = user.role;
+            if (user.role === 'admin') return res.redirect('/admin/dashboard');
+            if (user.role === 'entreprise') return res.redirect('/entreprise/dashboard');
+            return res.redirect('/ambassadeur/dashboard');
+        }
+        res.send("Email ou mot de passe incorrect.");
+    } catch (err) { res.send("Erreur serveur lors de la connexion."); }
+});
+
+// --- DASHBOARDS ---
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
-    const cand = await pool.query(`
-        SELECT c.id, m.titre, u.nom as ambassadeur, c.statut 
-        FROM candidatures c 
-        JOIN missions m ON c.mission_id = m.id 
-        JOIN users u ON c.ambassadeur_id = u.id 
-        WHERE c.statut = 'en_attente'`);
+    const cand = await pool.query(`SELECT c.id, m.titre, u.nom as ambassadeur, c.statut FROM candidatures c JOIN missions m ON c.mission_id = m.id JOIN users u ON c.ambassadeur_id = u.id WHERE c.statut = 'en_attente'`);
     const ent = await pool.query("SELECT * FROM users WHERE role = 'entreprise'");
     res.render('admin-dashboard', { candidatures: cand.rows, entreprises: ent.rows });
 });
 
-app.post('/admin/approuver', async (req, res) => {
-    const { id } = req.body;
-    await pool.query("UPDATE candidatures SET statut = 'approuvée' WHERE id = $1", [id]);
-    res.redirect('/admin/dashboard');
-});
-
-// --- PORTAIL ENTREPRISE ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
-    const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1", [req.session.userId]);
-    const rapports = await pool.query(`
-        SELECT r.*, m.titre, u.nom as ambassadeur 
-        FROM rapports r 
-        JOIN missions m ON r.mission_id = m.id 
-        JOIN users u ON r.ambassadeur_id = u.id 
-        WHERE m.entreprise_id = $1`, [req.session.userId]);
-    res.render('entreprise-dashboard', { missions: missions.rows, rapports: rapports.rows });
+    try {
+        const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1", [req.session.userId]);
+        const rapports = await pool.query(`SELECT r.*, m.titre, u.nom as ambassadeur FROM rapports r JOIN missions m ON r.mission_id = m.id JOIN users u ON r.ambassadeur_id = u.id WHERE m.entreprise_id = $1`, [req.session.userId]);
+        res.render('entreprise-dashboard', { missions: missions.rows, rapports: rapports.rows });
+    } catch (err) { res.status(500).send("Erreur Entreprise"); }
 });
 
-app.post('/creer-mission', async (req, res) => {
-    const { titre, description, recompense } = req.body;
-    await pool.query("INSERT INTO missions (entreprise_id, titre, description, recompense) VALUES ($1, $2, $3, $4)",
-        [req.session.userId, titre, description, recompense]);
-    res.redirect('/entreprise/dashboard');
-});
-
-// --- PORTAIL AMBASSADEUR ---
 app.get('/ambassadeur/dashboard', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
     const dispos = await pool.query("SELECT * FROM missions WHERE statut = 'disponible'");
-    const mes_missions = await pool.query(`
-        SELECT m.*, c.statut as etat_cand 
-        FROM missions m 
-        JOIN candidatures c ON m.id = c.mission_id 
-        WHERE c.ambassadeur_id = $1`, [req.session.userId]);
+    const mes_missions = await pool.query(`SELECT m.*, c.statut as etat_cand FROM missions m JOIN candidatures c ON m.id = c.mission_id WHERE c.ambassadeur_id = $1`, [req.session.userId]);
     res.render('ambassadeur-dashboard', { missions: dispos.rows, mes_missions: mes_missions.rows });
+});
+
+// --- ACTIONS ---
+app.post('/creer-mission', async (req, res) => {
+    const { titre, description, recompense } = req.body;
+    await pool.query("INSERT INTO missions (entreprise_id, titre, description, recompense) VALUES ($1, $2, $3, $4)", [req.session.userId, titre, description, recompense]);
+    res.redirect('/entreprise/dashboard');
 });
 
 app.post('/postuler-mission', async (req, res) => {
@@ -110,37 +127,13 @@ app.post('/postuler-mission', async (req, res) => {
 
 app.post('/soumettre-rapport', async (req, res) => {
     const { mission_id, contenu, note } = req.body;
-    await pool.query("INSERT INTO rapports (mission_id, ambassadeur_id, contenu, note) VALUES ($1, $2, $3, $4)", 
-        [mission_id, req.session.userId, contenu, note]);
-    res.redirect('/ambassadeur/dashboard?success=rapport_envoye');
+    await pool.query("INSERT INTO rapports (mission_id, ambassadeur_id, contenu, note) VALUES ($1, $2, $3, $4)", [mission_id, req.session.userId, contenu, note]);
+    res.redirect('/ambassadeur/dashboard');
 });
 
-// --- AUTHENTIFICATION ---
-app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    if (result.rows.length > 0 && await bcrypt.compare(password, result.rows[0].password)) {
-        req.session.userId = result.rows[0].id;
-        req.session.userRole = result.rows[0].role;
-        if (result.rows[0].role === 'admin') return res.redirect('/admin/dashboard');
-        if (result.rows[0].role === 'entreprise') return res.redirect('/entreprise/dashboard');
-        return res.redirect('/ambassadeur/dashboard');
-    }
-    res.send("Erreur de connexion");
-});
-
-app.post('/signup-ambassadeur', async (req, res) => {
-    const { nom, email, ville, password } = req.body;
-    const hash = await bcrypt.hash(password, 10);
-    await pool.query('INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)', [nom, email, ville, hash, 'ambassadeur']);
-    res.redirect('/login');
-});
-
-app.post('/signup-entreprise', async (req, res) => {
-    const { nom_entreprise, email, ville, password } = req.body;
-    const hash = await bcrypt.hash(password, 10);
-    await pool.query('INSERT INTO users (nom, email, ville, password, role) VALUES ($1, $2, $3, $4, $5)', [nom_entreprise, email, ville, hash, 'entreprise']);
-    res.redirect('/login');
+app.post('/admin/approuver', async (req, res) => {
+    await pool.query("UPDATE candidatures SET statut = 'approuvée' WHERE id = $1", [req.body.id]);
+    res.redirect('/admin/dashboard');
 });
 
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
