@@ -3,227 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FORFEO LAB - Portail Ambassadeurs & Entreprises</title>
-    
+    <title>FORFEO LAB - L'Élite de l'Audit</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-        .hero-animate { animation: float 6s ease-in-out infinite; }
-        
-        .btn-flash {
-            background: linear-gradient(45deg, #2563eb, #06b6d4, #2563eb);
-            background-size: 200% 200%;
-            color: white !important;
-            border: none;
-            font-weight: 800;
-            transition: all 0.3s;
-        }
-        .btn-flash:hover { transform: scale(1.05); }
-
-        /* Style Forfy IA Interactif */
-        .forfy-wrapper { position: fixed; bottom: 30px; right: 30px; z-index: 10000; font-family: 'Inter', sans-serif; }
-        .forfy-trigger { position: relative; cursor: pointer; transition: transform 0.3s; }
-        .forfy-trigger:hover { transform: scale(1.1); }
-        .forfy-video-circle { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #2563eb; background: #000; object-fit: cover; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        
-        /* Bulle Besoin d'aide */
-        .forfy-hint {
-            position: absolute; top: -45px; right: 0;
-            background: #2563eb; color: white; padding: 5px 15px;
-            border-radius: 20px; font-size: 12px; font-weight: bold;
-            white-space: nowrap; box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4);
-            animation: bounce 2s infinite;
-        }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-
-        .forfy-chat-box { 
-            position: absolute; bottom: 110px; right: 0; width: 300px; 
-            background: white; border-radius: 20px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
-            display: none; flex-direction: column; overflow: hidden;
-            border: 1px solid #e2e8f0;
-        }
-        .chat-header { background: #2563eb; color: white; padding: 12px 20px; font-size: 14px; font-weight: bold; }
-        .chat-content { padding: 15px; font-size: 13px; color: #1e293b; max-height: 200px; overflow-y: auto; }
-        .chat-options { padding: 10px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #f1f5f9; }
-        .chat-options button { 
-            border: 1px solid #e2e8f0; background: white; padding: 8px; 
-            border-radius: 10px; font-size: 12px; font-weight: 600; color: #2563eb;
-            cursor: pointer; text-align: left;
-        }
-        .chat-options button:hover { background: #f8fafc; border-color: #2563eb; }
+        :root { --primary: #2563eb; --dark: #050505; }
+        body { background-color: #ffffff; color: #000000; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .navbar { background: white; border-bottom: 1px solid #e2e8f0; padding: 15px 0; }
+        .navbar-brand { font-weight: 800; color: var(--primary) !important; }
+        .btn-premium { background: var(--primary); color: white; border: none; border-radius: 50px; font-weight: 700; padding: 12px 30px; }
+        .hero-section { padding: 100px 0 60px; background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); }
+        .card-plan { border-radius: 24px; border: 1px solid #e2e8f0; transition: 0.3s; background: white; }
+        .card-plan:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
-    <div class="main-container">
-        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
-            <div class="container">
-                <a class="navbar-brand fw-bold text-primary" href="/">
-                    <i class="bi bi-stars"></i> FORFEO LAB
-                </a>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto gap-2 align-items-center">
-                        <li class="nav-item"><a class="nav-link fw-semibold" href="#forfaits">Nos Forfaits</a></li>
-                        <li class="nav-item"><a class="nav-link fw-semibold" href="/entreprise/dashboard">Portail</a></li>
-                        <li class="nav-item ms-md-2">
-                            <a class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" href="/ambassadeur/inscription">
-                                <i class="bi bi-person-plus-fill me-1"></i> S'inscrire
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
+    <nav class="navbar navbar-expand-lg fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/">FORFEO LAB</a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-        <section class="py-5 text-center mt-5">
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-lg-9 hero-animate">
-                        <span class="badge bg-white text-primary border border-primary-subtle rounded-pill px-3 py-2 mb-4 shadow-sm">
-                            ✨ Devenez les yeux de l'excellence au Québec
-                        </span>
-                        <h1 class="display-4 mb-3 fw-bold">Vivez l'expérience Forfeo en VIP</h1>
-                        <p class="lead text-muted mb-4 px-md-5">
-                            Rejoignez notre cercle d'élite. Votre mission ? Évaluer anonymement les standards des plus grands établissements. 
-                            En échange, profitez d'expériences exclusives et gratuites.
-                        </p>
-                        <div class="d-flex justify-content-center align-items-center gap-3 flex-column flex-md-row mb-5">
-                            <a href="/ambassadeur/inscription" class="btn btn-flash btn-lg px-5 py-3 rounded-pill shadow-lg text-decoration-none">
-                                <i class="bi bi-star-fill me-2"></i> DEVENIR AMBASSADEUR
-                            </a>
-                        </div>
-                        
-                        <div class="row g-4 mt-2 text-start">
-                            <div class="col-md-4">
-                                <h6 class="fw-bold"><i class="bi bi-geo-alt-fill text-primary"></i> Expériences Locales</h6>
-                                <p class="small text-muted">Accédez gratuitement aux restaurants et spas partenaires.</p>
-                            </div>
-                            <div class="col-md-4">
-                                <h6 class="fw-bold"><i class="bi bi-shield-check text-primary"></i> Impact Réel</h6>
-                                <p class="small text-muted">Vos rapports aident les entreprises à atteindre la perfection.</p>
-                            </div>
-                            <div class="col-md-4">
-                                <h6 class="fw-bold"><i class="bi bi-award-fill text-primary"></i> Statut Élite</h6>
-                                <p class="small text-muted">Un réseau VIP réservé aux passionnés de qualité.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="forfaits" class="py-5 bg-light">
-            <div class="container">
-                <div class="text-center mb-5">
-                    <h2 class="fw-bold">Solutions Entreprise</h2>
-                    <p class="text-muted">Des outils précis pour piloter votre qualité de service.</p>
-                </div>
-                <div class="row g-4 justify-content-center">
-                    <div class="col-md-4">
-                        <div class="card p-4 text-center h-100 border-0 shadow-sm">
-                            <h3 class="h5 fw-bold">Découverte</h3>
-                            <div class="display-5 fw-bold my-3 text-primary">49$ <small class="fs-6 text-muted">CAD</small></div>
-                            <ul class="text-start small text-muted mb-4 list-unstyled">
-                                <li class="mb-2"><i class="bi bi-check2 text-success"></i> 1 Audit complet / mois</li>
-                                <li class="mb-2"><i class="bi bi-check2 text-success"></i> Rapport PDF détaillé</li>
-                                <li class="mb-2"><i class="bi bi-check2 text-success"></i> Accès Dashboard de base</li>
-                            </ul>
-                            <a href="https://buy.stripe.com/6oUbJ2bPs3W79QsalUd7q02" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Souscrire</a>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card p-4 text-center h-100 border-primary shadow-sm">
-                            <div class="badge bg-primary mb-2">PLUS POPULAIRE</div>
-                            <h3 class="h5 fw-bold text-primary">Croissance</h3>
-                            <div class="display-5 fw-bold my-3">99$ <small class="fs-6 text-muted">CAD</small></div>
-                            <ul class="text-start small text-muted mb-4 list-unstyled">
-                                <li class="mb-2"><i class="bi bi-check2 text-success"></i> 3 Audits complets / mois</li>
-                                <li class="mb-2"><i class="bi bi-check2 text-success"></i> Comparatif marché local</li>
-                                <li class="mb-2"><i class="bi bi-check2 text-success"></i> Support prioritaire</li>
-                            </ul>
-                            <a href="https://buy.stripe.com/7sY4gA06K1NZ6Eg3Xwd7q00" class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm">Souscrire</a>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card p-4 text-center h-100 border-0 shadow-sm">
-                            <h3 class="h5 fw-bold">Excellence</h3>
-                            <div class="display-5 fw-bold my-3 text-primary">149$ <small class="fs-6 text-muted">CAD</small></div>
-                            <ul class="text-start small text-muted mb-4 list-unstyled">
-                                <li class="mb-2"><i class="bi bi-check2 text-success"></i> 5 Audits complets / mois</li>
-                                <li class="mb-2"><i class="bi bi-check2 text-success"></i> Coaching d'équipe 1h/mois</li>
-                                <li class="mb-2"><i class="bi bi-check2 text-success"></i> Analyses IA avancées</li>
-                            </ul>
-                            <a href="https://buy.stripe.com/5kQ5kE7zcgIT0fS1Pod7q01" class="btn btn-outline-primary w-100 rounded-pill fw-bold">Souscrire</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <footer class="text-center py-4 bg-white border-top">
-            <div class="container"><p class="mb-0 fw-semibold">&copy; 2025 FORFEO LAB</p></div>
-        </footer>
-    </div>
-
-    <div class="forfy-wrapper">
-        <div id="forfyHint" class="forfy-hint">Besoin d'aide ? 👋</div>
-        <div class="forfy-chat-box" id="forfyChat">
-            <div class="chat-header">Forfy AI 🐾</div>
-            <div class="chat-content" id="chatContent">
-                Bienvenue ! Je suis Forfy. Je connais tout sur Forfeo Lab. Posez-moi vos questions sur les missions d'ambassadeur ou nos solutions entreprise !
-            </div>
-            <div class="chat-options" id="chatOptions">
-                <button onclick="handleForfy('ambassadeur')">C'est quoi un Ambassadeur ? 🤝</button>
-                <button onclick="handleForfy('tarifs')">Explique-moi les tarifs 💰</button>
-                <button onclick="handleForfy('audit')">Comment se passe un audit ? 📋</button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center gap-2 mt-3 mt-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold text-dark" href="#forfaits">Nos Forfaits</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold text-dark" href="/login">Portail</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/ambassadeur/inscription" class="btn btn-premium w-100">S'inscrire</a>
+                    </li>
+                </ul>
             </div>
         </div>
-        <div class="forfy-trigger" onclick="toggleForfy()">
-            <video class="forfy-video-circle" src="/videos/GifForfy.MP4" autoplay loop muted playsinline></video>
+    </nav>
+
+    <section class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-800 mb-4">L'excellence mérite un regard expert.</h1>
+            <p class="lead text-muted mb-5">Audit de luxe, expériences exclusives et rapports de haute précision.</p>
         </div>
-    </div>
+    </section>
 
-    <script>
-        function toggleForfy() {
-            const chat = document.getElementById('forfyChat');
-            const hint = document.getElementById('forfyHint');
-            const isOpen = (chat.style.display === 'flex');
-            
-            chat.style.display = isOpen ? 'none' : 'flex';
-            if(hint) hint.style.display = isOpen ? 'block' : 'none';
-        }
+    <section id="forfaits" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center fw-bold mb-5">Nos Forfaits</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card card-plan p-4 text-center">
+                        <h3 class="h5 fw-bold">Découverte</h3>
+                        <div class="display-5 fw-bold my-3 text-primary">49$</div>
+                        <p class="small text-muted mb-4">Parfait pour un premier test d'établissement.</p>
+                        <a href="https://buy.stripe.com/6oUbJ2bPs3W79QsalUd7q02" class="btn btn-outline-primary rounded-pill">Choisir</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-plan p-4 text-center border-primary shadow">
+                        <h3 class="h5 fw-bold">Croissance</h3>
+                        <div class="display-5 fw-bold my-3 text-primary">99$</div>
+                        <p class="small text-muted mb-4">Le choix favori pour un suivi mensuel.</p>
+                        <a href="https://buy.stripe.com/7sY4gA06K1NZ6Eg3Xwd7q00" class="btn btn-primary rounded-pill">Choisir</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-plan p-4 text-center">
+                        <h3 class="h5 fw-bold">Excellence</h3>
+                        <div class="display-5 fw-bold my-3 text-primary">149$</div>
+                        <p class="small text-muted mb-4">Pour une gestion d'élite multi-sites.</p>
+                        <a href="https://buy.stripe.com/5kQ5kE7zcgIT0fS1Pod7q01" class="btn btn-outline-primary rounded-pill">Choisir</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-        function handleForfy(action) {
-            const content = document.getElementById('chatContent');
-            const options = document.getElementById('chatOptions');
-            
-            if (action === 'ambassadeur') {
-                content.innerHTML = "Un Ambassadeur est un client mystère VIP. Votre rôle est d'évaluer anonymement la qualité (accueil, propreté, service). En échange, l'expérience est gratuite ! ✨";
-                options.innerHTML = `<button onclick="window.location.href='/ambassadeur/inscription'">S'inscrire comme Ambassadeur 🚀</button><button onclick="handleForfy('start')">Retour</button>`;
-            } else if (action === 'tarifs') {
-                content.innerHTML = "Nous proposons 3 forfaits pour les entreprises : Découverte (1 audit), Croissance (3 audits) et Excellence (5 audits). Ils aident à piloter la performance. 🇨🇦";
-                options.innerHTML = `<button onclick="window.location.href='#forfaits'">Voir les tarifs 💰</button><button onclick="handleForfy('start')">Retour</button>`;
-            } else if (action === 'audit') {
-                content.innerHTML = "L'audit se fait via une liste de critères précis. Tout est anonyme. Vous soumettez votre rapport et vos photos sur votre portail sécurisé. 🕵️";
-                options.innerHTML = `<button onclick="handleForfy('start')">Compris !</button>`;
-            } else {
-                content.innerHTML = "Comment puis-je vous aider ?";
-                options.innerHTML = `
-                    <button onclick="handleForfy('ambassadeur')">C'est quoi un Ambassadeur ? 🤝</button>
-                    <button onclick="handleForfy('tarifs')">Explique-moi les tarifs 💰</button>
-                    <button onclick="handleForfy('audit')">Comment se passe un audit ? 📋</button>
-                `;
-            }
-        }
-    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
