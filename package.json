@@ -1,24 +1,17 @@
 {
   "name": "forfeo-app",
   "version": "1.0.0",
-  "description": "Application Forfeo Business",
+  "description": "Plateforme Forfeo Lab",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "dotenv": "^17.2.3",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
-    "express": "^4.18.2",
-    "express-session": "^1.18.2",
-    "nodemailer": "^7.0.12",
-    "openai": "^4.0.0",
-    "pg": "^8.11.3",
-    "stripe": "^14.0.0"
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "pg": "^8.11.5"
   }
 }
