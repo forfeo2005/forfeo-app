@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement Réussi | FORFEO LAB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        
+        .success-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            transition: transform 0.3s ease;
+        }
+
+        /* Effet qui bouge au survol */
+        .success-card:hover {
+            transform: scale(1.02);
+        }
+
+        .check-container {
+            width: 100px; height: 100px;
+            background: #28a745;
+            color: white;
+            font-size: 50px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            margin: 0 auto 2rem;
+            animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .btn-dash {
+            transition: all 0.3s ease;
+            font-weight: bold;
+            padding: 12px 30px;
+        }
+        .btn-dash:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0,123,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="success-card">
+        <div class="check-container">✓</div>
+        <h1 class="fw-bold text-dark">Paiement Confirmé !</h1>
+        <p class="text-muted fs-5 mb-4">
+            Bienvenue dans l'élite. Votre statut **Premium** a été activé automatiquement.
+        </p>
+        <div class="bg-light p-3 rounded-3 mb-4 text-start">
+            <small class="text-uppercase fw-bold text-primary d-block mb-1">Prochaines étapes :</small>
+            <ul class="list-unstyled mb-0 small text-dark">
+                <li>✅ Accès illimité aux missions</li>
+                <li>✅ Réception de l'email de bienvenue</li>
+                <li>✅ Support prioritaire activé</li>
+            </ul>
+        </div>
+        <a href="/entreprise/dashboard" class="btn btn-primary btn-dash rounded-pill w-100">Accéder à mon Dashboard</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
