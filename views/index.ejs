@@ -6,152 +6,32 @@
     <title>FORFEO LAB | Accueil</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { --primary-blue: #007bff; --dark-bg: #1a1a1a; }
-        
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-
-        /* Effet de mouvement sur les cartes */
-        .stat-card {
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            cursor: pointer;
-            border-radius: 20px;
-        }
-        .stat-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            border-color: var(--primary-blue);
-        }
-
-        .hero-section {
-            background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
-            color: white;
-            padding: 100px 0;
-        }
-
-        /* Menu Hamburger Mobile */
-        @media (max-width: 991px) {
-            .navbar-collapse {
-                background: white;
-                padding: 20px;
-                border-radius: 15px;
-                margin-top: 10px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            }
-        }
+        .video-mosaic { display: flex; overflow-x: auto; gap: 20px; padding-bottom: 20px; scrollbar-width: none; }
+        .video-card { min-width: 300px; border-radius: 15px; overflow: hidden; background: #000; shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .welcome-msg { background: #eef6ff; border-radius: 50px; padding: 10px 25px; display: inline-block; font-weight: bold; }
     </style>
 </head>
 <body>
-
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom p-3">
         <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="mainNavbar">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item"><a class="nav-link px-3" href="/ambassadeur/details">L'Impact</a></li>
-                    <li class="nav-item"><a class="nav-link px-3" href="/contact">Support</a></li>
-                    <li class="nav-item"><a class="nav-link px-3" href="/login">Connexion</a></li>
-                    <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
-                        <a class="btn btn-primary rounded-pill px-4 w-100" href="/entreprise/inscription">Devenir Partenaire</a>
-                    </li>
-                </ul>
-            </div>
+            <a class="navbar-brand fw-bold" href="/">FORFEO <span class="text-primary">LAB</span></a>
+            <% if (userName) { %>
+                <div class="welcome-msg text-primary small">👋 Bonjour <%= userName %> !</div>
+            <% } %>
         </div>
     </nav>
 
-    <header class="hero-section text-center">
-        <div class="container">
-            <h1 class="display-3 fw-bold mb-3">L'Excellence au service du Local</h1>
-            <p class="lead opacity-75 mb-5 mx-auto" style="max-width: 800px;">
-                Propulsez votre établissement vers de nouveaux sommets grâce à l'analyse de nos ambassadeurs d'élite.
-            </p>
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <a href="/entreprise/inscription" class="btn btn-primary btn-lg rounded-pill px-5">Je suis une Entreprise</a>
-                <a href="/ambassadeur/inscription" class="btn btn-outline-light btn-lg rounded-pill px-5">Je suis un Ambassadeur</a>
-            </div>
+    <div class="container my-5">
+        <h2 class="fw-bold mb-4">Découvrez FORFEO en vidéo</h2>
+        <div class="video-mosaic">
+            <div class="video-card"><div class="ratio ratio-16x9"><video src="" poster="https://via.placeholder.com/400x225?text=Video+1" controls></video></div></div>
+            <div class="video-card"><div class="ratio ratio-16x9"><video src="" poster="https://via.placeholder.com/400x225?text=Video+2" controls></video></div></div>
+            <div class="video-card"><div class="ratio ratio-16x9"><video src="" poster="https://via.placeholder.com/400x225?text=Video+3" controls></video></div></div>
+            <div class="video-card"><div class="ratio ratio-16x9"><video src="" poster="https://via.placeholder.com/400x225?text=Video+4" controls></video></div></div>
         </div>
-    </header>
+    </div>
 
-    <section class="py-5 bg-white">
-        <div class="container py-5">
-            <div class="text-center mb-5">
-                <h2 class="fw-bold display-5">Deviens Ambassadeur Forfeo</h2>
-                <p class="text-muted fs-5">Tu aimes découvrir des endroits locaux, partager tes coups de cœur et vivre des expériences uniques ?</p>
-            </div>
+    <div id="forfy-app"></div>
 
-            <div class="row g-4 mb-5">
-                <div class="col-md-6 col-lg-4">
-                    <div class="card stat-card p-4 h-100 shadow-sm border-0 border-start border-primary border-4">
-                        <h5 class="fw-bold">1) Accès à des expériences exclusives</h5>
-                        <p class="small text-muted mb-0">Hôtels, restos, activités, détente... sois parmi les premiers à découvrir des forfaits sélectionnés par Forfeo.</p>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4">
-                    <div class="card stat-card p-4 h-100 shadow-sm border-0 border-start border-primary border-4">
-                        <h5 class="fw-bold">2) Avantages concrets et VIP</h5>
-                        <p class="small text-muted mb-0">Reçois des rabais, des accès privilégiés, des bonus surprises et des invitations à des moments spéciaux.</p>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4">
-                    <div class="card stat-card p-4 h-100 shadow-sm border-0 border-start border-primary border-4">
-                        <h5 class="fw-bold">3) Ta voix compte vraiment</h5>
-                        <p class="small text-muted mb-0">Aide à améliorer l’expérience client en partageant ton avis authentique sur ce qui est top ou peut être ajusté.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row align-items-center mt-5 bg-dark text-white rounded-4 p-4 p-md-5 mx-1">
-                <div class="col-lg-7">
-                    <h3 class="fw-bold mb-4">Comment ça fonctionne ?</h3>
-                    <ul class="list-unstyled">
-                        <li class="mb-3">✅ <strong>Tu t’inscris</strong> au programme Ambassadeur.</li>
-                        <li class="mb-3">✅ <strong>Tu reçois</strong> des opportunités (expériences / tests / missions).</li>
-                        <li class="mb-3">✅ <strong>Tu partages</strong> ton feedback simplement avec ton style.</li>
-                        <li class="mb-0">✅ <strong>Tu accumules</strong> des avantages et tu grandis dans la communauté.</li>
-                    </ul>
-                </div>
-                <div class="col-lg-5 text-center mt-4 mt-lg-0">
-                    <p class="fs-5 mb-4">Prêt(e) à vivre l’univers Forfeo de l’intérieur ?</p>
-                    <a href="/ambassadeur/inscription" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow">M'INSCRIRE MAINTENANT</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="py-5 bg-light">
-        <div class="container text-center">
-            <h2 class="fw-bold mb-5">L'Impact Mesurable</h2>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="stat-card bg-white p-5">
-                        <h2 class="display-4 fw-bold text-primary">+25%</h2>
-                        <p class="fw-bold">Chiffre d'Affaires</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stat-card bg-white p-5">
-                        <h2 class="display-4 fw-bold text-success">4.9/5</h2>
-                        <p class="fw-bold">E-Réputation</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stat-card bg-white p-5">
-                        <h2 class="display-4 fw-bold text-danger">91%</h2>
-                        <p class="fw-bold">Fidélisation</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <footer class="py-5 bg-dark text-white text-center">
-        <div class="container">
-            <p class="mb-0">© 2025 FORFEO LAB. Tous droits réservés.</p>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+    <script src="/js/forfy-brain.js"></script> </body>
 </html>
