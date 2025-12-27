@@ -65,21 +65,31 @@ app.get('/entreprise/dashboard', async (req, res) => {
 
 app.get('/ambassadeur/dashboard', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
-    // On n'affiche que les missions encore actives et non réservées
     const disponibles = await pool.query("SELECT * FROM missions WHERE statut = 'actif'");
     res.render('ambassadeur-dashboard', { missions: disponibles.rows, userName: req.session.userName });
 });
 
-// --- ACTIONS MISSIONS (Fix bouton statique) ---
+// --- ROUTE PROFIL AMBASSADEUR (MES MISSIONS) ---
+app.get('/ambassadeur/mes-missions', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
+    try {
+        const mesMissions = await pool.query(
+            "SELECT * FROM missions WHERE ambassadeur_id = $1 ORDER BY id DESC", 
+            [req.session.userId]
+        );
+        res.render('ambassadeur-missions', { missions: mesMissions.rows, userName: req.session.userName });
+    } catch (err) { res.status(500).send("Erreur de récupération des missions."); }
+});
+
+// --- ACTION POSTULER (Fix bouton statique) ---
 app.post('/postuler-mission', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.status(403).send("Non autorisé");
     const { id_mission } = req.body;
     try {
-        // Met à jour la mission pour la lier à l'ambassadeur
         await pool.query("UPDATE missions SET statut = 'reserve', ambassadeur_id = $1 WHERE id = $2", 
         [req.session.userId, id_mission]);
-        res.send("<script>alert('Mission réservée avec succès !'); window.location.href='/ambassadeur/dashboard';</script>");
-    } catch (err) { res.status(500).send("Erreur lors de la postulation"); }
+        res.send("<script>alert('Félicitations ! Mission réservée. Retrouvez-la dans Mes Missions.'); window.location.href='/ambassadeur/dashboard';</script>");
+    } catch (err) { res.status(500).send("Erreur lors de la réservation."); }
 });
 
 // --- FORFY CHAT ---
@@ -91,7 +101,7 @@ app.post('/forfy/chat', async (req, res) => {
             messages: [{ role: "system", content: "Tu es Forfy, l'IA de FORFEO LAB au Québec." }, { role: "user", content: message }],
         });
         res.json({ answer: response.choices[0].message.content });
-    } catch (err) { res.status(500).json({ answer: "Erreur Forfy." }); }
+    } catch (err) { res.status(500).json({ answer: "Erreur de connexion Forfy." }); }
 });
 
-app.listen(port, () => console.log(`🚀 Serveur actif sur port ${port}`));
+app.listen(port, () => console.log(`🚀 Serveur Live sur le port ${port}`));
