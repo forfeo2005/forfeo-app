@@ -6,67 +6,100 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #f4f7f6; }
-        .navbar-custom { background-color: #1a1a1a; padding: 15px; }
-        .statut-banner { background-color: #1a1a1a; color: white; border-radius: 20px; padding: 30px; margin-bottom: 30px; }
-        .card-custom { border-radius: 20px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); background: white; padding: 25px; }
-        .mission-card { background: white; border-radius: 15px; border-left: 5px solid #0d6efd; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-        .btn-launch { background-color: #0d6efd; color: white; border-radius: 50px; font-weight: bold; padding: 12px; border: none; width: 100%; }
-        .badge-price { border: 1px solid #0d6efd; color: #0d6efd; border-radius: 50px; padding: 5px 15px; font-size: 0.8rem; }
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .nav-black { background-color: #1a1a1a; padding: 15px 0; }
+        .statut-banner { background-color: #1a1a1a; color: white; border-radius: 20px; padding: 40px; margin-top: 20px; position: relative; overflow: hidden; }
+        .statut-banner h1 { font-weight: 800; font-size: 2.5rem; }
+        .card-custom { border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background: white; padding: 30px; }
+        .mission-item { background: white; border-radius: 15px; padding: 20px; margin-bottom: 15px; border-left: 6px solid #0d6efd; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .btn-primary-pill { background: #0d6efd; border: none; border-radius: 50px; padding: 12px 30px; font-weight: bold; width: 100%; }
+        .badge-recompense { border: 1px solid #0d6efd; color: #0d6efd; border-radius: 50px; padding: 4px 12px; font-size: 0.85rem; font-weight: 600; }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-custom">
-        <div class="container">
-            <span class="navbar-brand text-white fw-bold">FORFEO <span class="text-primary">LAB</span></span>
-            <div class="d-flex align-items-center">
-                <a href="/contact" class="text-white text-decoration-none me-4 small">Support</a>
-                <a href="/logout" class="btn btn-outline-light btn-sm rounded-pill">Déconnexion</a>
+
+    <nav class="nav-black shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="/" class="text-white text-decoration-none fw-bold fs-4">FORFEO <span class="text-primary">LAB</span></a>
+            <div class="d-flex gap-4 align-items-center">
+                <a href="/entreprise/dashboard" class="text-white text-decoration-none small fw-bold border-bottom border-primary">Dashboard</a>
+                <a href="/contact" class="text-white text-decoration-none small">Support</a>
+                <a href="/logout" class="btn btn-outline-light btn-sm rounded-pill px-3">Déconnexion</a>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <div class="statut-banner">
-            <h2 class="fw-bold">Votre Statut : 💎 Membre Premium</h2>
-            <p class="opacity-75">Vous avez un accès illimité aux missions et aux ambassadeurs.</p>
+    <div class="container">
+        <div class="statut-banner shadow-lg">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <span class="badge bg-primary mb-3 px-3 py-2 rounded-pill">COMPTE VÉRIFIÉ</span>
+                    <h1>Bonjour, <%= userName %> !</h1>
+                    <p class="fs-5 opacity-75">Statut : 💎 <strong>Membre Premium</strong> (Accès Illimité)</p>
+                </div>
+            </div>
         </div>
 
-        <div class="row g-4">
+        <div class="row mt-5 g-4">
             <div class="col-lg-4">
                 <div class="card-custom">
-                    <h4 class="fw-bold mb-4">Publier une Mission</h4>
+                    <h4 class="fw-bold mb-4"><i class="fas fa-plus-circle text-primary me-2"></i>Lancer une mission</h4>
                     <form action="/creer-mission" method="POST">
                         <div class="mb-3">
-                            <label class="small fw-bold mb-2">Titre de la mission</label>
-                            <input type="text" name="titre" class="form-control rounded-pill" placeholder="Ex: Audit Qualité Service">
+                            <label class="form-label small fw-bold">TITRE DU PROJET</label>
+                            <input type="text" name="titre" class="form-control rounded-pill px-3" placeholder="Ex: Test menu dégustation" required>
                         </div>
                         <div class="mb-3">
-                            <label class="small fw-bold mb-2">Description des attentes</label>
-                            <textarea name="description" class="form-control" rows="4" style="border-radius: 15px;"></textarea>
+                            <label class="form-label small fw-bold">DESCRIPTION DES ATTENTES</label>
+                            <textarea name="description" class="form-control" rows="4" style="border-radius:15px;" placeholder="Détaillez ce que l'ambassadeur doit faire..." required></textarea>
                         </div>
-                        <div class="mb-3">
-                            <label class="small fw-bold mb-2">Récompense offerte</label>
-                            <input type="text" name="recompense" class="form-control rounded-pill" placeholder="Ex: Repas pour 2 personnes">
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">RÉCOMPENSE</label>
+                            <input type="text" name="recompense" class="form-control rounded-pill px-3" placeholder="Ex: Bon d'achat de 50€" required>
                         </div>
-                        <button type="submit" class="btn-launch">LANCER LA MISSION</button>
+                        <button type="submit" class="btn-primary-pill shadow">PUBLIER MAINTENANT</button>
                     </form>
                 </div>
             </div>
 
             <div class="col-lg-8">
-                <h4 class="fw-bold mb-4">Mes Missions Actives</h4>
-                <% missions.forEach(m => { %>
-                    <div class="mission-card d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="fw-bold mb-1"><%= m.titre %></h5>
-                            <p class="small text-muted mb-2"><%= m.description %></p>
-                            <span class="badge-price">🎁 <%= m.recompense %></span>
-                        </div>
-                        <span class="badge bg-success rounded-pill px-3">En recherche</span>
+                <h4 class="fw-bold mb-4"><i class="fas fa-tasks text-primary me-2"></i>Missions en cours</h4>
+                <% if (missions.length === 0) { %>
+                    <div class="text-center p-5 card-custom">
+                        <p class="text-muted">Aucune mission active pour le moment.</p>
                     </div>
-                <% }) %>
+                <% } else { %>
+                    <% missions.forEach(m => { %>
+                        <div class="mission-item">
+                            <div>
+                                <h5 class="fw-bold mb-1"><%= m.titre %></h5>
+                                <p class="text-muted small mb-2"><%= m.description %></p>
+                                <span class="badge-recompense">🎁 <%= m.recompense %></span>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-light text-primary rounded-pill border px-3">En recherche</span>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } %>
             </div>
+        </div>
+    </div>
+
+    <div id="forfy-btn" style="position:fixed; bottom:20px; right:20px; cursor:pointer; z-index:1000;">
+        <img src="/ForfyLogo.png" alt="Forfy" style="width:70px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));">
+    </div>
+
+    <div id="forfy-chat" style="display:none; position:fixed; bottom:100px; right:20px; width:320px; height:450px; background:white; border-radius:20px; box-shadow:0 10px-40px rgba(0,0,0,0.2); z-index:1000; overflow:hidden; border:1px solid #eee;">
+        <div style="background:#1a1a1a; color:white; padding:15px; font-weight:bold; display:flex; align-items:center;">
+            <img src="/ForfyLogo.png" style="width:30px; margin-right:10px;">
+            Discussion avec Forfy
+        </div>
+        <div id="forfy-msgs" style="height:330px; padding:15px; overflow-y:auto; font-size:0.9rem;">
+            <div style="margin-bottom:10px;"><b>Forfy:</b> Salut ! Je suis ton assistant. Comment puis-je t'aider aujourd'hui ?</div>
+        </div>
+        <div style="padding:10px; border-top:1px solid #eee;">
+            <input type="text" id="forfy-input" placeholder="Écris ici..." style="width:100%; border-radius:50px; border:1px solid #ddd; padding:8px 15px; outline:none;">
         </div>
     </div>
 
