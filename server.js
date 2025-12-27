@@ -18,34 +18,37 @@ app.use(express.urlencoded({ extended: true }));
 app.use(session({ secret: 'forfeo_secret', resave: false, saveUninitialized: false }));
 app.set('view engine', 'ejs');
 
-// --- ROUTES DE NAVIGATION ---
+// --- ROUTES DE NAVIGATION (Fix Cannot GET/POST) ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere'));
 app.get('/forfaits', (req, res) => res.render('forfaits'));
 app.get('/ambassadeurs', (req, res) => res.render('ambassadeurs'));
+app.get('/contact', (req, res) => res.render('contact'));
 app.get('/login', (req, res) => res.render('login'));
+app.get('/register', (req, res) => res.render('register'));
 
-// --- DASHBOARDS ---
-app.get('/admin/dashboard', async (req, res) => {
-    if (req.session.userRole !== 'admin') return res.redirect('/login');
-    const entreprises = await pool.query("SELECT * FROM users WHERE role = 'entreprise'");
-    const rapports = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id");
-    res.render('admin-dashboard', { entreprises: entreprises.rows, rapports: rapports.rows });
+// --- LOGIQUE DE CONNEXION (Fix Cannot POST /login) ---
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+        if (result.rows.length > 0 && await bcrypt.compare(password, result.rows[0].password)) {
+            req.session.userId = result.rows[0].id;
+            req.session.userName = result.rows[0].nom;
+            req.session.userRole = result.rows[0].role;
+            return res.redirect(`/${req.session.userRole}/dashboard`);
+        }
+        res.send("<script>alert('Identifiants incorrects'); window.location.href='/login';</script>");
+    } catch (err) { res.status(500).send("Erreur de connexion"); }
 });
 
+// --- DASHBOARDS ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1", [req.session.userId]);
-    res.render('entreprise-dashboard', { missions: missions.rows, userName: req.session.userName, isPremium: true });
+    res.render('entreprise-dashboard', { missions: missions.rows, userName: req.session.userName });
 });
 
-app.get('/ambassadeur/dashboard', async (req, res) => {
-    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
-    const disponibles = await pool.query("SELECT * FROM missions WHERE statut = 'actif'");
-    res.render('ambassadeur-dashboard', { missions: disponibles.rows });
-});
-
-// --- API FORFY ---
 app.post('/forfy/chat', async (req, res) => {
     try {
         const { message } = req.body;
@@ -54,7 +57,7 @@ app.post('/forfy/chat', async (req, res) => {
             messages: [{ role: "system", content: "Tu es Forfy, l'IA de FORFEO LAB au Québec." }, { role: "user", content: message }],
         });
         res.json({ answer: response.choices[0].message.content });
-    } catch (err) { res.status(500).json({ answer: "Erreur de connexion." }); }
+    } catch (err) { res.status(500).json({ answer: "Erreur Forfy." }); }
 });
 
-app.listen(port, () => console.log(`🚀 Live sur ${port}`));
+app.listen(port, () => console.log(`🚀 Live sur port ${port}`));
