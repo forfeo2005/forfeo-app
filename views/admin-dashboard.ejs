@@ -3,74 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Direction | FORFEO LAB</title>
+    <title>Direction FORFEO | Administration</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-        .admin-card { border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .status-badge { font-size: 0.75rem; padding: 5px 12px; border-radius: 50px; font-weight: bold; }
-        .bg-premium { background-color: #e3f2fd; color: #0d6efd; }
-        .rapport-item { background: white; border-left: 5px solid #0d6efd; transition: 0.3s; }
-        .rapport-item:hover { transform: translateX(5px); }
+        :root { --admin-blue: #0d6efd; --bg-gray: #f8f9fa; }
+        body { background-color: var(--bg-gray); font-family: 'Segoe UI', sans-serif; }
+        
+        .admin-nav { background-color: #1a1a1a; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .card-custom { border-radius: 15px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        
+        /* Style des badges de statut */
+        .status-badge { font-size: 0.75rem; padding: 6px 12px; border-radius: 50px; font-weight: 700; text-transform: uppercase; }
+        .bg-premium-light { background-color: #e3f2fd; color: #0d6efd; }
+        .bg-standard-light { background-color: #f1f3f5; color: #6c757d; }
+
+        /* Style des rapports d'audit */
+        .report-card { 
+            border-left: 5px solid var(--admin-blue); 
+            transition: transform 0.2s ease;
+            background: white;
+        }
+        .report-card:hover { transform: translateX(5px); }
+        
+        .table-responsive { border-radius: 10px; }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-dark mb-4">
+
+    <nav class="navbar navbar-expand-lg navbar-dark admin-nav mb-4">
         <div class="container">
-            <span class="navbar-brand fw-bold">FORFEO <span class="text-primary">ADMIN</span></span>
-            <a href="/logout" class="btn btn-outline-light btn-sm">Sortir</a>
+            <a class="navbar-brand fw-bold" href="/">FORFEO <span class="text-primary">ADMIN</span></a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#adminMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="adminMenu">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="btn btn-outline-light btn-sm rounded-pill px-4" href="/logout">Déconnexion</a></li>
+                </ul>
+            </div>
         </div>
     </nav>
 
-    <div class="container">
-        <div class="row">
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="fw-bold text-dark">Tableau de Bord Direction</h2>
+                <p class="text-muted">Gérez vos partenaires et consultez les audits en temps réel.</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
             <div class="col-lg-7">
-                <h4 class="fw-bold mb-3">Partenaires Enregistrés</h4>
-                <div class="card admin-card overflow-hidden">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="ps-3">Entreprise</th>
-                                <th>Ville</th>
-                                <th>Offre</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% entreprises.forEach(ent => { %>
+                <div class="card card-custom p-4 h-100">
+                    <h5 class="fw-bold mb-4">Entreprises Partenaires</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
                                 <tr>
-                                    <td class="ps-3 fw-bold"><%= ent.nom %></td>
-                                    <td><%= ent.ville %></td>
-                                    <td>
-                                        <span class="status-badge <%= ent.is_premium ? 'bg-premium' : 'bg-light' %>">
-                                            <%= ent.is_premium ? 'PREMIUM' : 'STANDARD' %>
-                                        </span>
-                                    </td>
+                                    <th>Nom</th>
+                                    <th>Ville</th>
+                                    <th class="text-center">Statut</th>
                                 </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <% entreprises.forEach(ent => { %>
+                                    <tr>
+                                        <td class="fw-bold text-dark"><%= ent.nom %></td>
+                                        <td><%= ent.ville %></td>
+                                        <td class="text-center">
+                                            <span class="status-badge <%= ent.is_premium ? 'bg-premium-light' : 'bg-standard-light' %>">
+                                                <%= ent.is_premium ? 'Premium' : 'Standard' %>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                                <% if (entreprises.length === 0) { %>
+                                    <tr><td colspan="3" class="text-center py-4 text-muted">Aucune entreprise inscrite.</td></tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <div class="col-lg-5">
-                <h4 class="fw-bold mb-3">Audits Terminés</h4>
-                <% rapports.forEach(rep => { %>
-                    <div class="card admin-card rapport-item p-3 mb-3">
-                        <div class="d-flex justify-content-between">
-                            <h6 class="fw-bold m-0"><%= rep.titre %></h6>
-                            <small class="text-primary fw-bold"><%= rep.entreprise_nom %></small>
-                        </div>
-                        <hr class="my-2">
-                        <p class="small text-muted mb-0">"<%= rep.rapport_ambassadeur %>"</p>
+                <div class="card card-custom p-4 h-100">
+                    <h5 class="fw-bold mb-4">Rapports d'Ambassadeurs</h5>
+                    <div class="reports-container">
+                        <% rapports.forEach(rep => { %>
+                            <div class="report-card p-3 mb-3 shadow-sm rounded-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold m-0"><%= rep.titre %></h6>
+                                    <span class="badge bg-dark rounded-pill" style="font-size: 0.65rem;"><%= rep.entreprise_nom %></span>
+                                </div>
+                                <p class="small text-muted mb-0 italic">"<%= rep.rapport_ambassadeur %>"</p>
+                            </div>
+                        <% }) %>
+                        
+                        <% if (rapports.length === 0) { %>
+                            <div class="text-center py-5">
+                                <p class="text-muted small mb-0">En attente de rapports terminés.</p>
+                            </div>
+                        <% } %>
                     </div>
-                <% }) %>
-                <% if (rapports.length === 0) { %>
-                    <div class="text-center p-5 bg-white rounded shadow-sm">
-                        <p class="text-muted mb-0">En attente de rapports...</p>
-                    </div>
-                <% } %>
+                </div>
             </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
