@@ -3,44 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon Portail Ambassadeur | FORFEO LAB</title>
+    <title>Portail Ambassadeur | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .mission-card { transition: 0.3s; border-radius: 15px; border-left: 5px solid #28a745; }
-        .mission-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .mission-card { transition: 0.3s; border-radius: 20px; border-left: 6px solid #28a745; background: white; }
+        .mission-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .btn-validate { font-weight: bold; border-radius: 50px; }
     </style>
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="#">FORFEO <span class="text-success">AMBASSADEUR</span></a>
-            <a href="/logout" class="btn btn-outline-light btn-sm">Déconnexion</a>
+            <a class="navbar-brand fw-bold" href="/">FORFEO <span class="text-success">AMBASSADEUR</span></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navAmb">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navAmb">
+                <ul class="navbar-nav ms-auto"><li class="nav-item"><a class="nav-link" href="/logout">Déconnexion</a></li></ul>
+            </div>
         </div>
     </nav>
 
     <div class="container py-5">
-        <h2 class="fw-bold mb-4">Missions Disponibles</h2>
+        <h2 class="fw-bold mb-4">Mes Missions Disponibles</h2>
         <div class="row g-4">
             <% missions.forEach(mission => { %>
                 <div class="col-md-6 col-lg-4">
                     <div class="card mission-card p-4 shadow-sm border-0 h-100">
-                        <span class="badge bg-success-subtle text-success mb-2 w-fit">Nouvelle Mission</span>
                         <h5 class="fw-bold"><%= mission.titre %></h5>
-                        <p class="small text-muted"><%= mission.description %></p>
-                        <hr>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-bold text-primary">🎁 <%= mission.recompense %></span>
-                            <button class="btn btn-primary btn-sm rounded-pill">Postuler</button>
+                        <p class="text-muted small"><%= mission.description %></p>
+                        <div class="mt-auto">
+                            <hr>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="fw-bold text-primary">🎁 <%= mission.recompense %></span>
+                            </div>
+                            <button class="btn btn-success btn-validate w-100" data-bs-toggle="modal" data-bs-target="#modal<%= mission.id %>">
+                                Valider la Mission
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modal<%= mission.id %>" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg p-4" style="border-radius: 25px;">
+                            <h4 class="fw-bold">Rapport d'audit</h4>
+                            <p class="small text-muted">Partage ton expérience pour valider la mission.</p>
+                            <form action="/valider-mission" method="POST">
+                                <input type="hidden" name="mission_id" value="<%= mission.id %>">
+                                <textarea name="rapport" class="form-control mb-4" rows="6" placeholder="Qu'as-tu pensé de l'accueil, du service et de la qualité ?" required></textarea>
+                                <button type="submit" class="btn btn-primary w-100 py-3 btn-validate">Soumettre le Rapport</button>
+                            </form>
                         </div>
                     </div>
                 </div>
             <% }) %>
             <% if (missions.length === 0) { %>
-                <div class="col-12 text-center py-5">
-                    <p class="text-muted">Aucune mission n'est disponible pour le moment. Reviens plus tard !</p>
-                </div>
+                <div class="col-12 text-center py-5"><p class="text-muted">Aucune mission disponible actuellement.</p></div>
             <% } %>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
