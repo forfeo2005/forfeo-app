@@ -23,7 +23,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// --- WEBHOOK STRIPE ---
+// --- WEBHOOK STRIPE : ACTIVATION AUTOMATIQUE ---
 app.post('/stripe-webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
@@ -39,8 +39,8 @@ app.post('/stripe-webhook', express.raw({type: 'application/json'}), async (req,
             await transporter.sendMail({
                 from: 'forfeo2005@gmail.com',
                 to: customerEmail,
-                subject: 'Accès Premium Activé 💎',
-                text: `Votre statut Premium est désormais actif sur FORFEO LAB.`
+                subject: '💎 Accès Premium Activé - FORFEO LAB',
+                text: `Félicitations ! Votre compte est maintenant Premium.`
             });
         } catch (err) { console.error(err); }
     }
@@ -53,15 +53,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use(session({ secret: 'forfeo_secret', resave: false, saveUninitialized: false }));
 app.set('view engine', 'ejs');
 
-// --- ROUTES DE NAVIGATION (RÈGLE LES ERREURS "CANNOT GET") ---
+// --- ROUTES DE NAVIGATION ---
 app.get('/', (req, res) => res.render('index'));
 app.get('/login', (req, res) => res.render('login'));
 app.get('/contact', (req, res) => res.render('contact'));
-app.get('/entreprise/inscription', (req, res) => res.render('inscription-entreprise')); // CORRECTION
+app.get('/ambassadeur/details', (req, res) => res.render('ambassadeur-details'));
+app.get('/entreprise/inscription', (req, res) => res.render('inscription-entreprise'));
 app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
 
-// --- LOGIQUE DE CONNEXION (RÈGLE L'ERREUR "CANNOT POST /LOGIN") ---
-app.post('/login', async (req, res) => { // CORRECTION
+// --- LOGIQUE AUTHENTIFICATION ---
+app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
         const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
@@ -73,11 +74,10 @@ app.post('/login', async (req, res) => { // CORRECTION
                 return res.redirect(user.role === 'admin' ? '/admin/dashboard' : '/entreprise/dashboard');
             }
         }
-        res.send("<script>alert('Identifiants incorrects'); window.location.href='/login';</script>");
+        res.send("<script>alert('Identifiants invalides'); window.location.href='/login';</script>");
     } catch (err) { res.status(500).send("Erreur serveur"); }
 });
 
-// --- LOGIQUE D'INSCRIPTION ---
 app.post('/register', async (req, res) => {
     const { nom, email, password, role, ville } = req.body;
     const hashed = await bcrypt.hash(password, 10);
@@ -103,4 +103,4 @@ app.get('/admin/dashboard', async (req, res) => {
 
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
-app.listen(port, () => console.log(`🚀 Serveur opérationnel sur le port ${port}`));
+app.listen(port, () => console.log(`🚀 Serveur actif sur port ${port}`));
