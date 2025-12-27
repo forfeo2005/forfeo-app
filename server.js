@@ -3,7 +3,7 @@ const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const path = require('path');
-const stripe = require('stripe')('VOTRE_CLE_SECRETE_STRIPE_SK_LIVE'); // Remplacez par votre sk_live...
+const stripe = require('stripe')(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); // Remplacez par votre sk_live...
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
