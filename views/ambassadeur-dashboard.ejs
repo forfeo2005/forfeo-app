@@ -15,8 +15,9 @@
         <div class="container">
             <a class="navbar-brand fw-bold" href="/">FORFEO <span class="text-primary">LAB</span></a>
             <div class="d-flex align-items-center">
-                <span class="me-3 small fw-bold">Ambassadeur: <%= userName %></span>
-                <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill">Quitter</a>
+                <a href="/ambassadeur/mes-missions" class="btn btn-primary btn-sm rounded-pill me-3 px-4 fw-bold">Mes Missions</a>
+                <span class="me-3 small fw-bold text-muted">Bonjour, <%= userName %></span>
+                <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3">Quitter</a>
             </div>
         </div>
     </nav>
@@ -24,7 +25,7 @@
     <div class="container py-5">
         <div class="mb-5">
             <h1 class="fw-bold">Missions disponibles au Québec 📍</h1>
-            <p class="text-muted">Sélectionnez une mission et commencez votre audit.</p>
+            <p class="text-muted">Sélectionnez une mission pour commencer votre audit.</p>
         </div>
 
         <div class="row g-4">
@@ -35,9 +36,9 @@
                             <h4 class="fw-bold mb-0 text-uppercase"><%= m.titre %></h4>
                             <span class="reward-badge"><%= m.recompense %></span>
                         </div>
-                        <p class="text-muted"><%= m.description %></p>
+                        <p class="text-muted mb-4"><%= m.description %></p>
                         
-                        <div class="mt-auto pt-3">
+                        <div class="mt-auto">
                             <form action="/postuler-mission" method="POST">
                                 <input type="hidden" name="id_mission" value="<%= m.id %>">
                                 <button type="submit" class="btn btn-dark w-100 rounded-pill py-2 fw-bold shadow-sm">
@@ -51,8 +52,7 @@
 
             <% if (missions.length === 0) { %>
                 <div class="col-12 text-center py-5">
-                    <img src="/ForfyLogo.png" style="width:80px; opacity:0.3;" class="mb-3">
-                    <p class="text-muted fs-5">Aucune nouvelle mission disponible pour le moment.<br>Forfy vous préviendra dès qu'un nouvel audit sera publié !</p>
+                    <p class="text-muted fs-5">Aucune nouvelle mission disponible.<br>Consultez vos missions en cours dans l'onglet "Mes Missions".</p>
                 </div>
             <% } %>
         </div>
@@ -65,7 +65,7 @@
     <div id="forfy-chat" style="display:none; position:fixed; bottom:100px; right:25px; width:320px; height:450px; background:white; border-radius:20px; box-shadow:0 15px 50px rgba(0,0,0,0.15); z-index:1000; overflow:hidden; border:1px solid #eee;">
         <div style="background:#0d6efd; color:white; padding:15px; font-weight:bold;">Forfy - Assistant FORFEO</div>
         <div id="forfy-msgs" style="height:330px; padding:15px; overflow-y:auto; font-size:0.9rem;">
-            <div class="mb-2"><b>Forfy:</b> Prêt pour un audit au Québec ? Je peux t'aider à choisir !</div>
+            <div class="mb-2"><b>Forfy:</b> Une question sur une mission au Québec ? Je t'écoute !</div>
         </div>
         <div style="padding:10px; border-top:1px solid #eee;">
             <input type="text" id="forfy-input" placeholder="Posez une question..." style="width:100%; border-radius:50px; border:1px solid #ddd; padding:10px 15px; outline:none;">
