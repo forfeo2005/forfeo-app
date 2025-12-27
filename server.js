@@ -23,7 +23,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// --- WEBHOOK STRIPE : ACTIVATION AUTOMATIQUE ---
+// --- WEBHOOK STRIPE ---
 app.post('/stripe-webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
@@ -61,7 +61,7 @@ app.get('/ambassadeur/details', (req, res) => res.render('ambassadeur-details'))
 app.get('/entreprise/inscription', (req, res) => res.render('inscription-entreprise'));
 app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
 
-// --- LOGIQUE AUTHENTIFICATION ---
+// --- AUTHENTIFICATION ---
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
