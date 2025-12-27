@@ -9,9 +9,9 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 8080;
 
-// Configuration OpenAI avec votre clé fournie
+// CONFIGURATION SÉCURISÉE : Va chercher la clé dans l'onglet Environment de Render
 const openai = new OpenAI({ 
-    apiKey: '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' 
+    apiKey: process.env.OPENAI_API_KEY 
 });
 
 const pool = new Pool({
@@ -19,13 +19,13 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// Auto-réparation DB pour éviter les colonnes manquantes
+// Auto-réparation DB pour éviter les erreurs 502
 async function initDB() {
     try {
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS nom VARCHAR(100)");
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS statut VARCHAR(20) DEFAULT 'actif'");
-        console.log("DB Synchronisée");
-    } catch (e) { console.log("DB déjà à jour"); }
+        console.log("Base de données synchronisée.");
+    } catch (e) { console.log("DB déjà à jour."); }
 }
 initDB();
 
@@ -48,11 +48,12 @@ app.post('/forfy/chat', async (req, res) => {
         });
         res.json({ answer: response.choices[0].message.content });
     } catch (err) {
+        console.error("Erreur OpenAI:", err);
         res.json({ answer: "Désolé, j'ai une erreur de connexion à mon cerveau !" });
     }
 });
 
-// --- NAVIGATION & DASHBOARD (DESIGN RESTAURÉ) ---
+// --- DASHBOARD (DESIGN RESTAURÉ 100%) ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC", [req.session.userId]);
@@ -71,4 +72,4 @@ app.post('/admin/supprimer-rapport', async (req, res) => {
     res.redirect('/admin/dashboard');
 });
 
-app.listen(port, () => console.log(`Serveur Live sur ${port}`));
+app.listen(port, () => console.log(`🚀 Forfeo App Live sur le port ${port}`));
