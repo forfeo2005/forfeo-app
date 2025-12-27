@@ -18,16 +18,25 @@ app.use(express.urlencoded({ extended: true }));
 app.use(session({ secret: 'forfeo_secret', resave: false, saveUninitialized: false }));
 app.set('view engine', 'ejs');
 
-// --- ROUTES DE NAVIGATION (Fix Cannot GET/POST) ---
+// --- NAVIGATION ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
-app.get('/audit-mystere', (req, res) => res.render('audit-mystere'));
-app.get('/forfaits', (req, res) => res.render('forfaits'));
-app.get('/ambassadeurs', (req, res) => res.render('ambassadeurs'));
-app.get('/contact', (req, res) => res.render('contact'));
+app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
+app.get('/forfaits', (req, res) => res.render('forfaits', { userName: req.session.userName || null }));
+app.get('/ambassadeurs', (req, res) => res.render('ambassadeurs', { userName: req.session.userName || null }));
+app.get('/contact', (req, res) => res.render('contact', { userName: req.session.userName || null }));
 app.get('/login', (req, res) => res.render('login'));
 app.get('/register', (req, res) => res.render('register'));
 
-// --- LOGIQUE DE CONNEXION (Fix Cannot POST /login) ---
+// --- AUTHENTIFICATION (Fix Cannot POST /login et /register) ---
+app.post('/register', async (req, res) => {
+    const { nom, email, password, role } = req.body;
+    try {
+        const hash = await bcrypt.hash(password, 10);
+        await pool.query("INSERT INTO users (nom, email, password, role) VALUES ($1, $2, $3, $4)", [nom, email, hash, role]);
+        res.redirect('/login');
+    } catch (err) { res.status(500).send("Erreur lors de l'inscription"); }
+});
+
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -42,6 +51,11 @@ app.post('/login', async (req, res) => {
     } catch (err) { res.status(500).send("Erreur de connexion"); }
 });
 
+app.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/');
+});
+
 // --- DASHBOARDS ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
@@ -49,15 +63,40 @@ app.get('/entreprise/dashboard', async (req, res) => {
     res.render('entreprise-dashboard', { missions: missions.rows, userName: req.session.userName });
 });
 
+app.get('/ambassadeur/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
+    const disponibles = await pool.query("SELECT * FROM missions WHERE statut = 'actif'");
+    res.render('ambassadeur-dashboard', { missions: disponibles.rows, userName: req.session.userName });
+});
+
+app.get('/admin/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'admin') return res.redirect('/login');
+    const entreprises = await pool.query("SELECT * FROM users WHERE role = 'entreprise'");
+    const rapports = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id");
+    res.render('admin-dashboard', { entreprises: entreprises.rows, rapports: rapports.rows });
+});
+
+// --- MISSIONS (Fix Cannot POST /creer-mission) ---
+app.post('/creer-mission', async (req, res) => {
+    if (req.session.userRole !== 'entreprise') return res.status(403).send("Non autorisé");
+    const { titre, description, recompense } = req.body;
+    try {
+        await pool.query("INSERT INTO missions (entreprise_id, titre, description, recompense, statut) VALUES ($1, $2, $3, $4, 'actif')", 
+        [req.session.userId, titre, description, recompense]);
+        res.redirect('/entreprise/dashboard');
+    } catch (err) { res.status(500).send("Erreur de création"); }
+});
+
+// --- FORFY CHAT ---
 app.post('/forfy/chat', async (req, res) => {
     try {
         const { message } = req.body;
         const response = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
-            messages: [{ role: "system", content: "Tu es Forfy, l'IA de FORFEO LAB au Québec." }, { role: "user", content: message }],
+            messages: [{ role: "system", content: "Tu es Forfy, l'IA de FORFEO LAB au Québec. Réponds amicalement." }, { role: "user", content: message }],
         });
         res.json({ answer: response.choices[0].message.content });
-    } catch (err) { res.status(500).json({ answer: "Erreur Forfy." }); }
+    } catch (err) { res.status(500).json({ answer: "Désolé, Forfy a un petit problème technique." }); }
 });
 
 app.listen(port, () => console.log(`🚀 Live sur port ${port}`));
