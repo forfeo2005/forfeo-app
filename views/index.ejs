@@ -2,76 +2,74 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FORFEO LAB | Excellence en Qualité de Service</title>
+    <title>FORFEO LAB | Excellence Client Québec</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .navbar-brand { font-weight: 800; letter-spacing: -1px; }
-        .nav-link { font-weight: 500; color: #333 !important; margin-right: 15px; }
-        .video-box { background: #000; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .btn-premium { background: #1a1a1a; color: white; border-radius: 50px; padding: 10px 25px; border: none; }
+        .nav-link { font-weight: 600; color: #333; }
+        .stat-card { border: none; border-radius: 20px; background: #f8f9fa; padding: 30px; }
+        .stat-number { font-size: 2.5rem; font-weight: 800; color: #0d6efd; }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
+    <nav class="navbar navbar-expand-lg bg-white border-bottom p-3">
         <div class="container">
-            <a class="navbar-brand text-dark" href="/">FORFEO <span class="text-primary">LAB</span></a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <a class="navbar-brand fw-bold" href="/">FORFEO <span class="text-primary">LAB</span></a>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
+                <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="/audit-mystere">Audit Mystère</a></li>
                     <li class="nav-item"><a class="nav-link" href="/forfaits">Forfaits</a></li>
                     <li class="nav-item"><a class="nav-link" href="/ambassadeurs">Devenir Ambassadeur</a></li>
-                    <% if (userName) { %>
-                        <li class="nav-item"><a class="nav-link fw-bold text-primary" href="/entreprise/dashboard">Mon Dashboard</a></li>
-                        <li class="nav-item"><a class="btn btn-premium btn-sm" href="/logout">Déconnexion</a></li>
-                    <% } else { %>
-                        <li class="nav-item"><a class="nav-link" href="/login">Connexion</a></li>
-                        <li class="nav-item"><a class="btn btn-primary rounded-pill px-4" href="/register">S'inscrire</a></li>
-                    <% } %>
+                    <li class="nav-item"><a class="nav-link btn btn-primary text-white rounded-pill px-4 ms-lg-3" href="/login">Connexion</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container my-5 pt-4">
-        <h2 class="fw-bold mb-4 text-center">FORFEO en action</h2>
-        <div class="row g-4 mt-2">
+    <div class="container my-5 py-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Pourquoi mesurer votre impact au Québec ?</h2>
+            <p class="text-muted">Les entreprises qui ne sondent pas leur clientèle perdent du terrain.</p>
+        </div>
+        <div class="row g-4 text-center">
             <div class="col-md-4">
-                <div class="ratio ratio-16x9 video-box">
-                    <video src="" controls poster="https://via.placeholder.com/400x225?text=Audit+Qualité"></video>
+                <div class="stat-card">
+                    <div class="stat-number">82%</div>
+                    <p class="fw-bold mt-2">Des Québécois changent d'enseigne après une seule mauvaise expérience.</p>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="ratio ratio-16x9 video-box">
-                    <video src="" controls poster="https://via.placeholder.com/400x225?text=Nos+Ambassadeurs"></video>
+                <div class="stat-card">
+                    <div class="stat-number">1/26</div>
+                    <p class="fw-bold mt-2">Seul 1 client mécontent sur 26 se plaint, les autres partent sans rien dire.</p>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="ratio ratio-16x9 video-box">
-                    <video src="" controls poster="https://via.placeholder.com/400x225?text=Succès+Client"></video>
+                <div class="stat-card">
+                    <div class="stat-number">+15%</div>
+                    <p class="fw-bold mt-2">Augmentation moyenne du CA pour les entreprises utilisant l'audit mystère.</p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <h2 class="fw-bold mb-4">FORFEO en action</h2>
+        <div class="row g-4">
+            <div class="col-md-4"><div class="ratio ratio-16x9 bg-dark rounded-4 shadow overflow-hidden"><video src="" controls></video></div></div>
+            <div class="col-md-4"><div class="ratio ratio-16x9 bg-dark rounded-4 shadow overflow-hidden"><video src="" controls></video></div></div>
+            <div class="col-md-4"><div class="ratio ratio-16x9 bg-dark rounded-4 shadow overflow-hidden"><video src="" controls></video></div></div>
         </div>
     </div>
 
     <div id="forfy-btn" style="position:fixed; bottom:25px; right:25px; cursor:pointer; z-index:1000;">
-        <img src="/ForfyLogo.png" alt="Forfy" style="width:65px; filter:drop-shadow(0 5px 15px rgba(0,0,0,0.2));">
+        <img src="/ForfyLogo.png" style="width:65px;">
     </div>
-
-    <div id="forfy-chat" style="display:none; position:fixed; bottom:100px; right:25px; width:320px; height:450px; background:white; border-radius:20px; box-shadow:0 15px 50px rgba(0,0,0,0.15); z-index:1000; overflow:hidden; border:1px solid #eee;">
+    <div id="forfy-chat" style="display:none; position:fixed; bottom:100px; right:25px; width:320px; background:white; border-radius:20px; box-shadow:0 10px 40px rgba(0,0,0,0.1); border:1px solid #eee; overflow:hidden;">
         <div style="background:#0d6efd; color:white; padding:15px; font-weight:bold;">Forfy - Assistant FORFEO</div>
-        <div id="forfy-msgs" style="height:330px; padding:15px; overflow-y:auto; font-size:0.9rem;">
-            <div style="margin-bottom:10px;"><b>Forfy:</b> Bonjour ! Comment puis-je vous aider ?</div>
-        </div>
-        <div style="padding:10px; border-top:1px solid #eee;">
-            <input type="text" id="forfy-input" placeholder="Posez une question..." style="width:100%; border-radius:50px; border:1px solid #ddd; padding:10px 15px; outline:none;">
-        </div>
+        <div id="forfy-msgs" style="height:300px; padding:15px; overflow-y:auto; font-size:0.9rem;"></div>
+        <div style="padding:10px; border-top:1px solid #eee;"><input type="text" id="forfy-input" class="form-control rounded-pill" placeholder="Posez une question..."></div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/forfy-brain.js"></script>
 </body>
 </html>
