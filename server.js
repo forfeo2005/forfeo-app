@@ -19,14 +19,15 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// AUTO-RÉPARATION DB : Colonnes pour le nom et Stripe
+// SCRIPT D'AUTO-RÉPARATION DE LA BASE DE DONNÉES
 async function checkDatabase() {
     try {
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS nom VARCHAR(100)");
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT FALSE");
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS rapport_ambassadeur TEXT");
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS statut VARCHAR(20) DEFAULT 'actif'");
         console.log("✅ Base de données synchronisée.");
-    } catch (err) { console.log("DB déjà à jour."); }
+    } catch (err) { console.log("Info DB: Déjà à jour."); }
 }
 checkDatabase();
 
@@ -41,14 +42,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(session({ secret: 'forfeo_secret', resave: false, saveUninitialized: false }));
 app.set('view engine', 'ejs');
 
-// --- CERVEAU DE FORFY (IA CONTEXTUELLE SUR TOUT LE SITE) ---
+// --- ROUTES IA FORFY (CERVEAU OMNIPRÉSENT) ---
 app.post('/forfy/chat', async (req, res) => {
     const { message } = req.body;
     try {
         const response = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: [
-                { role: "system", content: "Tu es Forfy, l'IA de FORFEO LAB. Tu connais tout du site : audit mystère, forfaits (Freemium, Croissance 49$, Excellence 99$), et missions ambassadeurs. Réponds de manière courte et aidante." },
+                { role: "system", content: "Tu es Forfy, l'IA de FORFEO LAB. Tu connais le site : audits mystères, forfaits (Freemium, Croissance 49$, Excellence 99$). Réponds avec courtoisie." },
                 { role: "user", content: message }
             ],
         });
@@ -56,22 +57,30 @@ app.post('/forfy/chat', async (req, res) => {
     } catch (err) { res.status(500).json({ error: "Erreur Forfy" }); }
 });
 
-// --- STRIPE : LIENS DE PAIEMENT RÉELS ---
-app.post('/create-checkout-session', async (req, res) => {
-    const { priceId } = req.body;
+app.post('/forfy/generer-mission', async (req, res) => {
+    const { typeEtablissement } = req.body;
     try {
-        const session = await stripe.checkout.sessions.create({
-            mode: 'subscription',
-            payment_method_types: ['card'],
-            line_items: [{ price: priceId, quantity: 1 }],
-            success_url: `${req.headers.origin}/success`,
-            cancel_url: `${req.headers.origin}/entreprise/dashboard`,
+        const response = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "system", content: "Rédige une mission d'audit qualité courte." }, { role: "user", content: `Mission pour: ${typeEtablissement}` }],
         });
-        res.redirect(303, session.url);
-    } catch (e) { res.status(500).send("Erreur Stripe"); }
+        res.json({ description: response.choices[0].message.content });
+    } catch (err) { res.status(500).json({ error: "Erreur" }); }
 });
 
-// --- NAVIGATION AVEC SALUTATIONS NOMINATIVES ---
+// --- PAIEMENT STRIPE RÉEL ---
+app.post('/create-checkout-session', async (req, res) => {
+    const { priceId } = req.body;
+    const session = await stripe.checkout.sessions.create({
+        mode: 'subscription',
+        line_items: [{ price: priceId, quantity: 1 }],
+        success_url: `${req.headers.origin}/entreprise/dashboard?success=true`,
+        cancel_url: `${req.headers.origin}/entreprise/dashboard`,
+    });
+    res.redirect(303, session.url);
+});
+
+// --- NAVIGATION ---
 app.get('/', async (req, res) => {
     let userName = null;
     if (req.session.userId) {
@@ -81,7 +90,6 @@ app.get('/', async (req, res) => {
     res.render('index', { userName });
 });
 
-// --- AUTH & DASHBOARDS (CONSERVÉS) ---
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
@@ -90,7 +98,7 @@ app.post('/login', async (req, res) => {
         req.session.userRole = result.rows[0].role;
         return res.redirect(result.rows[0].role === 'admin' ? '/admin/dashboard' : result.rows[0].role === 'ambassadeur' ? '/ambassadeur/dashboard' : '/entreprise/dashboard');
     }
-    res.send("<script>alert('Erreur'); window.location.href='/login';</script>");
+    res.send("<script>alert('Identifiants invalides'); window.location.href='/login';</script>");
 });
 
 app.get('/entreprise/dashboard', async (req, res) => {
