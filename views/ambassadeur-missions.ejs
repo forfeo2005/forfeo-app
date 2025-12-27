@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes Missions | FORFEO LAB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f6; }
+        .nav-ambassadeur { background: white; border-bottom: 1px solid #e0e0e0; }
+        .mission-status-card { border: none; border-radius: 15px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .status-badge { background: #d1e7dd; color: #0f5132; padding: 5px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar nav-ambassadeur p-3 mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/ambassadeur/dashboard">← Retour au Dashboard</a>
+            <span class="fw-bold text-primary">Mes Audits en cours</span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <h2 class="fw-bold mb-4">Mes Missions Réservées</h2>
+
+                <% if (missions.length > 0) { %>
+                    <% missions.forEach(m => { %>
+                        <div class="card mission-status-card p-4 mb-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <span class="status-badge mb-2 d-inline-block">CONFIRMÉ</span>
+                                    <h4 class="fw-bold"><%= m.titre %></h4>
+                                    <p class="text-muted small"><%= m.description %></p>
+                                </div>
+                                <div class="text-end">
+                                    <span class="h5 fw-bold text-primary"><%= m.recompense %></span>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <p class="mb-0 small text-muted">Instructions envoyées par courriel.</p>
+                                <button class="btn btn-outline-primary btn-sm rounded-pill px-4">Soumettre le rapport</button>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="text-center py-5 bg-white rounded-4 shadow-sm">
+                        <p class="text-muted">Vous n'avez pas encore réservé de mission.</p>
+                        <a href="/ambassadeur/dashboard" class="btn btn-primary rounded-pill">Voir les missions disponibles</a>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/forfy-brain.js"></script>
+</body>
+</html>
