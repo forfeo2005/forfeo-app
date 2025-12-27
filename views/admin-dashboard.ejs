@@ -3,109 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Administration | FORFEO LAB</title>
+    <title>Direction | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { --admin-blue: #0d6efd; }
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        
-        /* Effet de survol sur les lignes du tableau */
-        .admin-table-card { border-radius: 15px; border: none; overflow: hidden; }
-        .table hover tr:hover { background-color: #f8f9fa; cursor: pointer; transition: 0.2s; }
-        
-        .status-badge { font-size: 0.8rem; padding: 6px 12px; border-radius: 50px; font-weight: 600; }
-        .bg-premium { background-color: #d1e7dd; color: #0f5132; }
-        .bg-standard { background-color: #e2e3e5; color: #41464b; }
-
-        /* Animation au chargement */
-        .fade-in { animation: fadeIn 0.5s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+        .admin-card { border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .status-badge { font-size: 0.75rem; padding: 5px 12px; border-radius: 50px; font-weight: bold; }
+        .bg-premium { background-color: #e3f2fd; color: #0d6efd; }
+        .rapport-item { background: white; border-left: 5px solid #0d6efd; transition: 0.3s; }
+        .rapport-item:hover { transform: translateX(5px); }
     </style>
 </head>
 <body>
-
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <nav class="navbar navbar-dark bg-dark mb-4">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="#">FORFEO <span class="badge bg-primary">ADMIN</span></a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navAdmin">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navAdmin">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link text-white" href="/logout">Déconnexion</a></li>
-                </ul>
-            </div>
+            <span class="navbar-brand fw-bold">FORFEO <span class="text-primary">ADMIN</span></span>
+            <a href="/logout" class="btn btn-outline-light btn-sm">Sortir</a>
         </div>
     </nav>
 
-    <div class="container py-5 fade-in">
-        <div class="row mb-4">
-            <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <h2 class="fw-bold m-0">Gestion de la Plateforme</h2>
-                <div class="text-muted">Dernière mise à jour : 2025</div>
-            </div>
-        </div>
-
-        <div class="row g-3 mb-5 text-center">
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm border-0 rounded-4">
-                    <h6 class="text-uppercase text-muted small fw-bold">Entreprises Total</h6>
-                    <h2 class="fw-bold text-primary"><%= entreprises.length %></h2>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm border-0 rounded-4">
-                    <h6 class="text-uppercase text-muted small fw-bold">Ambassadeurs Actifs</h6>
-                    <h2 class="fw-bold text-success">Disponible</h2>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm border-0 rounded-4">
-                    <h6 class="text-uppercase text-muted small fw-bold">Missions en cours</h6>
-                    <h2 class="fw-bold text-warning">En ligne</h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="card admin-table-card shadow-sm">
-            <div class="card-header bg-white py-3 border-0">
-                <h5 class="fw-bold m-0">Liste des Partenaires</h5>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="ps-4">Nom de l'entreprise</th>
-                            <th>Ville</th>
-                            <th>Contact Email</th>
-                            <th class="text-center">Statut Premium</th>
-                            <th class="text-end pe-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% entreprises.forEach(ent => { %>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-7">
+                <h4 class="fw-bold mb-3">Partenaires Enregistrés</h4>
+                <div class="card admin-card overflow-hidden">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <td class="ps-4 fw-bold text-dark"><%= ent.nom %></td>
-                                <td><%= ent.ville %></td>
-                                <td class="text-muted"><%= ent.email %></td>
-                                <td class="text-center">
-                                    <% if (ent.is_premium) { %>
-                                        <span class="status-badge bg-premium text-uppercase">Premium</span>
-                                    <% } else { %>
-                                        <span class="status-badge bg-standard text-uppercase">Standard</span>
-                                    <% } %>
-                                </td>
-                                <td class="text-end pe-4">
-                                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3">Détails</button>
-                                </td>
+                                <th class="ps-3">Entreprise</th>
+                                <th>Ville</th>
+                                <th>Offre</th>
                             </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <% entreprises.forEach(ent => { %>
+                                <tr>
+                                    <td class="ps-3 fw-bold"><%= ent.nom %></td>
+                                    <td><%= ent.ville %></td>
+                                    <td>
+                                        <span class="status-badge <%= ent.is_premium ? 'bg-premium' : 'bg-light' %>">
+                                            <%= ent.is_premium ? 'PREMIUM' : 'STANDARD' %>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <h4 class="fw-bold mb-3">Audits Terminés</h4>
+                <% rapports.forEach(rep => { %>
+                    <div class="card admin-card rapport-item p-3 mb-3">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="fw-bold m-0"><%= rep.titre %></h6>
+                            <small class="text-primary fw-bold"><%= rep.entreprise_nom %></small>
+                        </div>
+                        <hr class="my-2">
+                        <p class="small text-muted mb-0">"<%= rep.rapport_ambassadeur %>"</p>
+                    </div>
+                <% }) %>
+                <% if (rapports.length === 0) { %>
+                    <div class="text-center p-5 bg-white rounded shadow-sm">
+                        <p class="text-muted mb-0">En attente de rapports...</p>
+                    </div>
+                <% } %>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
