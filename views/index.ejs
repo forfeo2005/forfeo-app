@@ -1,97 +1,100 @@
 <!DOCTYPE html>
-<html lang="fr-CA">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FORFEO LAB - L'Élite de l'Audit</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>FORFEO LAB | Excellence Opérationnelle</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { --primary: #2563eb; --dark: #0f172a; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; color: var(--dark); padding-top: 70px; }
-        .navbar { background: white; border-bottom: 1px solid #e2e8f0; }
-        .btn-premium { background: var(--primary); color: white; border-radius: 50px; font-weight: 700; padding: 10px 25px; text-decoration: none; }
-        .card-plan { border-radius: 24px; border: 1px solid #e2e8f0; height: 100%; transition: 0.3s; }
-        .card-plan.featured { border: 2px solid var(--primary); transform: scale(1.05); }
+        :root { --primary-color: #007bff; --dark-bg: #1a1a1a; }
+        
+        /* Effet de mouvement sur les cartes de valeur */
+        .stat-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            border-radius: 20px;
+            background: white;
+            border: 1px solid #eee;
+        }
+        .stat-card:hover {
+            transform: translateY(-15px) scale(1.03);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-color: var(--primary-color);
+        }
+
+        /* Menu Hamburger et Navbar Mobile */
+        @media (max-width: 991px) {
+            .navbar-collapse {
+                background: white;
+                padding: 20px;
+                border-radius: 15px;
+                margin-top: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            }
+        }
     </style>
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg fixed-top shadow-sm">
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
         <div class="container">
             <a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center gap-3 mt-3 mt-lg-0">
-                    <li class="nav-item"><a class="nav-link fw-bold" href="#forfaits">Nos Forfaits</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold" href="#ambassadeur">Ambassadeurs</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold" href="/login">Connexion</a></li>
-                    <li class="nav-item"><a href="/entreprise/inscription" class="btn btn-premium">Essai Gratuit</a></li>
+
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link px-3" href="/ambassadeur/details">L'Impact</a></li>
+                    <li class="nav-item"><a class="nav-link px-3" href="/contact">Support</a></li>
+                    <li class="nav-item"><a class="nav-link px-3" href="/login">Connexion</a></li>
+                    <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+                        <a class="btn btn-primary rounded-pill px-4" href="/entreprise/inscription">Devenir Partenaire</a>
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <header class="py-5 text-center bg-light">
-        <div class="container">
-            <h1 class="display-4 fw-bold mb-4">Mesurez l'excellence de votre service.</h1>
-            <p class="lead text-muted mb-5">Commandez votre premier audit gratuitement et découvrez la puissance de FORFEO LAB.</p>
+    <header class="py-5 text-center bg-white border-bottom">
+        <div class="container py-5">
+            <h1 class="display-4 fw-bold mb-3">Mesurez l'Excellence de votre Établissement</h1>
+            <p class="lead text-muted mb-4">Transformez chaque interaction client en opportunité de croissance grâce à nos Ambassadeurs d'élite.</p>
         </div>
     </header>
 
-    <section id="forfaits" class="py-5">
-        <div class="container">
-            <div class="row g-4 align-items-stretch text-center">
-                <div class="col-md-4">
-                    <div class="card card-plan p-4">
-                        <h3 class="fw-bold">Découverte</h3>
-                        <div class="display-6 fw-bold my-3 text-success">GRATUIT</div>
-                        <ul class="list-unstyled mb-4 text-start">
-                            <li><i class="bi bi-check2 text-primary"></i> 1 Mission offerte</li>
-                            <li><i class="bi bi-check2 text-primary"></i> Rapport détaillé</li>
-                        </ul>
-                        <a href="/entreprise/inscription" class="btn btn-dark rounded-pill mt-auto">Commander</a>
-                    </div>
+    <section class="container py-5">
+        <div class="row g-4 text-center">
+            <div class="col-md-4">
+                <div class="stat-card p-5 h-100 shadow-sm">
+                    <h2 class="display-5 fw-bold text-primary">+25%</h2>
+                    <p class="fw-bold">Chiffre d'Affaires</p>
+                    <p class="small text-muted">Augmentation moyenne constatée après 3 mois d'audits réguliers.</p>
                 </div>
-                <div class="col-md-4">
-                    <div class="card card-plan featured p-4">
-                        <div class="badge bg-primary mb-2 rounded-pill">POPULAIRE</div>
-                        <h3 class="fw-bold">Croissance</h3>
-                        <div class="display-6 fw-bold my-3 text-primary">39$/mois</div>
-                        <ul class="list-unstyled mb-4 text-start">
-                            <li><i class="bi bi-check2 text-primary"></i> Audits illimités</li>
-                            <li><i class="bi bi-check2 text-primary"></i> Support 24/7</li>
-                        </ul>
-                        <a href="https://buy.stripe.com/aFa3cwbPs3W7aUw8dMd7q04" class="btn btn-primary rounded-pill mt-auto">S'abonner</a>
-                    </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card p-5 h-100 shadow-sm">
+                    <h2 class="display-5 fw-bold text-success">4.9/5</h2>
+                    <p class="fw-bold">E-Réputation</p>
+                    <p class="small text-muted">Amélioration drastique des avis clients grâce à la correction des failles invisibles.</p>
                 </div>
-                <div class="col-md-4">
-                    <div class="card card-plan p-4">
-                        <h3 class="fw-bold">Excellence</h3>
-                        <div class="display-6 fw-bold my-3 text-primary">299$/an</div> <ul class="list-unstyled mb-4 text-start">
-                            <li><i class="bi bi-check2 text-primary"></i> Audits illimités</li>
-                            <li><i class="bi bi-check2 text-primary"></i> Multi-sites</li>
-                        </ul>
-                        <a href="https://buy.stripe.com/28E00kbPs50bd2E51Ad7q05" class="btn btn-outline-primary rounded-pill mt-auto">Choisir l'annuel</a>
-                    </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card p-5 h-100 shadow-sm">
+                    <h2 class="display-5 fw-bold text-warning">91%</h2>
+                    <p class="fw-bold">Rétention Client</p>
+                    <p class="small text-muted">Évitez le départ silencieux de vos clients vers la concurrence.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="ambassadeur" class="py-5 bg-dark text-white">
+    <footer class="bg-dark text-white py-4 mt-5">
         <div class="container text-center">
-            <h2 class="fw-bold mb-4">Devenir Ambassadeur d'Élite</h2>
-            <p class="mb-5">Testez des établissements prestigieux et influencez la qualité de service.</p>
-            <div class="row g-4 mb-5">
-                <div class="col-md-4"><h5>Expériences Offertes</h5><p class="small text-muted">Vivez des moments uniques gratuitement.</p></div>
-                <div class="col-md-4"><h5>Regard Expert</h5><p class="small text-muted">Aidez les pros à atteindre l'excellence.</p></div>
-                <div class="col-md-4"><h5>Récompenses</h5><p class="small text-muted">Gagnez des avantages à chaque rapport.</p></div>
-            </div>
-            <a href="/ambassadeur/inscription" class="btn btn-primary btn-lg rounded-pill px-5">Rejoindre le Cercle</a>
+            <p class="mb-0">© 2025 FORFEO LAB. Tous droits réservés.</p>
         </div>
-    </section>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
