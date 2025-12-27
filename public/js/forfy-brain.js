@@ -11,8 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const userText = input.value;
             msgs.innerHTML += `<div class="mb-2"><b>Moi:</b> ${userText}</div>`;
             
+            // AFFICHAGE DU CHIEN (Dossier public/videos/)
             const loadId = "load-" + Date.now();
-            msgs.innerHTML += `<div id="${loadId}" class="mb-2"><video src="/GifForfy.MP4" autoplay loop muted style="width:65px; border-radius:10px;"></video></div>`;
+            msgs.innerHTML += `<div id="${loadId}" class="mb-2"><video src="/videos/GifForfy.MP4" autoplay loop muted style="width:70px; border-radius:10px;"></video></div>`;
             
             input.value = "";
             msgs.scrollTop = msgs.scrollHeight;
@@ -26,11 +27,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
                 
                 document.getElementById(loadId).remove();
-                // Utilisation de data.answer pour éviter le "undefined"
+                // FIX UNDEFINED : On utilise data.answer du serveur
                 msgs.innerHTML += `<div class="mb-2" style="color:#0d6efd;"><b>Forfy:</b> ${data.answer}</div>`;
             } catch (err) {
-                document.getElementById(loadId).remove();
-                msgs.innerHTML += `<div class="mb-2 text-danger"><b>Forfy:</b> Connexion perdue...</div>`;
+                if(document.getElementById(loadId)) document.getElementById(loadId).remove();
+                msgs.innerHTML += `<div class="mb-2 text-danger"><b>Forfy:</b> Erreur de connexion...</div>`;
             }
             msgs.scrollTop = msgs.scrollHeight;
         }
