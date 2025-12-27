@@ -13,7 +13,6 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
 // --- RÉPARATION AUTO DE LA BASE DE DONNÉES ---
-// Cela ajoute les colonnes nécessaires si elles manquent pour éviter l'erreur de réservation.
 async function patchDB() {
     try {
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS ambassadeur_id INTEGER");
@@ -32,7 +31,25 @@ app.use(express.urlencoded({ extended: true }));
 app.use(session({ secret: 'forfeo_secret', resave: false, saveUninitialized: false }));
 app.set('view engine', 'ejs');
 
-// --- ROUTES AUTHENTIFICATION ---
+// --- ROUTES DE NAVIGATION (Correction des erreurs Cannot GET) ---
+// Ces routes permettent d'afficher les pages correspondantes
+app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
+app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
+app.get('/forfaits', (req, res) => res.render('forfaits', { userName: req.session.userName || null }));
+app.get('/ambassadeurs', (req, res) => res.render('ambassadeurs', { userName: req.session.userName || null }));
+app.get('/login', (req, res) => res.render('login'));
+app.get('/register', (req, res) => res.render('register'));
+
+// --- AUTHENTIFICATION ---
+app.post('/register', async (req, res) => {
+    const { nom, email, password, role } = req.body;
+    try {
+        const hash = await bcrypt.hash(password, 10);
+        await pool.query("INSERT INTO users (nom, email, password, role) VALUES ($1, $2, $3, $4)", [nom, email, hash, role]);
+        res.redirect('/login');
+    } catch (err) { res.status(500).send("Erreur lors de l'inscription"); }
+});
+
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -52,9 +69,13 @@ app.get('/logout', (req, res) => {
     res.redirect('/');
 });
 
-// --- ROUTES AMBASSADEUR ---
+// --- DASHBOARDS ET MISSIONS ---
+app.get('/entreprise/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'entreprise') return res.redirect('/login');
+    const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1", [req.session.userId]);
+    res.render('entreprise-dashboard', { missions: missions.rows, userName: req.session.userName });
+});
 
-// 1. Dashboard : Missions publiques disponibles
 app.get('/ambassadeur/dashboard', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
     try {
@@ -63,45 +84,42 @@ app.get('/ambassadeur/dashboard', async (req, res) => {
     } catch (err) { res.status(500).send("Erreur dashboard"); }
 });
 
-// 2. Profil : Ses missions réservées (LA NOUVELLE ROUTE)
 app.get('/ambassadeur/mes-missions', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
     try {
-        const result = await pool.query(
-            "SELECT * FROM missions WHERE ambassadeur_id = $1 ORDER BY id DESC", 
-            [req.session.userId]
-        );
+        const result = await pool.query("SELECT * FROM missions WHERE ambassadeur_id = $1 ORDER BY id DESC", [req.session.userId]);
         res.render('ambassadeur-missions', { missions: result.rows, userName: req.session.userName });
     } catch (err) { res.status(500).send("Erreur lors de la récupération de vos missions."); }
 });
 
-// 3. Action : Postuler (Réserver la mission)
 app.post('/postuler-mission', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.status(403).send("Non autorisé");
     const { id_mission } = req.body;
     try {
-        await pool.query(
-            "UPDATE missions SET statut = 'reserve', ambassadeur_id = $1 WHERE id = $2", 
-            [req.session.userId, id_mission]
-        );
+        await pool.query("UPDATE missions SET statut = 'reserve', ambassadeur_id = $1 WHERE id = $2", [req.session.userId, id_mission]);
         res.send("<script>alert('Mission réservée avec succès !'); window.location.href='/ambassadeur/mes-missions';</script>");
     } catch (err) { res.status(500).send("Erreur lors de la réservation."); }
 });
 
-// 4. Action : Envoyer le rapport final
 app.post('/envoyer-rapport', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.status(403).send("Non autorisé");
     const { id_mission, rapport } = req.body;
     try {
-        await pool.query(
-            "UPDATE missions SET rapport_final = $1, statut = 'termine' WHERE id = $2 AND ambassadeur_id = $3", 
-            [rapport, id_mission, req.session.userId]
-        );
+        await pool.query("UPDATE missions SET rapport_final = $1, statut = 'termine' WHERE id = $2 AND ambassadeur_id = $3", [rapport, id_mission, req.session.userId]);
         res.send("<script>alert('Rapport envoyé ! Merci pour votre audit.'); window.location.href='/ambassadeur/mes-missions';</script>");
     } catch (err) { res.status(500).send("Erreur d'envoi du rapport."); }
 });
 
-// --- AUTRES ROUTES ---
-app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
+// --- FORFY CHAT ---
+app.post('/forfy/chat', async (req, res) => {
+    try {
+        const { message } = req.body;
+        const response = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "system", content: "Tu es Forfy, l'IA de FORFEO LAB au Québec." }, { role: "user", content: message }],
+        });
+        res.json({ answer: response.choices[0].message.content });
+    } catch (err) { res.status(500).json({ answer: "Erreur Forfy." }); }
+});
 
 app.listen(port, () => console.log(`🚀 FORFEO LAB actif sur le port ${port}`));
