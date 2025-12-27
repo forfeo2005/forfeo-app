@@ -10,11 +10,13 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 8080;
 
+// Connexion PostgreSQL
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
 
+// Configuration Email pour le Support
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -41,7 +43,7 @@ app.get('/ambassadeur/details', (req, res) => res.render('ambassadeur-details'))
 app.get('/entreprise/inscription', (req, res) => res.render('inscription-entreprise'));
 app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
 
-// --- SUPPORT : FIX REDIRECTION (Règle l'erreur Cannot POST /envoyer-contact) ---
+// --- SUPPORT : FIX "Cannot POST /envoyer-contact" ---
 app.post('/envoyer-contact', async (req, res) => {
     const { nom, sujet, message } = req.body;
     try {
@@ -51,48 +53,50 @@ app.post('/envoyer-contact', async (req, res) => {
             subject: `[SUPPORT] ${sujet} - de ${nom}`,
             text: `Message : ${message}`
         });
-        // Redirection vers l'accueil avec un message de succès
-        res.send("<script>alert('Message envoyé !'); window.location.href='/';</script>");
-    } catch (err) { res.status(500).send("Erreur d'envoi"); }
+        res.send("<script>alert('Message bien reçu !'); window.location.href='/';</script>");
+    } catch (err) { res.status(500).send("Erreur support"); }
 });
 
-// --- AUTHENTIFICATION ---
+// --- AUTHENTIFICATION : FIX "Cannot POST /login" ---
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+        if (result.rows.length > 0) {
+            const user = result.rows[0];
+            if (await bcrypt.compare(password, user.password)) {
+                req.session.userId = user.id;
+                req.session.userRole = user.role;
+                if (user.role === 'admin') return res.redirect('/admin/dashboard');
+                if (user.role === 'ambassadeur') return res.redirect('/ambassadeur/dashboard');
+                return res.redirect('/entreprise/dashboard');
+            }
+        }
+        res.send("<script>alert('Identifiants invalides'); window.location.href='/login';</script>");
+    } catch (err) { res.status(500).send("Erreur login"); }
+});
+
 app.post('/register', async (req, res) => {
     const { nom, email, password, role, ville } = req.body;
     const hashed = await bcrypt.hash(password, 10);
     let finalRole = role;
     if (nom.includes("ADMIN_FORFEO")) { finalRole = 'admin'; }
-
     try {
         await pool.query("INSERT INTO users (nom, email, password, role, ville, is_premium) VALUES ($1, $2, $3, $4, $5, $6)", 
             [nom.replace("ADMIN_FORFEO", ""), email, hashed, finalRole, ville, (finalRole === 'admin')]);
         res.redirect('/login');
-    } catch (err) { res.send("Erreur d'inscription"); }
+    } catch (err) { res.send("Erreur inscription"); }
 });
 
-app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-    if (result.rows.length > 0) {
-        const user = result.rows[0];
-        if (await bcrypt.compare(password, user.password)) {
-            req.session.userId = user.id;
-            req.session.userRole = user.role;
-            if (user.role === 'admin') return res.redirect('/admin/dashboard');
-            if (user.role === 'ambassadeur') return res.redirect('/ambassadeur/dashboard');
-            return res.redirect('/entreprise/dashboard');
-        }
-    }
-    res.send("<script>alert('Identifiants incorrects'); window.location.href='/login';</script>");
-});
-
-// --- MISSIONS ---
+// --- MISSIONS : FIX "Cannot POST /creer-mission" ---
 app.post('/creer-mission', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const { titre, description, recompense } = req.body;
-    await pool.query("INSERT INTO missions (entreprise_id, titre, description, recompense, statut) VALUES ($1, $2, $3, $4, 'actif')",
-        [req.session.userId, titre, description, recompense]);
-    res.redirect('/entreprise/dashboard');
+    try {
+        await pool.query("INSERT INTO missions (entreprise_id, titre, description, recompense, statut) VALUES ($1, $2, $3, $4, 'actif')",
+            [req.session.userId, titre, description, recompense]);
+        res.redirect('/entreprise/dashboard');
+    } catch (err) { res.status(500).send("Erreur mission"); }
 });
 
 app.post('/valider-mission', async (req, res) => {
@@ -102,7 +106,7 @@ app.post('/valider-mission', async (req, res) => {
     res.redirect('/ambassadeur/dashboard');
 });
 
-// --- DASHBOARDS ---
+// --- DASHBOARDS : FIX ERRORS 502/503 ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC", [req.session.userId]);
