@@ -2,94 +2,148 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Entreprise | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #f4f7f6; }
-        .sidebar { background: #1a1a1a; min-height: 100vh; color: white; }
-        .card-custom { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .btn-primary { background: #0d6efd; border-radius: 50px; padding: 10px 25px; }
+        body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
+        .nav-black { background-color: #1a1a1a; padding: 15px 0; }
+        .statut-banner { background-color: #1a1a1a; color: white; border-radius: 20px; padding: 40px; margin-top: 20px; }
+        .card-custom { border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background: white; padding: 30px; }
+        .btn-premium { background: #0d6efd; border: none; border-radius: 50px; padding: 12px 25px; font-weight: bold; }
+        .price-tag { font-size: 2rem; font-weight: 800; color: #1a1a1a; }
+        .video-box { background: #000; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-<div class="container-fluid">
-    <div class="row">
-        <nav class="col-md-2 sidebar p-4">
-            <h4 class="fw-bold text-primary">FORFEO LAB</h4>
-            <hr>
-            <a href="#" class="nav-link text-white mb-3 active"><i class="fas fa-th-large me-2"></i> Dashboard</a>
-            <a href="/forfaits" class="nav-link text-white mb-3"><i class="fas fa-credit-card me-2"></i> Forfaits (CAD)</a>
-            <a href="/logout" class="nav-link text-danger mt-5"><i class="fas fa-sign-out-alt me-2"></i> Déconnexion</a>
-        </nav>
 
-        <main class="col-md-10 p-5">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold">Bonjour, <%= userName %> 🏢</h2>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#missionModal">
-                    <i class="fas fa-plus me-2"></i> Nouvelle Mission d'Audit
-                </button>
+    <nav class="nav-black shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="/" class="text-white text-decoration-none fw-bold fs-4">FORFEO <span class="text-primary">LAB</span></a>
+            <div class="d-flex gap-4 align-items-center">
+                <a href="/audit-mystere" class="text-white text-decoration-none small">Audit Mystère</a>
+                <a href="/forfaits" class="text-white text-decoration-none small">Forfaits</a>
+                <a href="/ambassadeurs" class="text-white text-decoration-none small">Devenir Ambassadeur</a>
+                <a href="/logout" class="btn btn-outline-light btn-sm rounded-pill px-3">Déconnexion</a>
             </div>
+        </div>
+    </nav>
 
-            <div class="row mb-5">
+    <div class="container">
+        <div class="statut-banner shadow-lg">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <span class="badge bg-primary mb-3 px-3 py-2 rounded-pill">COMPTE ENTREPRISE</span>
+                    <h1>Bonjour, <%= userName %> !</h1>
+                    <p class="fs-5 opacity-75">Gérez vos audits et vos abonnements en dollars canadiens (CAD$).</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <h3 class="fw-bold mb-4 text-center">Nos Forfaits de Croissance CAD$</h3>
+            <div class="row g-4">
                 <div class="col-md-4">
-                    <div class="card card-custom p-4 bg-white">
-                        <small class="text-muted fw-bold">MISSIONS EN COURS</small>
-                        <h2 class="fw-bold mt-2"><%= missions.length %></h2>
+                    <div class="card-custom text-center h-100">
+                        <h4 class="fw-bold">Freemium</h4>
+                        <p class="text-muted">Découvrez la plateforme</p>
+                        <div class="price-tag my-3">0,00 $</div>
+                        <ul class="list-unstyled text-start mb-4">
+                            <li><i class="fas fa-check text-success me-2"></i> Accès au Dashboard</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Support IA Forfy</li>
+                        </ul>
+                        <button class="btn btn-outline-secondary w-100 rounded-pill disabled">Plan Actuel</button>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card card-custom p-4 bg-primary text-white">
-                        <small class="fw-bold">STATUT DU COMPTE</small>
-                        <h2 class="fw-bold mt-2">PREMIUM CAD$</h2>
+                    <div class="card-custom text-center h-100 border border-primary">
+                        <span class="badge bg-primary rounded-pill mb-2">Mensuel</span>
+                        <h4 class="fw-bold">Croissance</h4>
+                        <p class="text-muted">Optimisez vos ventes</p>
+                        <div class="price-tag my-3">39,00 $ <small class="fs-6 text-muted">/mois</small></div>
+                        <ul class="list-unstyled text-start mb-4">
+                            <li><i class="fas fa-check text-success me-2"></i> Audits prioritaires</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Rapports détaillés</li>
+                        </ul>
+                        <a href="https://buy.stripe.com/4gMbJ21aO1NZ5Ac9hQd7q07" target="_blank" class="btn btn-primary w-100 rounded-pill">S'abonner</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-custom text-center h-100 border border-warning shadow">
+                        <span class="badge bg-warning text-dark rounded-pill mb-2">Annuel</span>
+                        <h4 class="fw-bold">Excellence</h4>
+                        <p class="text-muted">Le summum du service</p>
+                        <div class="price-tag my-3">299,00 $ <small class="fs-6 text-muted">/an</small></div>
+                        <ul class="list-unstyled text-start mb-4">
+                            <li><i class="fas fa-check text-success me-2"></i> Forfy IA illimité</li>
+                            <li><i class="fas fa-check text-success me-2"></i> Accès VIP Expériences</li>
+                        </ul>
+                        <a href="https://buy.stripe.com/6oU5kE5r4boz4w8eCad7q06" target="_blank" class="btn btn-warning w-100 rounded-pill fw-bold text-dark">Passer à l'Excellence</a>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="card card-custom p-4">
-                <h5 class="fw-bold mb-4">Vos Audits Récents</h5>
-                <table class="table align-middle">
-                    <thead>
-                        <tr>
-                            <th>Titre</th>
-                            <th>Récompense</th>
-                            <th>Statut</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% missions.forEach(m => { %>
-                            <tr>
-                                <td class="fw-bold"><%= m.titre %></td>
-                                <td><%= m.recompense %></td>
-                                <td><span class="badge bg-success rounded-pill">Actif</span></td>
-                            </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
+        <div class="row mt-5 g-4">
+            <div class="col-lg-4">
+                <div class="card-custom">
+                    <h4 class="fw-bold mb-4">Lancer un Audit Mystère</h4>
+                    <form action="/creer-mission" method="POST">
+                        <div class="mb-3">
+                            <label class="small fw-bold mb-2">NOM DE L'ÉTABLISSEMENT</label>
+                            <input type="text" name="titre" class="form-control rounded-pill px-3" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small fw-bold mb-2">CONSIGNES POUR L'AMBASSADEUR</label>
+                            <textarea name="description" class="form-control" rows="4" style="border-radius: 15px;" required></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="small fw-bold mb-2">RÉCOMPENSE OFFERTE</label>
+                            <input type="text" name="recompense" class="form-control rounded-pill px-3" placeholder="Ex: 50$ + Repas" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill shadow">PUBLIER LA MISSION</button>
+                    </form>
+                </div>
             </div>
-        </main>
+
+            <div class="col-lg-8">
+                <h4 class="fw-bold mb-4">FORFEO en action</h4>
+                <div class="row g-3 mb-5">
+                    <div class="col-md-4"><div class="ratio ratio-16x9 video-box"><video src="" controls></video></div></div>
+                    <div class="col-md-4"><div class="ratio ratio-16x9 video-box"><video src="" controls></video></div></div>
+                    <div class="col-md-4"><div class="ratio ratio-16x9 video-box"><video src="" controls></video></div></div>
+                </div>
+
+                <h4 class="fw-bold mb-4">Historique de vos Missions</h4>
+                <% missions.forEach(m => { %>
+                    <div class="card-custom mb-3 p-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-bold mb-1"><%= m.titre %></h6>
+                            <span class="badge bg-light text-primary rounded-pill">🎁 <%= m.recompense %></span>
+                        </div>
+                        <span class="badge bg-success rounded-pill px-3">Actif</span>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
     </div>
-</div>
 
-<div class="modal fade" id="missionModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form action="/creer-mission" method="POST" class="modal-content border-0 rounded-4 p-3">
-            <div class="modal-header border-0">
-                <h5 class="fw-bold">Détails de l'Audit Mystère</h5>
-            </div>
-            <div class="modal-body">
-                <input type="text" name="titre" class="form-control mb-3" placeholder="Nom de l'établissement" required>
-                <textarea name="description" class="form-control mb-3" placeholder="Consignes pour l'ambassadeur (ex: commander un café et tester l'accueil)"></textarea>
-                <input type="text" name="recompense" class="form-control" placeholder="Récompense (ex: Repas offert + 50$ CAD)">
-            </div>
-            <div class="modal-footer border-0">
-                <button type="submit" class="btn btn-primary w-100 shadow">Lancer la mission</button>
-            </div>
-        </form>
+    <div id="forfy-btn" style="position:fixed; bottom:25px; right:25px; cursor:pointer; z-index:1000;">
+        <img src="/ForfyLogo.png" alt="Forfy" style="width:65px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));">
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/js/forfy-brain.js"></script>
+    <div id="forfy-chat" style="display:none; position:fixed; bottom:100px; right:25px; width:320px; height:450px; background:white; border-radius:20px; box-shadow:0 15px 50px rgba(0,0,0,0.15); z-index:1000; overflow:hidden; border:1px solid #eee;">
+        <div style="background:#0d6efd; color:white; padding:15px; font-weight:bold;">Forfy - Assistant FORFEO</div>
+        <div id="forfy-msgs" style="height:330px; padding:15px; overflow-y:auto; font-size:0.9rem;">
+            <div style="margin-bottom:10px;"><b>Forfy:</b> Bonjour ! Comment puis-je vous aider ?</div>
+        </div>
+        <div style="padding:10px; border-top:1px solid #eee;">
+            <input type="text" id="forfy-input" placeholder="Posez une question..." style="width:100%; border-radius:50px; border:1px solid #ddd; padding:10px 15px; outline:none;">
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/forfy-brain.js"></script>
 </body>
 </html>
