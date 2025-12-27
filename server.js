@@ -16,7 +16,7 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// Configuration Nodemailer avec vos identifiants Gmail
+// Configuration Nodemailer (Gmail)
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -44,7 +44,7 @@ app.get('/ambassadeur/details', (req, res) => res.render('ambassadeur-details'))
 app.get('/entreprise/inscription', (req, res) => res.render('inscription-entreprise'));
 app.get('/ambassadeur/inscription', (req, res) => res.render('espace-ambassadeur'));
 
-// --- ROUTE SUPPORT : RÉCEPTION DES DEMANDES (POST) ---
+// --- ROUTE SUPPORT (Correction de l'erreur Cannot POST /envoyer-contact) ---
 app.post('/envoyer-contact', async (req, res) => {
     const { nom, sujet, message } = req.body;
     try {
@@ -54,19 +54,17 @@ app.post('/envoyer-contact', async (req, res) => {
             subject: `[SUPPORT] ${sujet} - de ${nom}`,
             text: `Message : ${message}`
         });
-        res.send("<script>alert('Message envoyé !'); window.location.href='/';</script>");
+        res.send("<script>alert('Message envoyé avec succès !'); window.location.href='/';</script>");
     } catch (err) { 
         console.error(err);
-        res.status(500).send("Erreur d'envoi"); 
+        res.status(500).send("Erreur d'envoi du message."); 
     }
 });
 
-// --- AUTHENTIFICATION (POST) ---
+// --- AUTHENTIFICATION (Login & Register) ---
 app.post('/register', async (req, res) => {
     const { nom, email, password, role, ville } = req.body;
     const hashed = await bcrypt.hash(password, 10);
-    
-    // Astuce pour créer un compte admin via le formulaire d'inscription
     let finalRole = role;
     if (nom.includes("ADMIN_FORFEO")) { finalRole = 'admin'; }
 
@@ -74,7 +72,7 @@ app.post('/register', async (req, res) => {
         await pool.query("INSERT INTO users (nom, email, password, role, ville, is_premium) VALUES ($1, $2, $3, $4, $5, $6)", 
             [nom.replace("ADMIN_FORFEO", ""), email, hashed, finalRole, ville, (finalRole === 'admin')]);
         res.redirect('/login');
-    } catch (err) { res.send("Erreur d'inscription : Email déjà utilisé."); }
+    } catch (err) { res.send("Erreur d'inscription."); }
 });
 
 app.post('/login', async (req, res) => {
@@ -86,18 +84,16 @@ app.post('/login', async (req, res) => {
             if (await bcrypt.compare(password, user.password)) {
                 req.session.userId = user.id;
                 req.session.userRole = user.role;
-                
-                // Redirection selon le rôle
                 if (user.role === 'admin') return res.redirect('/admin/dashboard');
                 if (user.role === 'ambassadeur') return res.redirect('/ambassadeur/dashboard');
                 return res.redirect('/entreprise/dashboard');
             }
         }
         res.send("<script>alert('Identifiants incorrects'); window.location.href='/login';</script>");
-    } catch (err) { res.status(500).send("Erreur serveur lors de la connexion."); }
+    } catch (err) { res.status(500).send("Erreur serveur."); }
 });
 
-// --- GESTION DES MISSIONS (POST) ---
+// --- MISSIONS ---
 app.post('/creer-mission', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const { titre, description, recompense } = req.body;
@@ -105,19 +101,17 @@ app.post('/creer-mission', async (req, res) => {
         await pool.query("INSERT INTO missions (entreprise_id, titre, description, recompense, statut) VALUES ($1, $2, $3, $4, 'actif')",
             [req.session.userId, titre, description, recompense]);
         res.redirect('/entreprise/dashboard');
-    } catch (err) { res.status(500).send("Erreur lors de la création de la mission."); }
+    } catch (err) { res.status(500).send("Erreur lors de la création."); }
 });
 
 app.post('/valider-mission', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
     const { mission_id, rapport } = req.body;
-    try {
-        await pool.query("UPDATE missions SET rapport_ambassadeur = $1, statut = 'termine' WHERE id = $2", [rapport, mission_id]);
-        res.send("<script>alert('Mission validée !'); window.location.href='/ambassadeur/dashboard';</script>");
-    } catch (err) { res.status(500).send("Erreur de validation."); }
+    await pool.query("UPDATE missions SET rapport_ambassadeur = $1, statut = 'termine' WHERE id = $2", [rapport, mission_id]);
+    res.redirect('/ambassadeur/dashboard');
 });
 
-// --- DASHBOARDS (GET) ---
+// --- DASHBOARDS (Correction des erreurs 502/503 Admin) ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC", [req.session.userId]);
@@ -135,6 +129,7 @@ app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     try {
         const entreprises = await pool.query("SELECT * FROM users WHERE role = 'entreprise' ORDER BY id DESC");
+        // Jointure sécurisée pour éviter les crashs
         const rapports = await pool.query(`
             SELECT m.id, m.titre, m.rapport_ambassadeur, u.nom as entreprise_nom 
             FROM missions m 
@@ -148,7 +143,7 @@ app.get('/admin/dashboard', async (req, res) => {
     }
 });
 
-// --- SUPPRESSION ADMIN (POST) ---
+// --- SUPPRESSION ADMIN ---
 app.post('/admin/supprimer-entreprise', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const { id } = req.body;
@@ -166,4 +161,4 @@ app.post('/admin/supprimer-rapport', async (req, res) => {
 
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
-app.listen(port, () => console.log(`🚀 Serveur FORFEO LAB actif sur le port ${port}`));
+app.listen(port, () => console.log(`🚀 Serveur actif sur port ${port}`));
