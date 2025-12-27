@@ -3,77 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Support & Contact | FORFEO LAB</title>
+    <title>Contactez-nous | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .contact-card {
-            border-radius: 20px;
-            overflow: hidden;
-            transition: transform 0.3s ease;
-        }
-        /* Effet qui bouge au survol */
-        .contact-card:hover {
-            transform: translateY(-10px);
-        }
-        .btn-send {
-            transition: all 0.3s ease;
-            font-weight: bold;
-        }
-        .btn-send:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(0,123,255,0.2);
-        }
+        body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
+        .nav-black { background-color: #1a1a1a; padding: 15px 0; }
+        .hero-contact { background: #1a1a1a; color: white; padding: 60px 0; border-radius: 0 0 50px 50px; }
+        .card-custom { border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background: white; padding: 40px; }
+        .info-box { background: #f0f7ff; border-radius: 15px; padding: 20px; margin-bottom: 20px; border-left: 5px solid #0d6efd; }
+        .btn-send { background: #0d6efd; border: none; border-radius: 50px; padding: 15px; font-weight: bold; width: 100%; color: white; transition: 0.3s; }
+        .btn-send:hover { background: #0b5ed7; transform: translateY(-2px); }
     </style>
 </head>
-<body class="bg-light">
+<body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navContact">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navContact">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/">Accueil</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/ambassadeur/details">L'Impact</a></li>
-                </ul>
+    <nav class="nav-black shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="/" class="text-white text-decoration-none fw-bold fs-4">FORFEO <span class="text-primary">LAB</span></a>
+            <div class="d-flex gap-4 align-items-center">
+                <a href="/audit-mystere" class="text-white text-decoration-none small">Audit Mystère</a>
+                <a href="/forfaits" class="text-white text-decoration-none small">Forfaits</a>
+                <a href="/ambassadeurs" class="text-white text-decoration-none small">Devenir Ambassadeur</a>
+                <a href="/login" class="btn btn-primary btn-sm rounded-pill px-4">Connexion</a>
             </div>
         </div>
     </nav>
 
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-6">
-                <div class="contact-card bg-white shadow-lg p-4 p-md-5">
-                    <h2 class="fw-bold text-center mb-4">Contactez le Support</h2>
-                    <p class="text-center text-muted mb-5">Une question sur vos missions ou votre abonnement ? Notre équipe vous répond sous 24h.</p>
-                    
-                    <form action="/envoyer-contact" method="POST">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Votre Nom</label>
-                            <input type="text" name="nom" class="form-control rounded-pill px-4" placeholder="Ex: Jean Dupont" required>
+    <header class="hero-contact text-center">
+        <div class="container">
+            <h1 class="fw-bold">Contactez l'Équipe Forfeo</h1>
+            <p class="opacity-75">Une question ? Un projet d'audit au Québec ? Nous sommes là pour vous.</p>
+        </div>
+    </header>
+
+    <div class="container my-5">
+        <div class="row g-5">
+            <div class="col-lg-5">
+                <h3 class="fw-bold mb-4">Parlons de votre succès</h3>
+                <p class="text-muted mb-5">Que vous soyez une entreprise cherchant à optimiser son service ou un futur ambassadeur, notre équipe vous répondra sous 24h.</p>
+                
+                <div class="info-box">
+                    <h6 class="fw-bold text-primary"><i class="fas fa-envelope me-2"></i> Courriel</h6>
+                    <p class="mb-0">forfeo2005@gmail.com</p>
+                </div>
+                
+                <div class="info-box">
+                    <h6 class="fw-bold text-primary"><i class="fas fa-map-marker-alt me-2"></i> Localisation</h6>
+                    <p class="mb-0">Québec, Canada</p>
+                </div>
+
+                <div class="mt-5">
+                    <h6 class="fw-bold mb-3">Suivez-nous</h6>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="btn btn-dark rounded-circle"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="btn btn-dark rounded-circle"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card-custom">
+                    <form action="/contact/envoyer" method="POST">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="small fw-bold mb-2">NOM COMPLET</label>
+                                <input type="text" name="nom" class="form-control rounded-pill px-3" placeholder="Votre nom" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small fw-bold mb-2">COURRIEL</label>
+                                <input type="email" name="email" class="form-control rounded-pill px-3" placeholder="votre@email.com" required>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <label class="small fw-bold mb-2">SUJET</label>
+                                <select name="sujet" class="form-select rounded-pill px-3">
+                                    <option>Devenir Ambassadeur</option>
+                                    <option>Informations Forfaits (CAD$)</option>
+                                    <option>Demande d'Audit Mystère</option>
+                                    <option>Autre</option>
+                                </select>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <label class="small fw-bold mb-2">MESSAGE</label>
+                                <textarea name="message" class="form-control" rows="5" style="border-radius: 20px;" placeholder="Comment pouvons-nous vous aider ?" required></textarea>
+                            </div>
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn-send shadow">ENVOYER LE MESSAGE</button>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Sujet</label>
-                            <select name="sujet" class="form-select rounded-pill px-4">
-                                <option value="Question Générale">Question Générale</option>
-                                <option value="Problème Technique">Problème Technique</option>
-                                <option value="Paiement / Premium">Paiement / Premium</option>
-                                <option value="Devenir Ambassadeur">Devenir Ambassadeur</option>
-                            </select>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Message</label>
-                            <textarea name="message" class="form-control rounded-4 px-4" rows="5" placeholder="Comment pouvons-nous vous aider ?" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-send w-100 rounded-pill py-3">ENVOYER LE MESSAGE</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="forfy-btn" style="position:fixed; bottom:25px; right:25px; cursor:pointer; z-index:1000;">
+        <img src="/ForfyLogo.png" alt="Forfy" style="width:65px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));">
+    </div>
+
+    <div id="forfy-chat" style="display:none; position:fixed; bottom:100px; right:25px; width:320px; height:450px; background:white; border-radius:20px; box-shadow:0 15px 50px rgba(0,0,0,0.15); z-index:1000; overflow:hidden; border:1px solid #eee;">
+        <div style="background:#0d6efd; color:white; padding:15px; font-weight:bold;">Forfy - Assistant FORFEO</div>
+        <div id="forfy-msgs" style="height:330px; padding:15px; overflow-y:auto; font-size:0.9rem;">
+            <div style="margin-bottom:10px;"><b>Forfy:</b> Une question sur nos services ? Je suis là pour vous !</div>
+        </div>
+        <div style="padding:10px; border-top:1px solid #eee;">
+            <input type="text" id="forfy-input" placeholder="Posez une question..." style="width:100%; border-radius:50px; border:1px solid #ddd; padding:10px 15px; outline:none;">
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/forfy-brain.js"></script>
 </body>
 </html>
