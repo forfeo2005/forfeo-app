@@ -2,130 +2,60 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Entreprise | FORFEO LAB</title>
+    <title>Dashboard Entreprise</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .sidebar-card { background: white; border-radius: 15px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .premium-banner { background: #1a1a1a; color: white; border-radius: 15px; padding: 25px; position: relative; overflow: hidden; }
-        .premium-banner::after { content: '💎'; position: absolute; right: 20px; top: 10px; font-size: 3rem; opacity: 0.2; }
-        .mission-item { background: white; border-radius: 12px; border-left: 5px solid #0d6efd; transition: 0.3s; margin-bottom: 15px; }
-        .mission-item:hover { transform: translateX(5px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .forfy-box { background: #eef6ff; border: 1px dashed #0d6efd; border-radius: 10px; padding: 15px; margin-bottom: 20px; }
-        .price-card { transition: 0.3s; border: none; border-radius: 15px; }
-        .price-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .premium-banner { background: #1a1a1a; color: white; border-radius: 15px; padding: 25px; }
+        .forfy-box { background: #eef6ff; border: 1px dashed #0d6efd; border-radius: 10px; padding: 15px; }
     </style>
 </head>
-<body>
-    <nav class="navbar navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/">FORFEO <span class="text-primary">LAB</span></a>
-            <div class="d-flex align-items-center">
-                <span class="text-white me-3 small">Bienvenue, <strong><%= userName %></strong></span>
-                <a href="/logout" class="btn btn-outline-light btn-sm rounded-pill">Déconnexion</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container">
-        <div class="premium-banner mb-4 shadow-sm">
-            <h4 class="fw-bold mb-1">Votre Statut : <%= isPremium ? 'Membre Premium' : 'Membre Standard' %></h4>
-            <p class="small mb-0 opacity-75">Vous avez un accès <%= isPremium ? 'illimité' : 'limité' %> aux missions et aux ambassadeurs.</p>
+<body class="bg-light">
+    <div class="container py-4">
+        <div class="premium-banner mb-4">
+            <h4>Statut : <%= isPremium ? '💎 Membre Premium' : 'Membre Standard' %></h4>
+            <p>Bienvenue, <%= userName %></p>
         </div>
 
         <div class="row g-4">
             <div class="col-lg-4">
-                <div class="sidebar-card p-4">
-                    <h5 class="fw-bold mb-4">Publier une Mission</h5>
-                    
-                    <div class="forfy-box">
-                        <label class="small fw-bold text-primary mb-2"><i class="fas fa-robot"></i> Forfy - Assistant Rédaction</label>
-                        <select id="typeForfy" class="form-select form-select-sm mb-2 shadow-sm">
-                            <option value="Restaurant">Restaurant (Accueil & Cuisine)</option>
-                            <option value="Hôtel">Hôtel (Chambre & Service)</option>
-                            <option value="Boutique">Boutique (Vente & Conseil)</option>
-                            <option value="Bar">Bar / Lounge (Ambiance & Boissons)</option>
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <h5 class="fw-bold mb-3">Publier une Mission</h5>
+                    <div class="forfy-box mb-3">
+                        <small class="fw-bold text-primary">Assistant Forfy IA</small>
+                        <select id="typeF" class="form-select form-select-sm my-2">
+                            <option value="Restaurant">Restaurant</option>
+                            <option value="Boutique">Boutique</option>
                         </select>
-                        <button type="button" onclick="demanderAForfy()" id="btnForfy" class="btn btn-primary btn-sm w-100 shadow-sm fw-bold">Rédiger avec Forfy</button>
+                        <button onclick="demanderForfy()" id="btnF" class="btn btn-primary btn-sm w-100">Rédiger avec Forfy</button>
                     </div>
-
                     <form action="/creer-mission" method="POST">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Titre de la mission</label>
-                            <input type="text" name="titre" class="form-control rounded-pill" placeholder="Ex: Audit Qualité Service" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Description des attentes</label>
-                            <textarea name="description" id="descMission" class="form-control" rows="5" placeholder="Décrivez ce que l'ambassadeur doit tester..." required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Récompense offerte</label>
-                            <input type="text" name="recompense" class="form-control rounded-pill" placeholder="Ex: Repas pour 2 personnes offert" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-pill shadow">LANCER LA MISSION</button>
+                        <input type="text" name="titre" class="form-control mb-2" placeholder="Titre" required>
+                        <textarea name="description" id="descF" class="form-control mb-2" rows="4" required></textarea>
+                        <input type="text" name="recompense" class="form-control mb-2" placeholder="Récompense" required>
+                        <button type="submit" class="btn btn-primary w-100">LANCER LA MISSION</button>
                     </form>
                 </div>
             </div>
 
             <div class="col-lg-8">
-                <h5 class="fw-bold mb-3">Mes Missions Actives</h5>
-                <div class="missions-list mb-5">
-                    <% missions.forEach(m => { %>
-                        <div class="mission-item p-3 shadow-sm d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold mb-1"><%= m.titre %></h6>
-                                <p class="small text-muted mb-2"><%= m.description.substring(0, 100) %>...</p>
-                                <span class="badge bg-light text-primary border border-primary"><i class="fas fa-gift"></i> <%= m.recompense %></span>
-                            </div>
-                            <div class="text-end">
-                                <span class="badge rounded-pill <%= m.statut === 'actif' ? 'bg-success' : 'bg-secondary' %>">
-                                    <%= m.statut === 'actif' ? 'En recherche' : 'Terminé' %>
-                                </span>
-                            </div>
-                        </div>
-                    <% }) %>
-                    <% if (missions.length === 0) { %>
-                        <div class="text-center py-5 bg-white rounded shadow-sm">
-                            <p class="text-muted">Vous n'avez pas encore publié de mission.</p>
-                        </div>
-                    <% } %>
-                </div>
-
-                <h5 class="fw-bold mb-4">Optimisez votre visibilité</h5>
+                <h5 class="fw-bold mb-3">Nos Forfaits</h5>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <div class="card price-card p-4 border-primary border-top border-4 shadow-sm h-100">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="fw-bold m-0">Croissance</h5>
-                                <span class="badge bg-primary">49$/mois</span>
-                            </div>
-                            <ul class="list-unstyled small mb-4">
-                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> 5 Missions actives / mois</li>
-                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Support prioritaire</li>
-                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Accès Forfy Assistant</li>
-                            </ul>
-                            <form action="/create-checkout-session" method="POST" class="mt-auto">
+                        <div class="card p-3 shadow-sm border-primary">
+                            <h6>Croissance (49$/mois)</h6>
+                            <form action="/create-checkout-session" method="POST">
                                 <input type="hidden" name="priceId" value="price_1QauKxJ0e1pCFddP0u2O6B5z">
-                                <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">Choisir Croissance</button>
+                                <button type="submit" class="btn btn-primary btn-sm w-100 mt-2">S'abonner</button>
                             </form>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card price-card p-4 border-dark border-top border-4 shadow-sm h-100">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="fw-bold m-0">Excellence</h5>
-                                <span class="badge bg-dark">99$/mois</span>
-                            </div>
-                            <ul class="list-unstyled small mb-4">
-                                <li class="mb-2"><i class="fas fa-star text-warning me-2"></i> Missions illimitées</li>
-                                <li class="mb-2"><i class="fas fa-star text-warning me-2"></i> Forfy Pro (Analyse prédictive)</li>
-                                <li class="mb-2"><i class="fas fa-star text-warning me-2"></i> Mise en avant prioritaire</li>
-                            </ul>
-                            <form action="/create-checkout-session" method="POST" class="mt-auto">
+                        <div class="card p-3 shadow-sm border-dark">
+                            <h6>Excellence (99$/mois)</h6>
+                            <form action="/create-checkout-session" method="POST">
                                 <input type="hidden" name="priceId" value="price_1QauLyJ0e1pCFddP9W2R7Y1X">
-                                <button type="submit" class="btn btn-dark w-100 rounded-pill fw-bold">Choisir Excellence</button>
+                                <button type="submit" class="btn btn-dark btn-sm w-100 mt-2">S'abonner</button>
                             </form>
                         </div>
                     </div>
@@ -135,35 +65,16 @@
     </div>
 
     <script>
-    async function demanderAForfy() {
-        const type = document.getElementById('typeForfy').value;
-        const btn = document.getElementById('btnForfy');
-        const descArea = document.getElementById('descMission');
-
-        btn.innerText = "Forfy analyse...";
-        btn.disabled = true;
-
-        try {
-            const res = await fetch('/forfy/generer-mission', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ typeEtablissement: type })
-            });
-            const data = await res.json();
-            
-            if(data.description) {
-                descArea.value = data.description;
-            } else {
-                alert("Forfy rencontre une petite difficulté, réessayez.");
-            }
-        } catch (e) {
-            alert("Erreur de connexion avec Forfy.");
-        } finally {
-            btn.innerText = "Rédiger avec Forfy";
-            btn.disabled = false;
-        }
+    async function demanderForfy() {
+        const res = await fetch('/forfy/generer-mission', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ typeEtablissement: document.getElementById('typeF').value })
+        });
+        const data = await res.json();
+        document.getElementById('descF').value = data.description;
     }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/forfy-brain.js"></script>
 </body>
 </html>
