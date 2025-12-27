@@ -1,11 +1,10 @@
 {
   "name": "forfeo-app",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Plateforme FORFEO LAB - Gestion Ambassadeurs et Entreprises",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -19,7 +18,5 @@
   },
   "engines": {
     "node": "22.x"
-  },
-  "author": "FORFEO",
-  "license": "ISC"
+  }
 }
