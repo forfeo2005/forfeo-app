@@ -1,73 +1,80 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <%- include('partials/header') %>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <%- include('partials/header') %>
     <style>
         .hover-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
             border-radius: 20px;
+            background: white;
+            padding: 2rem;
+            height: 100%;
         }
-        /* Effet qui bouge au survol de la souris */
+        /* Effet de mouvement interactif */
         .hover-card:hover {
-            transform: translateY(-10px) rotate(1deg);
-            box-shadow: 0 15px 35px rgba(0,123,255,0.2);
-            border: 2px solid #007bff;
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border-left: 5px solid #007bff;
         }
-        .vs-panel {
-            background: #f8f9fa;
-            border-left: 5px solid #ff4757;
+        .vs-container {
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
+        @media (min-width: 768px) {
+            .vs-container { flex-direction: row; }
+        }
+        .stat-value { font-size: 3.5rem; font-weight: 800; }
     </style>
 </head>
 <body class="bg-light">
     <div class="container py-5">
-        <h1 class="text-center fw-bold mb-5">Qu'est-ce qu'un Ambassadeur Forfeo ?</h1>
+        <h1 class="text-center fw-bold mb-4 display-5">Qu'est-ce qu'un Ambassadeur ?</h1>
         
-        <div class="row g-4 mb-5">
-            <div class="col-md-6">
-                <div class="bg-white p-5 shadow-sm rounded-4 h-100">
-                    <h2 class="text-primary fw-bold">Un expert de la Qualité</h2>
-                    <p class="lead">L'ambassadeur est un client mystère professionnel. Il infiltre les établissements pour tester l'accueil, le service et le produit sans être démasqué.</p>
+        <div class="vs-container shadow-sm mb-5">
+            <div class="p-5 bg-white flex-fill border-end">
+                <span class="badge bg-danger mb-3">SANS SONDAGE</span>
+                <h3 class="fw-bold">Le Silence est Fatal</h3>
+                <p class="text-muted">9 clients sur 10 ne se plaignent jamais à la direction. Ils partent simplement chez votre concurrent avec une mauvaise image de vous.</p>
+            </div>
+            <div class="p-5 bg-primary text-white flex-fill">
+                <span class="badge bg-white text-primary mb-3">AVEC FORFEO</span>
+                <h3 class="fw-bold">L'Avantage Élite</h3>
+                <p>Nos ambassadeurs agissent en clients mystères. Vous recevez un audit complet de 24h qui permet d'augmenter votre CA de **+25% en moyenne**.</p>
+            </div>
+        </div>
+
+        <h2 class="text-center fw-bold mb-5">Statistiques de Qualité</h2>
+        
+        <div class="row g-4 text-center">
+            <div class="col-12 col-md-4">
+                <div class="hover-card shadow-sm border">
+                    <div class="stat-value text-primary">15%</div>
+                    <p class="fw-bold fs-5">Fidélisation</p>
+                    <p class="small text-muted">Augmentation de la rétention client grâce à l'ajustement immédiat du service.</p>
                 </div>
             </div>
-            
-            <div class="col-md-6">
-                <div class="vs-panel p-4 mb-3 rounded-3 shadow-sm">
-                    <h4 class="text-danger fw-bold">SANS SONDAGE (Traditionnel)</h4>
-                    <p>91% des clients mécontents partent chez la concurrence sans s'exprimer.</p>
+            <div class="col-12 col-md-4">
+                <div class="hover-card shadow-sm border">
+                    <div class="stat-value text-success">4.9</div>
+                    <p class="fw-bold fs-5">E-Réputation</p>
+                    <p class="small text-muted">Note moyenne Google atteinte par nos partenaires après 3 mois d'audits.</p>
                 </div>
-                <div class="p-4 rounded-3 shadow-sm bg-primary text-white">
-                    <h4 class="fw-bold text-white">AVEC AMBASSADEUR FORFEO</h4>
-                    <p>+30% de satisfaction client dès le premier mois grâce aux ajustements basés sur nos rapports.</p>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="hover-card shadow-sm border">
+                    <div class="stat-value text-warning">0$</div>
+                    <p class="fw-bold fs-5">Publicité Perdue</p>
+                    <p class="small text-muted">Ne dépensez plus en marketing si votre accueil fait fuir les nouveaux clients.</p>
                 </div>
             </div>
         </div>
 
-        <h2 class="text-center fw-bold mb-4">Valeur ajoutée (Survoler pour voir l'effet)</h2>
-        <div class="row text-center g-4">
-            <div class="col-md-4">
-                <div class="hover-card bg-white p-5 shadow-sm">
-                    <h1 class="display-4 fw-bold text-primary">98%</h1>
-                    <p class="fw-bold">Précision des rapports</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="hover-card bg-white p-5 shadow-sm">
-                    <h1 class="display-4 fw-bold text-success">24h</h1>
-                    <p class="fw-bold">Délai de correction</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="hover-card bg-white p-5 shadow-sm">
-                    <h1 class="display-4 fw-bold text-warning">0$</h1>
-                    <p class="fw-bold">Coût marketing gaspillé</p>
-                </div>
-            </div>
-        </div>
-        
         <div class="text-center mt-5">
-            <a href="/ambassadeur/inscription" class="btn btn-primary btn-lg rounded-pill px-5">DEVENIR AMBASSADEUR</a>
+            <a href="/ambassadeur/inscription" class="btn btn-primary btn-lg rounded-pill px-5 py-3 fw-bold">REJOINDRE LE CERCLE</a>
         </div>
     </div>
 </body>
