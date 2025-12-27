@@ -9,7 +9,6 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 8080;
 
-// Configuration OpenAI
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
@@ -19,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(session({ secret: 'forfeo_secret', resave: false, saveUninitialized: false }));
 app.set('view engine', 'ejs');
 
-// --- ROUTES DE NAVIGATION ---
+// --- NAVIGATION ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
 app.get('/forfaits', (req, res) => res.render('forfaits', { userName: req.session.userName || null }));
@@ -57,7 +56,7 @@ app.get('/logout', (req, res) => {
     res.redirect('/');
 });
 
-// --- DASHBOARDS (Fix Cannot GET /admin/dashboard et /ambassadeur/dashboard) ---
+// --- DASHBOARDS ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1", [req.session.userId]);
@@ -66,26 +65,21 @@ app.get('/entreprise/dashboard', async (req, res) => {
 
 app.get('/ambassadeur/dashboard', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
-    const disponibles = await pool.query("SELECT * FROM missions WHERE statut = 'actif' OR statut IS NULL");
+    // On n'affiche que les missions encore actives et non réservées
+    const disponibles = await pool.query("SELECT * FROM missions WHERE statut = 'actif'");
     res.render('ambassadeur-dashboard', { missions: disponibles.rows, userName: req.session.userName });
 });
 
-app.get('/admin/dashboard', async (req, res) => {
-    if (req.session.userRole !== 'admin') return res.redirect('/login');
-    const entreprises = await pool.query("SELECT * FROM users WHERE role = 'entreprise'");
-    const rapports = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id");
-    res.render('admin-dashboard', { entreprises: entreprises.rows, rapports: rapports.rows });
-});
-
-// --- MISSIONS (Fix Cannot POST /creer-mission) ---
-app.post('/creer-mission', async (req, res) => {
-    if (req.session.userRole !== 'entreprise') return res.status(403).send("Non autorisé");
-    const { titre, description, recompense } = req.body;
+// --- ACTIONS MISSIONS (Fix bouton statique) ---
+app.post('/postuler-mission', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.status(403).send("Non autorisé");
+    const { id_mission } = req.body;
     try {
-        await pool.query("INSERT INTO missions (entreprise_id, titre, description, recompense, statut) VALUES ($1, $2, $3, $4, 'actif')", 
-        [req.session.userId, titre, description, recompense]);
-        res.redirect('/entreprise/dashboard');
-    } catch (err) { res.status(500).send("Erreur de création de mission"); }
+        // Met à jour la mission pour la lier à l'ambassadeur
+        await pool.query("UPDATE missions SET statut = 'reserve', ambassadeur_id = $1 WHERE id = $2", 
+        [req.session.userId, id_mission]);
+        res.send("<script>alert('Mission réservée avec succès !'); window.location.href='/ambassadeur/dashboard';</script>");
+    } catch (err) { res.status(500).send("Erreur lors de la postulation"); }
 });
 
 // --- FORFY CHAT ---
@@ -97,7 +91,7 @@ app.post('/forfy/chat', async (req, res) => {
             messages: [{ role: "system", content: "Tu es Forfy, l'IA de FORFEO LAB au Québec." }, { role: "user", content: message }],
         });
         res.json({ answer: response.choices[0].message.content });
-    } catch (err) { res.status(500).json({ answer: "Désolé, Forfy a un problème technique." }); }
+    } catch (err) { res.status(500).json({ answer: "Erreur Forfy." }); }
 });
 
-app.listen(port, () => console.log(`🚀 Serveur actif sur ${port}`));
+app.listen(port, () => console.log(`🚀 Serveur actif sur port ${port}`));
