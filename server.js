@@ -9,17 +9,21 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 8080;
 
+// Configuration des services
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
-// --- RÉPARATION AUTO DE LA BASE DE DONNÉES ---
+// --- AUTO-RÉPARATION DE LA BASE DE DONNÉES ---
+// Prévient l'erreur "Erreur lors de la réservation" en créant les colonnes nécessaires.
 async function initialiserDB() {
     try {
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS ambassadeur_id INTEGER");
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS rapport_final TEXT");
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS statut VARCHAR(20) DEFAULT 'actif'");
         console.log("✅ Base de données synchronisée.");
-    } catch (e) { console.log("DB déjà à jour."); }
+    } catch (e) {
+        console.log("DB déjà à jour.");
+    }
 }
 initialiserDB();
 
@@ -29,22 +33,24 @@ app.use(express.urlencoded({ extended: true }));
 app.use(session({ secret: 'forfeo_secret', resave: false, saveUninitialized: false }));
 app.set('view engine', 'ejs');
 
-// --- ROUTES DE NAVIGATION PRINCIPALE (Fix Cannot GET) ---
+// --- ROUTES DE NAVIGATION (Fix Cannot GET) ---
+// Lie les URLs aux fichiers de vues correspondants.
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
 app.get('/forfaits', (req, res) => res.render('forfaits', { userName: req.session.userName || null }));
 app.get('/ambassadeurs', (req, res) => res.render('ambassadeurs', { userName: req.session.userName || null }));
+app.get('/contact', (req, res) => res.render('contact', { userName: req.session.userName || null }));
 app.get('/login', (req, res) => res.render('login'));
 app.get('/register', (req, res) => res.render('register'));
 
-// --- AUTHENTIFICATION (Fix Cannot POST /login) ---
+// --- AUTHENTIFICATION ---
 app.post('/register', async (req, res) => {
     const { nom, email, password, role } = req.body;
     try {
         const hash = await bcrypt.hash(password, 10);
         await pool.query("INSERT INTO users (nom, email, password, role) VALUES ($1, $2, $3, $4)", [nom, email, hash, role]);
         res.redirect('/login');
-    } catch (err) { res.status(500).send("Erreur d'inscription"); }
+    } catch (err) { res.status(500).send("Erreur lors de l'inscription"); }
 });
 
 app.post('/login', async (req, res) => {
@@ -66,7 +72,7 @@ app.get('/logout', (req, res) => {
     res.redirect('/');
 });
 
-// --- DASHBOARDS ---
+// --- DASHBOARDS (Fix Cannot GET dashboards) ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1", [req.session.userId]);
@@ -88,11 +94,11 @@ app.get('/ambassadeur/mes-missions', async (req, res) => {
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const entreprises = await pool.query("SELECT * FROM users WHERE role = 'entreprise'");
-    const rapports = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id");
+    const rapports = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id ORDER BY m.id DESC");
     res.render('admin-dashboard', { entreprises: entreprises.rows, rapports: rapports.rows, userName: req.session.userName });
 });
 
-// --- ACTIONS MISSIONS (Fix Cannot POST /creer-mission) ---
+// --- ACTIONS MISSIONS (Fix Cannot POST) ---
 app.post('/creer-mission', async (req, res) => {
     const { titre, description, recompense } = req.body;
     try {
@@ -110,6 +116,28 @@ app.post('/postuler-mission', async (req, res) => {
     } catch (err) { res.status(500).send("Erreur lors de la réservation."); }
 });
 
+app.post('/envoyer-rapport', async (req, res) => {
+    const { id_mission, rapport } = req.body;
+    try {
+        await pool.query("UPDATE missions SET rapport_final = $1, statut = 'termine' WHERE id = $2", [rapport, id_mission]);
+        res.redirect('/ambassadeur/mes-missions');
+    } catch (err) { res.status(500).send("Erreur d'envoi du rapport."); }
+});
+
+// --- ACTIONS ADMIN (Nouvelles fonctionnalités Approuver/Supprimer) ---
+app.post('/admin/approuver-audit', async (req, res) => {
+    const { id_mission } = req.body;
+    await pool.query("UPDATE missions SET statut = 'approuve' WHERE id = $1", [id_mission]);
+    res.redirect('/admin/dashboard');
+});
+
+app.post('/admin/supprimer-audit', async (req, res) => {
+    const { id_mission } = req.body;
+    await pool.query("DELETE FROM missions WHERE id = $1", [id_mission]);
+    res.redirect('/admin/dashboard');
+});
+
+// --- FORFY CHAT ---
 app.post('/forfy/chat', async (req, res) => {
     try {
         const { message } = req.body;
@@ -118,7 +146,7 @@ app.post('/forfy/chat', async (req, res) => {
             messages: [{ role: "system", content: "Tu es Forfy, l'IA de FORFEO LAB au Québec." }, { role: "user", content: message }],
         });
         res.json({ answer: response.choices[0].message.content });
-    } catch (err) { res.status(500).json({ answer: "Erreur Forfy." }); }
+    } catch (err) { res.status(500).json({ answer: "Désolé, Forfy a un petit problème." }); }
 });
 
 app.listen(port, () => console.log(`🚀 FORFEO LAB actif sur le port ${port}`));
