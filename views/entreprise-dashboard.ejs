@@ -3,42 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Entreprise | FORFEO LAB</title>
+    <title>Espace Entreprise | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --forfeo-blue: #007bff; --bg-light: #f8f9fa; }
+        :root { --forfeo-blue: #007bff; --bg-light: #f4f7fb; }
         body { background-color: var(--bg-light); font-family: 'Inter', sans-serif; }
-        .card-stat { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .table-container { background: white; border-radius: 15px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        .badge-forfait { background: #eef4ff; color: var(--forfeo-blue); border: 1px solid #d0e1ff; }
-        .chart-container { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); height: 100%; }
+        .card-stat { border: none; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .badge-forfait { background: #eef4ff; color: var(--forfeo-blue); border: 1px solid #d0e1ff; font-weight: 700; }
+        .preview-box { background: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; border-radius: 8px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar bg-white border-bottom px-4 py-3">
+    <nav class="navbar bg-white border-bottom px-4 py-3 sticky-top">
         <a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a>
         <div class="d-flex align-items-center gap-3">
-            <span class="fw-semibold">Bienvenue, <%= userName %></span>
-            <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill">Déconnexion</a>
+            <span class="badge badge-forfait px-3 py-2 rounded-pill">Forfait : <%= stats.forfait %></span>
+            <span class="fw-bold"><%= userName %></span>
+            <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill">Quitter</a>
         </div>
     </nav>
 
     <div class="container py-5">
-        <div class="row align-items-center mb-5">
-            <div class="col-md-7">
+        <div class="row mb-5 align-items-center">
+            <div class="col-md-8">
                 <h2 class="fw-bold mb-1">Votre Espace Qualité 🚀</h2>
-                <p class="text-muted">Gérez vos audits et suivez vos indicateurs de performance.</p>
+                <p class="text-muted">Analysez vos performances et configurez vos audits mystères.</p>
             </div>
-            <div class="col-md-5 text-md-end">
-                <div class="d-inline-flex align-items-center p-2 px-3 rounded-pill badge-forfait mb-3">
-                    <i class="bi bi-gem me-2"></i> Forfait : <strong><%= stats.forfait %></strong>
-                </div>
-                <br>
-                <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalMission">
-                    <i class="bi bi-plus-lg"></i> Créer une mission
+            <div class="col-md-4 text-md-end">
+                <button class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow" data-bs-toggle="modal" data-bs-target="#modalMission">
+                    <i class="bi bi-clipboard-plus me-2"></i>Créer une mission
                 </button>
             </div>
         </div>
@@ -47,104 +43,132 @@
             <div class="col-lg-8">
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <div class="card card-stat p-4">
-                            <h6 class="text-muted small fw-bold">MISSIONS TOTALES</h6>
+                        <div class="card card-stat p-4 text-center">
+                            <h6 class="text-muted small fw-bold">TOTAL AUDITS</h6>
                             <h2 class="fw-bold m-0"><%= stats.totale %></h2>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card card-stat p-4 border-start border-primary border-4">
-                            <h6 class="text-muted small fw-bold text-primary">EN COURS</h6>
-                            <h2 class="fw-bold m-0"><%= stats.enCours %></h2>
+                        <div class="card card-stat p-4 text-center border-bottom border-primary border-4">
+                            <h6 class="text-muted small fw-bold">EN COURS</h6>
+                            <h2 class="fw-bold m-0 text-primary"><%= stats.enCours %></h2>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card card-stat p-4">
-                            <h6 class="text-muted small fw-bold">INVESTI ($ CAD)</h6>
+                        <div class="card card-stat p-4 text-center">
+                            <h6 class="text-muted small fw-bold">INVESTI</h6>
                             <h2 class="fw-bold m-0"><%= stats.totalInvesti %>$</h2>
                         </div>
                     </div>
                 </div>
-                
-                <div class="table-container mt-4">
+
+                <div class="bg-white rounded-4 p-4 shadow-sm mt-4">
                     <h5 class="fw-bold mb-4">Historique des audits</h5>
-                    <div class="table-responsive">
-                        <table class="table align-middle">
-                            <thead class="text-muted small">
-                                <tr><th>MISSION</th><th>RECOMPENSE</th><th>STATUT</th><th class="text-end">ACTIONS</th></tr>
-                            </thead>
-                            <tbody>
-                                <% missions.forEach(m => { %>
-                                    <tr>
-                                        <td><strong><%= m.titre %></strong></td>
-                                        <td><%= m.recompense %>$</td>
-                                        <td>
-                                            <span class="badge rounded-pill <%= m.statut === 'approuve' ? 'bg-success' : 'bg-warning' %>">
-                                                <%= m.statut %>
-                                            </span>
-                                        </td>
-                                        <td class="text-end">
-                                            <% if(m.statut === 'approuve' || m.statut === 'termine') { %>
-                                                <a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-danger">
-                                                    <i class="bi bi-file-earmark-pdf"></i> PDF
-                                                </a>
-                                            <% } %>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            </tbody>
-                        </table>
-                    </div>
+                    <table class="table align-middle">
+                        <thead class="text-muted small"><tr><th>MISSION</th><th>RÉCOMPENSE</th><th>STATUT</th><th class="text-end">RAPPORT</th></tr></thead>
+                        <tbody>
+                            <% missions.forEach(m => { %>
+                                <tr>
+                                    <td><strong><%= m.titre %></strong></td>
+                                    <td><%= m.recompense %>$</td>
+                                    <td><span class="badge rounded-pill <%= m.statut === 'approuve' ? 'bg-success' : 'bg-warning' %>"><%= m.statut %></span></td>
+                                    <td class="text-end">
+                                        <% if(m.statut === 'approuve' || m.statut === 'termine') { %>
+                                            <a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-danger"><i class="bi bi-file-pdf"></i></a>
+                                        <% } else { %><small class="text-muted">En cours...</small><% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
             <div class="col-lg-4">
-                <div class="chart-container">
+                <div class="card card-stat p-4 h-100">
                     <h6 class="fw-bold mb-4 text-center">Répartition des Statuts</h6>
                     <canvas id="statusChart"></canvas>
-                    <div class="mt-4 small text-muted text-center">
-                        <i class="bi bi-info-circle me-1"></i> Visualisation basée sur vos <%= stats.totale %> audits.
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="modal fade" id="modalMission" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content p-4 rounded-4">
-                <h5 class="fw-bold mb-4">Nouvel Audit Mystère</h5>
-                <form action="/creer-mission" method="POST">
-                    <input type="text" name="titre" class="form-control mb-3" placeholder="Titre de la mission" required>
-                    <textarea name="description" class="form-control mb-3" placeholder="Description..." required></textarea>
-                    <input type="number" name="recompense" class="form-control mb-4" placeholder="Récompense ($)" required>
-                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2">Publier</button>
-                </form>
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 overflow-hidden">
+                <div class="row g-0">
+                    <div class="col-lg-7 p-5">
+                        <h4 class="fw-bold mb-4 text-primary">Configurer l'Audit</h4>
+                        <form action="/creer-mission" method="POST" id="auditForm">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="small fw-bold mb-2">Titre de la mission</label>
+                                    <input type="text" name="titre" id="inputTitre" class="form-control" placeholder="Ex: Accueil Client" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small fw-bold mb-2">Type</label>
+                                    <select name="type_mission" id="inputSub" class="form-select">
+                                        <option value="Audit Complet">Audit Complet</option>
+                                        <option value="Visite Éclair">Visite Éclair</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="small fw-bold d-block mb-3">Critères à tester :</label>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <div class="form-check"><input class="form-check-input critere-check" type="checkbox" value="Propreté" checked><label class="form-check-label small">Propreté</label></div>
+                                    <div class="form-check"><input class="form-check-input critere-check" type="checkbox" value="Courtoisie" checked><label class="form-check-label small">Courtoisie</label></div>
+                                    <div class="form-check"><input class="form-check-input critere-check" type="checkbox" value="Vente incitative"><label class="form-check-label small">Upsell</label></div>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="small fw-bold mb-2">Consignes détaillées</label>
+                                <textarea name="description" id="inputDesc" class="form-control" rows="5" placeholder="Décrivez le scénario..." required></textarea>
+                            </div>
+                            <div class="row align-items-center">
+                                <div class="col-6"><input type="number" name="recompense" class="form-control" placeholder="Budget $ CAD" required></div>
+                                <div class="col-6"><button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">Publier</button></div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-lg-5 bg-light p-5 border-start">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-eye me-2 text-primary"></i>Aperçu de l'Ambassadeur</h5>
+                        <p class="small text-muted mb-4">Voici ce que l'auditeur verra sur son application mobile lors de la visite.</p>
+                        <div class="preview-box shadow-sm">
+                            <h6 class="fw-bold text-primary" id="previewTitre">Titre de la mission</h6>
+                            <hr>
+                            <p class="small fw-bold mb-1">Critères exigés :</p>
+                            <div id="previewCriteres" class="mb-3 small text-muted"></div>
+                            <p class="small fw-bold mb-1">Scénario à suivre :</p>
+                            <div id="previewDesc" class="small text-muted" style="white-space: pre-wrap;">...</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // CONFIGURATION CHART.JS
-        const ctx = document.getElementById('statusChart').getContext('2d');
-        new Chart(ctx, {
+        // Graphique
+        new Chart(document.getElementById('statusChart'), {
             type: 'doughnut',
-            data: {
-                labels: ['En cours', 'Terminés/Approuvés'],
-                datasets: [{
-                    data: [<%= stats.enCours %>, <%= stats.termine %>],
-                    backgroundColor: ['#ffc107', '#198754'],
-                    borderWidth: 0,
-                    hoverOffset: 10
-                }]
-            },
-            options: {
-                plugins: { legend: { position: 'bottom' } },
-                cutout: '70%'
-            }
+            data: { labels: ['Actif', 'Terminé'], datasets: [{ data: [<%= stats.enCours %>, <%= stats.termine %>], backgroundColor: ['#ffc107', '#198754'] }] },
+            options: { cutout: '80%', plugins: { legend: { position: 'bottom' } } }
         });
-    </script>
 
+        // Logique d'aperçu dynamique
+        const updatePreview = () => {
+            document.getElementById('previewTitre').innerText = document.getElementById('inputTitre').value || 'Titre de la mission';
+            document.getElementById('previewDesc').innerText = document.getElementById('inputDesc').value || 'En attente de consignes...';
+            
+            const checks = document.querySelectorAll('.critere-check:checked');
+            let list = Array.from(checks).map(c => `<span class="badge bg-white text-primary border me-1 mb-1">${c.value}</span>`).join('');
+            document.getElementById('previewCriteres').innerHTML = list || 'Aucun critère sélectionné';
+        };
+
+        ['inputTitre', 'inputDesc'].forEach(id => document.getElementById(id).addEventListener('input', updatePreview));
+        document.querySelectorAll('.critere-check').forEach(c => c.addEventListener('change', updatePreview));
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
