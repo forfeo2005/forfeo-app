@@ -12,7 +12,7 @@ const port = process.env.PORT || 8080;
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
-// --- AUTO-RÉPARATION DE LA BASE DE DONNÉES ---
+// --- RÉPARATION AUTO DE LA BASE DE DONNÉES ---
 async function initialiserDB() {
     try {
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS ambassadeur_id INTEGER");
@@ -34,7 +34,6 @@ app.get('/', (req, res) => res.render('index', { userName: req.session.userName 
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
 app.get('/forfaits', (req, res) => res.render('forfaits', { userName: req.session.userName || null }));
 app.get('/ambassadeurs', (req, res) => res.render('ambassadeurs', { userName: req.session.userName || null }));
-app.get('/contact', (req, res) => res.render('contact', { userName: req.session.userName || null }));
 app.get('/login', (req, res) => res.render('login'));
 app.get('/register', (req, res) => res.render('register'));
 
@@ -67,7 +66,7 @@ app.get('/logout', (req, res) => {
     res.redirect('/');
 });
 
-// --- DASHBOARDS (Fix Cannot GET /dashboard) ---
+// --- DASHBOARDS ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1", [req.session.userId]);
@@ -78,6 +77,12 @@ app.get('/ambassadeur/dashboard', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
     const disponibles = await pool.query("SELECT * FROM missions WHERE statut = 'actif'");
     res.render('ambassadeur-dashboard', { missions: disponibles.rows, userName: req.session.userName });
+});
+
+app.get('/ambassadeur/mes-missions', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
+    const mesMissions = await pool.query("SELECT * FROM missions WHERE ambassadeur_id = $1", [req.session.userId]);
+    res.render('ambassadeur-missions', { missions: mesMissions.rows, userName: req.session.userName });
 });
 
 app.get('/admin/dashboard', async (req, res) => {
@@ -95,6 +100,14 @@ app.post('/creer-mission', async (req, res) => {
         [req.session.userId, titre, description, recompense]);
         res.redirect('/entreprise/dashboard');
     } catch (err) { res.status(500).send("Erreur de création"); }
+});
+
+app.post('/postuler-mission', async (req, res) => {
+    const { id_mission } = req.body;
+    try {
+        await pool.query("UPDATE missions SET statut = 'reserve', ambassadeur_id = $1 WHERE id = $2", [req.session.userId, id_mission]);
+        res.redirect('/ambassadeur/mes-missions');
+    } catch (err) { res.status(500).send("Erreur lors de la réservation."); }
 });
 
 app.post('/forfy/chat', async (req, res) => {
