@@ -3,20 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forfeo LAB | Excellence Expérientielle Québec</title>
+    <title>Forfeo LAB | Excellence Québec</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
         :root { --primary: #007bff; --dark: #1a1a1a; }
         body { font-family: 'Inter', sans-serif; color: var(--dark); }
         .hero { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 100px 0; border-radius: 0 0 50px 50px; }
-        .nav-link { font-weight: 600; color: #333 !important; transition: 0.3s; }
-        .nav-link:hover { color: var(--primary) !important; }
-        .video-box { background: #000; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: 0.3s; }
-        .video-box:hover { transform: translateY(-5px); }
-        .step-number { width: 45px; height: 45px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 0 auto 15px; }
+        .video-box { background: #000; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .section-padding { padding: 80px 0; }
-        .btn-main { border-radius: 50px; padding: 12px 35px; font-weight: bold; }
+        .step-num { width: 45px; height: 45px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 0 auto 15px; }
     </style>
 </head>
 <body>
@@ -36,25 +31,22 @@
         </div>
     </nav>
 
-    <header class="hero text-center animate__animated animate__fadeIn">
+    <header class="hero text-center">
         <div class="container">
             <h1 class="display-3 fw-bold mb-3">Forfeo LAB</h1>
             <p class="lead fs-3 text-muted mb-4">L’endroit où les expériences locales deviennent mesurables, crédibles… et meilleures.</p>
-            <p class="col-lg-8 mx-auto mb-5">Forfeo LAB connecte les entreprises locales et les ambassadeurs-testeurs pour réaliser des audits mystères, recueillir des sondages clients, et améliorer concrètement la qualité des expériences.</p>
+            <p class="col-lg-8 mx-auto mb-5">Forfeo LAB connecte les entreprises locales et les ambassadeurs-testeurs pour réaliser des audits mystères et recueillir des sondages clients.</p>
             <div class="d-flex justify-content-center gap-3">
-                <a href="/register" class="btn btn-primary btn-main shadow">Devenir Ambassadeur</a>
-                <a href="/register" class="btn btn-outline-dark btn-main">Inscrire mon entreprise</a>
+                <a href="/register" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow">Devenir Ambassadeur</a>
+                <a href="/register" class="btn btn-outline-dark rounded-pill px-5 py-3 fw-bold">Inscrire mon entreprise</a>
             </div>
-            <div class="mt-4 small text-muted">
-                ✅ Rapports clairs • ✅ Améliorations actionnables • ✅ Confiance + ventes
-            </div>
+            <div class="mt-4 small text-muted">✅ Rapports clairs • ✅ Améliorations actionnables • ✅ Confiance + ventes</div>
         </div>
     </header>
 
-    <section class="section-padding">
-        <div class="container text-center">
-            <h2 class="fw-bold display-5 mb-2">FORFEO en action</h2>
-            <p class="text-muted mb-5">Des missions réelles. Des résultats concrets. Une expérience client qui monte d’un cran.</p>
+    <section class="section-padding text-center">
+        <div class="container">
+            <h2 class="fw-bold display-5 mb-5">FORFEO en action</h2>
             <div class="row g-4">
                 <div class="col-md-4">
                     <div class="ratio ratio-16x9 video-box mb-3"><video src="" controls></video></div>
@@ -75,59 +67,29 @@
         </div>
     </section>
 
-    <section class="section-padding bg-light">
-        <div class="container text-center">
+    <section class="section-padding bg-light text-center">
+        <div class="container">
             <h2 class="fw-bold mb-4">C’est quoi Forfeo LAB ?</h2>
-            <p class="fs-5 mb-5 mx-auto col-lg-9">Forfeo LAB est le “laboratoire qualité” de l’écosystème Forfeo. On y retrouve des audits mystères, des sondages clients et des rapports professionnels faciles à comprendre et à appliquer.</p>
-            <div class="alert alert-primary rounded-pill d-inline-block px-5 py-3 fw-bold shadow-sm">
-                🎯 L’objectif : augmenter la qualité perçue, renforcer la confiance et aider les entreprises à vendre plus.
-            </div>
+            <p class="fs-5 mb-5 mx-auto col-lg-9">Forfeo LAB est le “laboratoire qualité” de l’écosystème Forfeo. On y retrouve des audits mystères, des sondages clients et des rapports professionnels.</p>
+            <div class="alert alert-primary rounded-pill d-inline-block px-5 py-3 fw-bold">🎯 Qualité = ventes : meilleure note, meilleur bouche-à-oreille.</div>
         </div>
     </section>
 
-    <section class="section-padding">
-        <div class="container text-center">
+    <section class="section-padding text-center">
+        <div class="container">
             <h2 class="fw-bold mb-5">Comment ça marche</h2>
             <div class="row g-4">
-                <div class="col-md-3"><div class="step-number">1</div><h6>L’entreprise s’inscrit</h6><p class="small">Choisit son service (Audit / Sondage)</p></div>
-                <div class="col-md-3"><div class="step-number">2</div><h6>Assignation</h6><p class="small">Forfeo assigne un ambassadeur qualifié</p></div>
-                <div class="col-md-3"><div class="step-number">3</div><h6>Réalisation</h6><p class="small">Le test est réalisé sur le terrain</p></div>
-                <div class="col-md-3"><div class="step-number">4</div><h6>Rapport</h6><p class="small">L’entreprise reçoit ses recommandations</p></div>
+                <div class="col-md-3"><div class="step-num">1</div><h6>L'entreprise s'inscrit</h6></div>
+                <div class="col-md-3"><div class="step-num">2</div><h6>Assignation</h6></div>
+                <div class="col-md-3"><div class="step-num">3</div><h6>Le test terrain</h6></div>
+                <div class="col-md-3"><div class="step-num">4</div><h6>Le rapport final</h6></div>
             </div>
         </div>
     </section>
 
-    <section class="section-padding bg-light">
-        <div class="container col-lg-8">
-            <h2 class="fw-bold text-center mb-5">Questions fréquentes</h2>
-            <div class="accordion accordion-flush" id="faqAccordion">
-                <div class="accordion-item bg-transparent">
-                    <h2 class="accordion-header"><button class="accordion-button collapsed bg-transparent fw-bold" data-bs-toggle="collapse" data-bs-target="#q1">Combien de temps dure un audit mystère ?</button></h2>
-                    <div id="q1" class="accordion-collapse collapse"><div class="accordion-body text-muted">Généralement 30 à 90 minutes selon l’expérience.</div></div>
-                </div>
-                <div class="accordion-item bg-transparent">
-                    <h2 class="accordion-header"><button class="accordion-button collapsed bg-transparent fw-bold" data-bs-toggle="collapse" data-bs-target="#q2">Est-ce que l’entreprise sait quand l’audit a lieu ?</button></h2>
-                    <div id="q2" class="accordion-collapse collapse"><div class="accordion-body text-muted">Non, pour garder l’expérience authentique.</div></div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <footer class="section-padding bg-dark text-white text-center">
-        <div class="container">
-            <h2 class="fw-bold mb-4">Prêt à passer au niveau supérieur ?</h2>
-            <p class="mb-5 opacity-75">Améliorez votre expérience client ou devenez ambassadeur dès aujourd'hui.</p>
-            <div class="d-flex justify-content-center gap-3">
-                <a href="/register" class="btn btn-primary btn-main">Devenir Ambassadeur</a>
-                <a href="/forfaits" class="btn btn-outline-light btn-main">Voir les forfaits</a>
-            </div>
-            <p class="mt-5 small opacity-50">Tester. Mesurer. Améliorer. — Forfeo LAB Québec</p>
-        </div>
+    <footer class="bg-dark text-white text-center py-5">
+        <p class="mb-0 small opacity-50">Tester. Mesurer. Améliorer. — Forfeo LAB Québec</p>
     </footer>
-
-    <div id="forfy-btn" style="position:fixed; bottom:25px; right:25px; cursor:pointer; z-index:1000;">
-        <img src="/ForfyLogo.png" alt="Forfy" style="width:65px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));">
-    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/forfy-brain.js"></script>
