@@ -12,18 +12,16 @@ const port = process.env.PORT || 8080;
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
-// --- RÉPARATION ET INITIALISATION DE LA BASE DE DONNÉES ---
-async function patchDB() {
+// --- AUTO-RÉPARATION DE LA BASE DE DONNÉES ---
+async function initialiserDB() {
     try {
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS ambassadeur_id INTEGER");
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS rapport_final TEXT");
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS statut VARCHAR(20) DEFAULT 'actif'");
-        console.log("✅ Base de données vérifiée et mise à jour.");
-    } catch (e) {
-        console.log("DB déjà à jour.");
-    }
+        console.log("✅ Base de données synchronisée.");
+    } catch (e) { console.log("DB déjà à jour."); }
 }
-patchDB();
+initialiserDB();
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
@@ -31,22 +29,23 @@ app.use(express.urlencoded({ extended: true }));
 app.use(session({ secret: 'forfeo_secret', resave: false, saveUninitialized: false }));
 app.set('view engine', 'ejs');
 
-// --- ROUTES DE NAVIGATION (Correction des erreurs Cannot GET) ---
+// --- ROUTES DE NAVIGATION PRINCIPALE (Fix Cannot GET) ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
 app.get('/forfaits', (req, res) => res.render('forfaits', { userName: req.session.userName || null }));
 app.get('/ambassadeurs', (req, res) => res.render('ambassadeurs', { userName: req.session.userName || null }));
+app.get('/contact', (req, res) => res.render('contact', { userName: req.session.userName || null }));
 app.get('/login', (req, res) => res.render('login'));
 app.get('/register', (req, res) => res.render('register'));
 
-// --- AUTHENTIFICATION ---
+// --- AUTHENTIFICATION (Fix Cannot POST /login) ---
 app.post('/register', async (req, res) => {
     const { nom, email, password, role } = req.body;
     try {
         const hash = await bcrypt.hash(password, 10);
         await pool.query("INSERT INTO users (nom, email, password, role) VALUES ($1, $2, $3, $4)", [nom, email, hash, role]);
         res.redirect('/login');
-    } catch (err) { res.status(500).send("Erreur lors de l'inscription"); }
+    } catch (err) { res.status(500).send("Erreur d'inscription"); }
 });
 
 app.post('/login', async (req, res) => {
@@ -59,8 +58,8 @@ app.post('/login', async (req, res) => {
             req.session.userRole = result.rows[0].role;
             return res.redirect(`/${req.session.userRole}/dashboard`);
         }
-        res.send("<script>alert('Erreur de connexion'); window.location.href='/login';</script>");
-    } catch (err) { res.status(500).send("Erreur serveur"); }
+        res.send("<script>alert('Identifiants incorrects'); window.location.href='/login';</script>");
+    } catch (err) { res.status(500).send("Erreur de connexion"); }
 });
 
 app.get('/logout', (req, res) => {
@@ -68,23 +67,19 @@ app.get('/logout', (req, res) => {
     res.redirect('/');
 });
 
-// --- DASHBOARDS ---
-
-// 1. Dashboard Entreprise
+// --- DASHBOARDS (Fix Cannot GET /dashboard) ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1", [req.session.userId]);
     res.render('entreprise-dashboard', { missions: missions.rows, userName: req.session.userName });
 });
 
-// 2. Dashboard Ambassadeur (Fix Cannot GET /ambassadeur/dashboard)
 app.get('/ambassadeur/dashboard', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
-    const disponibles = await pool.query("SELECT * FROM missions WHERE statut = 'actif' OR statut IS NULL");
+    const disponibles = await pool.query("SELECT * FROM missions WHERE statut = 'actif'");
     res.render('ambassadeur-dashboard', { missions: disponibles.rows, userName: req.session.userName });
 });
 
-// 3. Dashboard Admin (Fix Cannot GET /admin/dashboard)
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const entreprises = await pool.query("SELECT * FROM users WHERE role = 'entreprise'");
@@ -92,43 +87,22 @@ app.get('/admin/dashboard', async (req, res) => {
     res.render('admin-dashboard', { entreprises: entreprises.rows, rapports: rapports.rows, userName: req.session.userName });
 });
 
-// --- MISSIONS (Correction de l'erreur Cannot POST /creer-mission) ---
+// --- ACTIONS MISSIONS (Fix Cannot POST /creer-mission) ---
 app.post('/creer-mission', async (req, res) => {
-    if (req.session.userRole !== 'entreprise') return res.status(403).send("Non autorisé");
     const { titre, description, recompense } = req.body;
     try {
-        await pool.query(
-            "INSERT INTO missions (entreprise_id, titre, description, recompense, statut) VALUES ($1, $2, $3, $4, 'actif')", 
-            [req.session.userId, titre, description, recompense]
-        );
+        await pool.query("INSERT INTO missions (entreprise_id, titre, description, recompense, statut) VALUES ($1, $2, $3, $4, 'actif')", 
+        [req.session.userId, titre, description, recompense]);
         res.redirect('/entreprise/dashboard');
-    } catch (err) {
-        res.status(500).send("Erreur lors de la création de la mission.");
-    }
+    } catch (err) { res.status(500).send("Erreur de création"); }
 });
 
-// --- ACTIONS AMBASSADEURS ---
-app.get('/ambassadeur/mes-missions', async (req, res) => {
-    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
-    const result = await pool.query("SELECT * FROM missions WHERE ambassadeur_id = $1", [req.session.userId]);
-    res.render('ambassadeur-missions', { missions: result.rows, userName: req.session.userName });
-});
-
-app.post('/postuler-mission', async (req, res) => {
-    const { id_mission } = req.body;
-    try {
-        await pool.query("UPDATE missions SET statut = 'reserve', ambassadeur_id = $1 WHERE id = $2", [req.session.userId, id_mission]);
-        res.redirect('/ambassadeur/mes-missions');
-    } catch (err) { res.status(500).send("Erreur lors de la réservation."); }
-});
-
-// --- FORFY CHAT ---
 app.post('/forfy/chat', async (req, res) => {
     try {
         const { message } = req.body;
         const response = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
-            messages: [{ role: "system", content: "Tu es Forfy, l'IA de FORFEO LAB." }, { role: "user", content: message }],
+            messages: [{ role: "system", content: "Tu es Forfy, l'IA de FORFEO LAB au Québec." }, { role: "user", content: message }],
         });
         res.json({ answer: response.choices[0].message.content });
     } catch (err) { res.status(500).json({ answer: "Erreur Forfy." }); }
