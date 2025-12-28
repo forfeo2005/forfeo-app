@@ -1,155 +1,41 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Console Admin | FORFEO LAB</title>
+    <meta charset="UTF-8"><title>Admin | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7fb; color: #334155; }
-        .sidebar { background: #1e293b; min-height: 100vh; color: white; padding: 2rem 1.5rem; }
-        .nav-link { color: #94a3b8; font-weight: 500; border-radius: 8px; padding: 0.8rem 1rem; transition: 0.3s; }
-        .nav-link:hover, .nav-link.active { background: #334155; color: white; }
-        
-        .main-content { padding: 3rem; }
-        .stat-card { border: none; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: 0.3s; }
-        
-        .table-container { background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .search-bar { border-radius: 10px; border: 1px solid #e2e8f0; padding: 0.6rem 1rem; padding-left: 2.5rem; width: 100%; max-width: 400px; }
-        .search-wrapper { position: relative; }
-        .search-wrapper i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-        
-        .status-badge { padding: 0.4rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: capitalize; }
-        .bg-actif { background: #fef9c3; color: #854d0e; }
-        .bg-reserve { background: #dcfce7; color: #166534; }
-        .bg-termine { background: #e0f2fe; color: #075985; }
-        .bg-approuve { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-        .btn-action { border-radius: 8px; font-weight: 600; font-size: 0.85rem; }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>body { background: #f8fafc; font-family: 'Inter', sans-serif; } .table-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }</style>
 </head>
 <body>
-
-<div class="container-fluid">
-    <div class="row">
-        <nav class="col-md-3 col-lg-2 sidebar d-md-block d-none">
-            <div class="mb-5 px-3">
-                <h4 class="fw-bold text-white mb-0">FORFEO <span class="text-primary">ADMIN</span></h4>
-                <p class="small text-muted">Console de gestion</p>
-            </div>
-            <ul class="nav flex-column gap-2">
-                <li class="nav-item"><a href="/admin/dashboard" class="nav-link active"><i class="bi bi-speedometer2 me-2"></i> Vue d'ensemble</a></li>
-                <li class="nav-item"><a href="/logout" class="nav-link text-danger mt-5"><i class="bi bi-box-arrow-left me-2"></i> Déconnexion</a></li>
-            </ul>
-        </nav>
-
-        <main class="col-md-9 ms-sm-auto col-lg-10 main-content">
-            <div class="d-flex justify-content-between align-items-center mb-5">
-                <h2 class="fw-bold mb-0">Gestion des Audits 🛡️</h2>
-                <div class="text-end">
-                    <p class="fw-bold mb-0"><%= userName %></p>
-                    <span class="badge bg-primary">Administrateur</span>
-                </div>
-            </div>
-
-            <div class="row g-4 mb-5">
-                <div class="col-md-6 col-lg-3">
-                    <div class="card stat-card p-4">
-                        <p class="text-muted small fw-bold mb-1">ENTREPRISES</p>
-                        <h3 class="fw-bold mb-0"><%= entreprises.length %></h3>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="card stat-card p-4">
-                        <p class="text-muted small fw-bold mb-1">AUDITS TOTAUX</p>
-                        <h3 class="fw-bold mb-0"><%= rapports.length %></h3>
-                    </div>
-                </div>
-            </div>
-
-            <div class="table-container">
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-                    <h5 class="fw-bold mb-0">Flux des Missions</h5>
-                    <div class="search-wrapper">
-                        <i class="bi bi-search"></i>
-                        <input type="text" id="adminSearch" class="search-bar" placeholder="Rechercher une entreprise ou mission...">
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table align-middle" id="auditTable">
-                        <thead>
-                            <tr>
-                                <th>Entreprise</th>
-                                <th>Mission</th>
-                                <th>Statut</th>
-                                <th>Ambassadeur</th>
-                                <th>Rapport</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% rapports.forEach(r => { %>
-                                <tr class="audit-row">
-                                    <td class="company-name fw-bold"><%= r.entreprise_nom %></td>
-                                    <td class="mission-title text-muted"><%= r.titre %></td>
-                                    <td><span class="status-badge bg-<%= r.statut %>"><%= r.statut %></span></td>
-                                    <td>
-                                        <% if(r.ambassadeur_id) { %>
-                                            <span class="small fw-bold"><i class="bi bi-person me-1"></i> ID: <%= r.ambassadeur_id %></span>
-                                        <% } else { %>
-                                            <span class="small text-muted italic">Non assigné</span>
-                                        <% } %>
-                                    </td>
-                                    <td>
-                                        <% if(r.rapport_final) { %>
-                                            <span class="badge bg-light text-dark border"><i class="bi bi-file-text me-1"></i> Prêt</span>
-                                        <% } else { %>
-                                            <span class="text-muted small">En attente</span>
-                                        <% } %>
-                                    </td>
-                                    <td class="text-end">
-                                        <div class="d-flex justify-content-end gap-2">
-                                            <form action="/admin/approuver-audit" method="POST">
-                                                <input type="hidden" name="id_mission" value="<%= r.id %>">
-                                                <button type="submit" class="btn btn-sm btn-outline-success btn-action" title="Approuver">Approuver</button>
-                                            </form>
-                                            <form action="/admin/supprimer-audit" method="POST" onsubmit="return confirm('Supprimer définitivement ?');">
-                                                <input type="hidden" name="id_mission" value="<%= r.id %>">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger btn-action"><i class="bi bi-trash"></i></button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
+    <div class="container-fluid py-5 px-4">
+        <h2 class="fw-bold mb-5 text-center">🛡️ Console d'Administration</h2>
+        <div class="table-card">
+            <table class="table align-middle">
+                <thead class="text-muted small"><tr><th>ENTREPRISE</th><th>MISSION</th><th>STATUT</th><th>PREUVE</th><th class="text-end">ACTIONS</th></tr></thead>
+                <tbody>
+                    <% rapports.forEach(r => { %>
+                        <tr>
+                            <td><strong><%= r.entreprise_nom %></strong></td>
+                            <td><%= r.titre %></td>
+                            <td><span class="badge rounded-pill bg-<%= r.statut === 'approuve' ? 'success' : 'warning' %>"><%= r.statut %></span></td>
+                            <td>
+                                <% if(r.photo_preuve) { %>
+                                    <a href="<%= r.photo_preuve %>" target="_blank" class="btn btn-sm btn-outline-info rounded-pill">Voir Photo</a>
+                                <% } else { %><small class="text-muted">N/A</small><% } %>
+                            </td>
+                            <td class="text-end">
+                                <% if(r.statut === 'termine') { %>
+                                    <form action="/admin/approuver-audit" method="POST" class="d-inline">
+                                        <input type="hidden" name="id_mission" value="<%= r.id %>">
+                                        <button class="btn btn-success btn-sm rounded-pill">Approuver & Payer</button>
+                                    </form>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
-
-<script>
-    document.getElementById('adminSearch').addEventListener('keyup', function() {
-        let value = this.value.toLowerCase();
-        let rows = document.querySelectorAll('.audit-row');
-        
-        rows.forEach(row => {
-            let company = row.querySelector('.company-name').textContent.toLowerCase();
-            let mission = row.querySelector('.mission-title').textContent.toLowerCase();
-            
-            if (company.includes(value) || mission.includes(value)) {
-                row.style.display = "";
-            } else {
-                row.style.display = "none";
-            }
-        });
-    });
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
