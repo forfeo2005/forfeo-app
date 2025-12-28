@@ -3,24 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de bord Entreprise | FORFEO LAB</title>
+    <title>Dashboard Entreprise | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --forfeo-blue: #007bff; --bg-light: #f8f9fa; }
         body { background-color: var(--bg-light); font-family: 'Inter', sans-serif; }
-        .navbar-custom { background: white; border-bottom: 1px solid #e0e0e0; padding: 1rem 2rem; }
-        .card-stat { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.3s; }
-        .card-stat:hover { transform: translateY(-5px); }
+        .card-stat { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .table-container { background: white; border-radius: 15px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        .badge-status { border-radius: 50px; padding: 0.5rem 1rem; font-weight: 600; font-size: 0.8rem; }
-        .btn-pdf { background-color: #fff; border: 1px solid #dc3545; color: #dc3545; border-radius: 8px; font-weight: 600; transition: 0.3s; }
-        .btn-pdf:hover { background-color: #dc3545; color: #fff; }
+        .badge-forfait { background: #eef4ff; color: var(--forfeo-blue); border: 1px solid #d0e1ff; }
+        .chart-container { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); height: 100%; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-custom d-flex justify-content-between align-items-center">
+    <nav class="navbar bg-white border-bottom px-4 py-3">
         <a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a>
         <div class="d-flex align-items-center gap-3">
             <span class="fw-semibold">Bienvenue, <%= userName %></span>
@@ -29,109 +27,123 @@
     </nav>
 
     <div class="container py-5">
-        <div class="d-flex justify-content-between align-items-end mb-5">
-            <div>
+        <div class="row align-items-center mb-5">
+            <div class="col-md-7">
                 <h2 class="fw-bold mb-1">Votre Espace Qualité 🚀</h2>
-                <p class="text-muted">Gérez vos audits mystères et consultez vos performances.</p>
+                <p class="text-muted">Gérez vos audits et suivez vos indicateurs de performance.</p>
             </div>
-            <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalMission">
-                <i class="bi bi-plus-lg"></i> Créer une mission
-            </button>
+            <div class="col-md-5 text-md-end">
+                <div class="d-inline-flex align-items-center p-2 px-3 rounded-pill badge-forfait mb-3">
+                    <i class="bi bi-gem me-2"></i> Forfait : <strong><%= stats.forfait %></strong>
+                </div>
+                <br>
+                <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalMission">
+                    <i class="bi bi-plus-lg"></i> Créer une mission
+                </button>
+            </div>
         </div>
 
         <div class="row g-4 mb-5">
-            <div class="col-md-4">
-                <div class="card card-stat p-4">
-                    <h6 class="text-muted small fw-bold">MISSIONS TOTALES</h6>
-                    <h2 class="fw-bold m-0"><%= missions.length %></h2>
+            <div class="col-lg-8">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="card card-stat p-4">
+                            <h6 class="text-muted small fw-bold">MISSIONS TOTALES</h6>
+                            <h2 class="fw-bold m-0"><%= stats.totale %></h2>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-stat p-4 border-start border-primary border-4">
+                            <h6 class="text-muted small fw-bold text-primary">EN COURS</h6>
+                            <h2 class="fw-bold m-0"><%= stats.enCours %></h2>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-stat p-4">
+                            <h6 class="text-muted small fw-bold">INVESTI ($ CAD)</h6>
+                            <h2 class="fw-bold m-0"><%= stats.totalInvesti %>$</h2>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-container mt-4">
+                    <h5 class="fw-bold mb-4">Historique des audits</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead class="text-muted small">
+                                <tr><th>MISSION</th><th>RECOMPENSE</th><th>STATUT</th><th class="text-end">ACTIONS</th></tr>
+                            </thead>
+                            <tbody>
+                                <% missions.forEach(m => { %>
+                                    <tr>
+                                        <td><strong><%= m.titre %></strong></td>
+                                        <td><%= m.recompense %>$</td>
+                                        <td>
+                                            <span class="badge rounded-pill <%= m.statut === 'approuve' ? 'bg-success' : 'bg-warning' %>">
+                                                <%= m.statut %>
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <% if(m.statut === 'approuve' || m.statut === 'termine') { %>
+                                                <a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                                                </a>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card card-stat p-4 border-start border-primary border-4">
-                    <h6 class="text-muted small fw-bold">EN COURS</h6>
-                    <h2 class="fw-bold m-0 text-primary">
-                        <%= missions.filter(m => m.statut !== 'approuve' && m.statut !== 'termine').length %>
-                    </h2>
-                </div>
-            </div>
-        </div>
 
-        <div class="table-container">
-            <h5 class="fw-bold mb-4">Historique des audits</h5>
-            <div class="table-responsive">
-                <table class="table align-middle">
-                    <thead class="text-muted small">
-                        <tr>
-                            <th>MISSION</th>
-                            <th>RECOMPENSE</th>
-                            <th>STATUT</th>
-                            <th class="text-end">ACTIONS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if(missions.length === 0) { %>
-                            <tr><td colspan="4" class="text-center py-5 text-muted">Aucune mission créée pour le moment.</td></tr>
-                        <% } %>
-                        <% missions.forEach(m => { %>
-                            <tr>
-                                <td>
-                                    <div class="fw-bold"><%= m.titre %></div>
-                                    <div class="small text-muted"><%= m.description.substring(0, 50) %>...</div>
-                                </td>
-                                <td class="fw-bold"><%= m.recompense %> $</td>
-                                <td>
-                                    <% if(m.statut === 'approuve' || m.statut === 'termine') { %>
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle badge-status">
-                                            <i class="bi bi-check-circle-fill"></i> Rapport Prêt
-                                        </span>
-                                    <% } else { %>
-                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle badge-status">
-                                            <%= m.statut.toUpperCase() %>
-                                        </span>
-                                    <% } %>
-                                </td>
-                                <td class="text-end">
-                                    <% if(m.statut === 'approuve' || m.statut === 'termine') { %>
-                                        <a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-pdf shadow-sm">
-                                            <i class="bi bi-file-earmark-pdf-fill"></i> Rapport PDF
-                                        </a>
-                                    <% } else { %>
-                                        <button class="btn btn-sm btn-light disabled">En attente...</button>
-                                    <% } %>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
+            <div class="col-lg-4">
+                <div class="chart-container">
+                    <h6 class="fw-bold mb-4 text-center">Répartition des Statuts</h6>
+                    <canvas id="statusChart"></canvas>
+                    <div class="mt-4 small text-muted text-center">
+                        <i class="bi bi-info-circle me-1"></i> Visualisation basée sur vos <%= stats.totale %> audits.
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="modal fade" id="modalMission" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow" style="border-radius: 20px;">
-                <div class="modal-header border-0 p-4">
-                    <h5 class="fw-bold m-0">Nouvel Audit Mystère</h5>
-                    <button type="button" class="btn-close" data-bs-dynamic="modal"></button>
-                </div>
-                <form action="/creer-mission" method="POST" class="p-4 pt-0">
-                    <div class="mb-3">
-                        <label class="small fw-bold mb-2">Titre de la mission</label>
-                        <input type="text" name="titre" class="form-control rounded-3" placeholder="Ex: Évaluation de l'accueil" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="small fw-bold mb-2">Description détaillée</label>
-                        <textarea name="description" class="form-control rounded-3" rows="4" placeholder="Quels points l'ambassadeur doit-il vérifier ?" required></textarea>
-                    </div>
-                    <div class="mb-4">
-                        <label class="small fw-bold mb-2">Récompense ($ CAD)</label>
-                        <input type="number" name="recompense" class="form-control rounded-3" placeholder="50" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100 rounded-3 py-2 fw-bold">Publier la mission</button>
+            <div class="modal-content p-4 rounded-4">
+                <h5 class="fw-bold mb-4">Nouvel Audit Mystère</h5>
+                <form action="/creer-mission" method="POST">
+                    <input type="text" name="titre" class="form-control mb-3" placeholder="Titre de la mission" required>
+                    <textarea name="description" class="form-control mb-3" placeholder="Description..." required></textarea>
+                    <input type="number" name="recompense" class="form-control mb-4" placeholder="Récompense ($)" required>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2">Publier</button>
                 </form>
             </div>
         </div>
     </div>
+
+    <script>
+        // CONFIGURATION CHART.JS
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['En cours', 'Terminés/Approuvés'],
+                datasets: [{
+                    data: [<%= stats.enCours %>, <%= stats.termine %>],
+                    backgroundColor: ['#ffc107', '#198754'],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                plugins: { legend: { position: 'bottom' } },
+                cutout: '70%'
+            }
+        });
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
