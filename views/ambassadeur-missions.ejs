@@ -1,91 +1,42 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mes Missions | FORFEO LAB</title>
+    <meta charset="UTF-8"><title>Mes Missions | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <style>
-        body { background-color: #f4f7fb; font-family: 'Inter', sans-serif; }
-        .mission-item { background: white; border-radius: 15px; padding: 20px; margin-bottom: 15px; border-left: 5px solid #ccc; }
-        .mission-item.reserve { border-left-color: #ffc107; }
-        .mission-item.termine { border-left-color: #198754; opacity: 0.8; }
-    </style>
+    <style>body { background: #f4f7fb; font-family: 'Inter', sans-serif; } .card-mission { background: white; border-radius: 15px; padding: 20px; margin-bottom: 15px; }</style>
 </head>
 <body>
-    <nav class="navbar bg-white border-bottom px-4 py-3">
-        <a class="navbar-brand fw-bold text-primary" href="/ambassadeur/dashboard">FORFEO LAB</a>
-        <a href="/ambassadeur/dashboard" class="btn btn-outline-primary btn-sm rounded-pill">Retour aux missions</a>
-    </nav>
-
+    <nav class="navbar bg-white border-bottom px-4"><a class="navbar-brand fw-bold text-primary" href="/ambassadeur/dashboard">FORFEO LAB</a></nav>
     <div class="container py-5">
-        <h2 class="fw-bold mb-4">Mes Audits en cours 📋</h2>
-
+        <h2 class="fw-bold mb-4">Suivi de mes Audits</h2>
         <% missions.forEach(m => { %>
-            <div class="mission-item shadow-sm <%= m.statut %>">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h5 class="fw-bold mb-1"><%= m.titre %></h5>
-                        <p class="small text-muted mb-0">Statut : <strong><%= m.statut.toUpperCase() %></strong> | Récompense : <%= m.recompense %>$</p>
-                    </div>
-                    <div class="col-md-4 text-md-end">
-                        <% if(m.statut === 'reserve') { %>
-                            <button class="btn btn-success btn-sm rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalRapport<%= m.id %>">
-                                Remplir le rapport
-                            </button>
-                        <% } else { %>
-                            <span class="text-success fw-bold"><i class="bi bi-check-all"></i> Rapport envoyé</span>
-                        <% } %>
-                    </div>
+            <div class="card-mission shadow-sm border-start border-4 <%= m.statut === 'reserve' ? 'border-warning' : 'border-success' %>">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><h5 class="fw-bold mb-0"><%= m.titre %></h5><small class="text-muted"><%= m.statut.toUpperCase() %> - <%= m.recompense %>$</small></div>
+                    <% if(m.statut === 'reserve') { %>
+                        <button class="btn btn-primary btn-sm rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modal<%= m.id %>">Rapport</button>
+                    <% } else { %><span class="text-success small fw-bold">Envoyé</span><% } %>
                 </div>
             </div>
 
-            <div class="modal fade" id="modalRapport<%= m.id %>" tabindex="-1">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
-                    <div class="modal-content p-4 rounded-4 border-0 shadow">
-                        <h5 class="fw-bold mb-4">Rapport d'audit : <%= m.titre %></h5>
-                        <form action="/envoyer-rapport" method="POST">
-                            <input type="hidden" name="id_mission" value="<%= m.id %>">
-                            
-                            <div class="bg-light p-3 rounded-3 mb-4">
-                                <h6 class="fw-bold small mb-3">CONSIGNES DE L'ENTREPRISE :</h6>
-                                <p class="small text-muted"><%= m.description %></p>
-                            </div>
-
-                            <h6 class="fw-bold mb-3 text-primary">QUESTIONNAIRE TERRAIN :</h6>
-                            <% 
-                                // On extrait les critères s'ils existent (format : CRITÈRES : Accueil|Propreté)
-                                let criteresRaw = m.description.split('CRITÈRES : ')[1]?.split('\n')[0] || "";
-                                let criteres = criteresRaw.split('|').filter(c => c.trim() !== "");
-                            %>
-
-                            <% criteres.forEach(crit => { %>
-                                <div class="mb-3">
-                                    <label class="small fw-bold mb-2"><%= crit %> ?</label>
-                                    <select name="<%= crit %>" class="form-select form-select-sm" required>
-                                        <option value="">Sélectionnez...</option>
-                                        <option value="Excellent">Excellent</option>
-                                        <option value="Satisfaisant">Satisfaisant</option>
-                                        <option value="À améliorer">À améliorer</option>
-                                        <option value="Inacceptable">Inacceptable</option>
-                                    </select>
-                                </div>
-                            <% }) %>
-
-                            <div class="mb-4">
-                                <label class="small fw-bold mb-2">Commentaires et observations générales</label>
-                                <textarea name="feedback_general" class="form-control" rows="4" placeholder="Décrivez votre expérience en détail..." required></textarea>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold">Soumettre mon audit final</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+            <div class="modal fade" id="modal<%= m.id %>" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content p-4 rounded-4">
+                <h5 class="fw-bold mb-4">Envoyer mon rapport</h5>
+                <form action="/envoyer-rapport" method="POST">
+                    <input type="hidden" name="id_mission" value="<%= m.id %>">
+                    <div class="mb-4 bg-light p-3 rounded small"><%= m.description %></div>
+                    
+                    <div class="mb-3"><label class="small fw-bold">Feedback Général</label>
+                    <textarea name="feedback_general" class="form-control" rows="3" required></textarea></div>
+                    
+                    <div class="mb-4"><label class="small fw-bold text-primary"><i class="bi bi-camera"></i> Preuve visuelle (Lien Photo)</label>
+                    <input type="url" name="photo_url" class="form-control" placeholder="Lien vers photo (Drive, iCloud...)" required></div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">Soumettre l'Audit</button>
+                </form>
+            </div></div></div>
         <% }) %>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
