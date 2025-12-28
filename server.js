@@ -31,83 +31,71 @@ app.use(express.urlencoded({ extended: true }));
 app.use(session({ secret: 'forfeo_secret', resave: false, saveUninitialized: false }));
 app.set('view engine', 'ejs');
 
-// --- NAVIGATION ---
+// --- NAVIGATION PRINCIPALE ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
-app.get('/forfaits', (req, res) => res.render('forfaits', { userName: req.session.userName || null }));
 app.get('/login', (req, res) => res.render('login'));
-app.get('/register', (req, res) => res.render('register'));
+app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
-app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+// --- DASHBOARD AMBASSADEUR ---
+app.get('/ambassadeur/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
     try {
-        const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-        if (result.rows.length > 0 && await bcrypt.compare(password, result.rows[0].password)) {
-            req.session.userId = result.rows[0].id;
-            req.session.userName = result.rows[0].nom;
-            req.session.userRole = result.rows[0].role;
-            return res.redirect(`/${req.session.userRole}/dashboard`);
-        }
-        res.send("<script>alert('Erreur'); window.location.href='/login';</script>");
-    } catch (err) { res.status(500).send("Erreur serveur"); }
-});
-
-app.get('/logout', (req, res) => {
-    req.session.destroy();
-    res.redirect('/');
-});
-
-// --- DASHBOARD ENTREPRISE ---
-app.get('/entreprise/dashboard', async (req, res) => {
-    if (req.session.userRole !== 'entreprise') return res.redirect('/login');
-    try {
-        const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC", [req.session.userId]);
-        const user = await pool.query("SELECT forfait FROM users WHERE id = $1", [req.session.userId]);
-        
-        const stats = {
-            totale: missions.rows.length,
-            enCours: missions.rows.filter(m => m.statut === 'actif' || m.statut === 'reserve').length,
-            termine: missions.rows.filter(m => m.statut === 'termine' || m.statut === 'approuve').length,
-            totalInvesti: missions.rows.reduce((acc, m) => acc + (parseFloat(m.recompense) || 0), 0),
-            forfait: user.rows[0]?.forfait || 'Freemium'
-        };
-
-        res.render('entreprise-dashboard', { 
-            missions: missions.rows, 
+        const disponibles = await pool.query("SELECT * FROM missions WHERE statut = 'actif' ORDER BY id DESC");
+        const gains = await pool.query("SELECT SUM(recompense::numeric) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'", [req.session.userId]);
+        res.render('ambassadeur-dashboard', { 
+            missions: disponibles.rows, 
             userName: req.session.userName,
-            stats: stats
+            totalGains: gains.rows[0].total || 0
         });
     } catch (err) { res.status(500).send("Erreur Dashboard"); }
 });
 
-// --- CRÉATION DE MISSION ENRICHIE ---
+// --- PAGE MES MISSIONS (QUESTIONNAIRE DYNAMIQUE) ---
+app.get('/ambassadeur/mes-missions', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
+    try {
+        const mesMissions = await pool.query("SELECT * FROM missions WHERE ambassadeur_id = $1 ORDER BY id DESC", [req.session.userId]);
+        res.render('ambassadeur-missions', { missions: mesMissions.rows, userName: req.session.userName });
+    } catch (err) { res.status(500).send("Erreur Mes Missions"); }
+});
+
+// --- ACTIONS MISSIONS ---
+app.post('/postuler-mission', async (req, res) => {
+    try {
+        await pool.query("UPDATE missions SET statut = 'reserve', ambassadeur_id = $1 WHERE id = $2", [req.session.userId, req.body.id_mission]);
+        res.redirect('/ambassadeur/mes-missions');
+    } catch (err) { res.status(500).send("Erreur réservation"); }
+});
+
+app.post('/envoyer-rapport', async (req, res) => {
+    const { id_mission, feedback_general, ...reponses } = req.body;
+    // On compile les réponses du questionnaire dynamique en un texte structuré
+    let rapportCompile = "RÉSULTATS DU QUESTIONNAIRE :\n";
+    for (const [key, value] of Object.entries(reponses)) {
+        rapportCompile += `- ${key} : ${value}\n`;
+    }
+    rapportCompile += `\nFEEDBACK GÉNÉRAL :\n${feedback_general}`;
+
+    try {
+        await pool.query("UPDATE missions SET rapport_final = $1, statut = 'termine' WHERE id = $2", [rapportCompile, id_mission]);
+        res.redirect('/ambassadeur/mes-missions');
+    } catch (err) { res.status(500).send("Erreur envoi rapport"); }
+});
+
+// --- DASHBOARD ENTREPRISE & ADMIN (PRÉSERVÉS) ---
+app.get('/entreprise/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'entreprise') return res.redirect('/login');
+    const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC", [req.session.userId]);
+    const user = await pool.query("SELECT forfait FROM users WHERE id = $1", [req.session.userId]);
+    const stats = { totale: missions.rows.length, enCours: missions.rows.filter(m => m.statut === 'actif' || m.statut === 'reserve').length, termine: missions.rows.filter(m => m.statut === 'termine' || m.statut === 'approuve').length, totalInvesti: missions.rows.reduce((acc, m) => acc + (parseFloat(m.recompense) || 0), 0), forfait: user.rows[0]?.forfait || 'Freemium' };
+    res.render('entreprise-dashboard', { missions: missions.rows, userName: req.session.userName, stats: stats });
+});
+
 app.post('/creer-mission', async (req, res) => {
-    if (req.session.userRole !== 'entreprise') return res.status(403).send("Accès refusé");
     const { titre, description, recompense, type_mission, criteres } = req.body;
-    const listeCriteres = Array.isArray(criteres) ? criteres.join(', ') : (criteres || 'Standard');
-    
-    const descriptionComplete = `TYPE : ${type_mission}\nCRITÈRES : ${listeCriteres}\n---\nDETAILS : ${description}`;
-
-    try {
-        await pool.query(
-            "INSERT INTO missions (entreprise_id, titre, description, recompense, statut) VALUES ($1, $2, $3, $4, 'actif')", 
-            [req.session.userId, titre, descriptionComplete, recompense]
-        );
-        res.redirect('/entreprise/dashboard');
-    } catch (err) { res.status(500).send("Erreur création"); }
+    const descAction = `TYPE : ${type_mission}\nCRITÈRES : ${Array.isArray(criteres) ? criteres.join('|') : criteres}\n---\n${description}`;
+    await pool.query("INSERT INTO missions (entreprise_id, titre, description, recompense, statut) VALUES ($1, $2, $3, $4, 'actif')", [req.session.userId, titre, descAction, recompense]);
+    res.redirect('/entreprise/dashboard');
 });
 
-// --- TÉLÉCHARGEMENT PDF ---
-app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
-    try {
-        const result = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id WHERE m.id = $1", [req.params.id]);
-        const mission = result.rows[0];
-        const doc = new PDFDocument();
-        res.setHeader('Content-disposition', `attachment; filename="Rapport_${req.params.id}.pdf"`);
-        doc.fontSize(20).text('FORFEO LAB - RAPPORT QUALITÉ', { align: 'center' });
-        doc.moveDown().fontSize(12).text(`Entreprise: ${mission.entreprise_nom}\nMission: ${mission.titre}\n\n${mission.rapport_final}`);
-        doc.pipe(res);
-        doc.end();
-    } catch (err) { res.status(500).send("Erreur PDF"); }
-});
-
-app.listen(port, () => console.log(`🚀 Serveur actif sur port ${port}`));
+app.listen(port, () => console.log(`🚀 FORFEO LAB sur port ${port}`));
