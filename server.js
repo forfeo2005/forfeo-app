@@ -27,7 +27,7 @@ async function initialiserDB() {
 }
 initialiserDB();
 
-// --- WEBHOOK STRIPE (Automatisation Forfait) ---
+// --- WEBHOOK STRIPE ---
 app.post('/webhook/stripe', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
@@ -53,13 +53,14 @@ app.use(session({
 }));
 app.set('view engine', 'ejs');
 
-// --- ROUTES PRINCIPALES ---
+// --- ROUTES DE NAVIGATION (Fix Cannot GET) ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
+app.get('/forfaits', (req, res) => res.render('forfaits', { userName: req.session.userName || null }));
 app.get('/login', (req, res) => res.render('login'));
 app.get('/register', (req, res) => res.render('register'));
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
-// --- DASHBOARD ADMIN (Fix Capture 1) ---
+// --- DASHBOARD ADMIN (Fix Erreur Admin) ---
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     try {
@@ -77,7 +78,7 @@ app.get('/admin/dashboard', async (req, res) => {
     } catch (err) { res.status(500).send("Erreur Admin"); }
 });
 
-// --- DASHBOARD AMBASSADEUR (Fix Capture 2) ---
+// --- DASHBOARD AMBASSADEUR (Fix Erreur Ambassadeur) ---
 app.get('/ambassadeur/dashboard', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
     try {
@@ -87,7 +88,7 @@ app.get('/ambassadeur/dashboard', async (req, res) => {
     } catch (err) { res.status(500).send("Erreur Ambassadeur"); }
 });
 
-// --- DASHBOARD ENTREPRISE (Fix Capture 3) ---
+// --- DASHBOARD ENTREPRISE ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     try {
@@ -98,25 +99,14 @@ app.get('/entreprise/dashboard', async (req, res) => {
     } catch (err) { res.status(500).send("Erreur Entreprise"); }
 });
 
-// --- MES MISSIONS (Ambassadeur Mobile Optimisé) ---
-app.get('/ambassadeur/mes-missions', async (req, res) => {
-    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
-    try {
-        const missions = await pool.query("SELECT * FROM missions WHERE ambassadeur_id = $1 ORDER BY id DESC", [req.session.userId]);
-        res.render('ambassadeur-missions', { missions: missions.rows, userName: req.session.userName });
-    } catch (err) { res.status(500).send("Erreur"); }
-});
-
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
     if (result.rows.length > 0 && await bcrypt.compare(password, result.rows[0].password)) {
-        req.session.userId = result.rows[0].id;
-        req.session.userName = result.rows[0].nom;
-        req.session.userRole = result.rows[0].role;
+        req.session.userId = result.rows[0].id; req.session.userName = result.rows[0].nom; req.session.userRole = result.rows[0].role;
         return res.redirect(`/${req.session.userRole}/dashboard`);
     }
     res.redirect('/login');
 });
 
-app.listen(port, () => console.log(`🚀 Serveur actif sur port ${port}`));
+app.listen(port, () => console.log(`🚀 FORFEO LAB sur port ${port}`));
