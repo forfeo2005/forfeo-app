@@ -2,72 +2,19 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audit Mystère | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <style>
-        :root { --forfeo-blue: #007bff; }
-        body { background: #f8fafc; font-family: 'Inter', sans-serif; color: #1e293b; }
-        .hero-section { background: white; padding: 80px 0; border-bottom: 1px solid #e2e8f0; }
-        .step-card { background: white; border-radius: 20px; padding: 30px; border: none; transition: 0.3s; height: 100%; }
-        .step-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .step-number { width: 40px; height: 40px; background: var(--forfeo-blue); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 20px; }
-    </style>
 </head>
 <body>
-    <nav class="navbar bg-white border-bottom px-4 py-3 sticky-top shadow-sm">
-        <div class="container-fluid d-flex justify-content-between align-items-center">
-            <a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a>
-            <div class="d-flex align-items-center gap-2">
-                <% if (userName) { %>
-                    <a href="/profil" class="btn btn-outline-primary btn-sm rounded-pill px-3">Mon Profil</a>
-                <% } else { %>
-                    <a href="/login" class="btn btn-outline-primary btn-sm rounded-pill px-3">Connexion</a>
-                    <a href="/register" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">S'inscrire</a>
-                <% } %>
-            </div>
-        </div>
-    </nav>
-
-    <header class="hero-section text-center">
-        <div class="container">
-            <h1 class="display-4 fw-bold mb-3">Devenez Ambassadeur FORFEO 🕵️‍♂️</h1>
-            <p class="lead text-muted mx-auto" style="max-width: 700px;">
-                Réalisez des missions d'audit mystère dans votre ville, aidez les entreprises québécoises à s'améliorer et gagnez des récompenses.
-            </p>
-        </div>
-    </header>
-
-    <main class="container py-5">
+    <div class="container py-5 text-center">
+        <h1 class="fw-bold mb-4">Devenez Ambassadeur FORFEO 🕵️‍♂️</h1>
+        <p class="lead mb-5">Réalisez des missions d'audit mystère dans votre ville et gagnez des récompenses.</p>
         <div class="row g-4 mb-5">
-            <div class="col-md-4">
-                <div class="step-card shadow-sm text-center">
-                    <div class="step-number mx-auto">1</div>
-                    <h5 class="fw-bold">Réservez une mission</h5>
-                    <p class="small text-muted">Parcourez les offres disponibles sur votre dashboard et choisissez celle qui vous convient.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="step-card shadow-sm text-center">
-                    <div class="step-number mx-auto">2</div>
-                    <h5 class="fw-bold">Réalisez l'audit</h5>
-                    <p class="small text-muted">Visitez l'établissement anonymement, prenez une photo de preuve et notez les points clés.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="step-card shadow-sm text-center">
-                    <div class="step-number mx-auto">3</div>
-                    <h5 class="fw-bold">Recevez vos gains</h5>
-                    <p class="small text-muted">Une fois le rapport validé par l'admin, vos gains sont ajoutés à votre solde.</p>
-                </div>
-            </div>
+            <div class="col-md-4"><div class="p-4 bg-white rounded-4 shadow-sm"><h5>1. Réservez</h5></div></div>
+            <div class="col-md-4"><div class="p-4 bg-white rounded-4 shadow-sm"><h5>2. Réalisez</h5></div></div>
+            <div class="col-md-4"><div class="p-4 bg-white rounded-4 shadow-sm"><h5>3. Gagnez</h5></div></div>
         </div>
-
-        <div class="bg-primary text-white rounded-4 p-5 text-center shadow-lg">
-            <h2 class="fw-bold mb-4">Prêt à commencer votre première mission ?</h2>
-            <a href="/register?role=ambassadeur" class="btn btn-light btn-lg rounded-pill px-5 fw-bold text-primary">Créer mon compte Ambassadeur</a>
-        </div>
-    </main>
-</body>
+        <a href="/register?role=ambassadeur" class="btn btn-primary btn-lg rounded-pill px-5">Créer mon compte Ambassadeur</a>
+    </div>
+    </body>
 </html>
