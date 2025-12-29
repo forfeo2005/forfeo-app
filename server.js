@@ -32,16 +32,12 @@ app.set('view engine', 'ejs');
 // --- AUTO-MIGRATION : RÉPARATION ET CRÉATION DES TABLES ---
 async function setupDatabase() {
     try {
-        // 1. Réparation de la table users (Ajout entreprise_id si manquant)
         await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS entreprise_id INTEGER;`);
-        
-        // 2. Création des tables LMS
         await pool.query(`
             CREATE TABLE IF NOT EXISTS formations_modules (id SERIAL PRIMARY KEY, titre VARCHAR(255), description TEXT, video_url VARCHAR(255));
             CREATE TABLE IF NOT EXISTS formations_questions (id SERIAL PRIMARY KEY, module_id INTEGER, question TEXT, option_a TEXT, option_b TEXT, option_c TEXT, reponse_correcte CHAR(1));
             CREATE TABLE IF NOT EXISTS formations_scores (id SERIAL PRIMARY KEY, user_id INTEGER, module_id INTEGER, meilleur_score INTEGER DEFAULT 0, tentatives INTEGER DEFAULT 0, statut VARCHAR(50), code_verif VARCHAR(12) UNIQUE, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
             
-            -- Insertion du module par défaut s'il est absent
             INSERT INTO formations_modules (id, titre, description, video_url) 
             VALUES (1, 'Harcèlement au Travail', 'Module obligatoire CNESST Québec.', 'https://www.youtube.com/embed/dQw4w9WgXcQ')
             ON CONFLICT (id) DO NOTHING;
@@ -51,20 +47,26 @@ async function setupDatabase() {
 }
 setupDatabase();
 
-// --- ROUTES DE NAVIGATION & AUTH ---
+// --- ROUTES DE NAVIGATION PUBLIQUES (Correction des "Cannot GET") ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
+app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
+app.get('/forfaits', (req, res) => res.render('forfaits', { userName: req.session.userName || null }));
+app.get('/politique-confidentialite', (req, res) => res.render('politique-confidentialite', { userName: req.session.userName || null }));
+app.get('/conditions-utilisation', (req, res) => res.render('conditions-utilisation', { userName: req.session.userName || null }));
+app.get('/verifier-certificat', (req, res) => res.render('verifier-certificat', { certificat: null, error: null, userName: req.session.userName || null }));
+
+// --- AUTHENTIFICATION ---
 app.get('/register', (req, res) => res.render('register', { role: req.query.role || 'ambassadeur', error: null }));
 app.get('/login', (req, res) => res.render('login', { error: null, msg: req.query.msg || null }));
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
-app.get('/verifier-certificat', (req, res) => res.render('verifier-certificat', { certificat: null, error: null, userName: req.session.userName || null }));
 
 app.post('/register', async (req, res) => {
     const { nom, email, password, role } = req.body;
     const hash = await bcrypt.hash(password, 10);
     try {
         await pool.query("INSERT INTO users (nom, email, password, role, forfait) VALUES ($1, $2, $3, $4, 'Freemium')", [nom, email, hash, role]);
-        res.redirect('/login?msg=Compte créé avec succès');
-    } catch (err) { res.redirect('/register?error=Email déjà utilisé'); }
+        res.redirect('/login?msg=Succès');
+    } catch (err) { res.redirect('/register?error=Email utilisé'); }
 });
 
 app.post('/login', async (req, res) => {
@@ -77,6 +79,15 @@ app.post('/login', async (req, res) => {
         return res.redirect(`/${req.session.userRole}/dashboard`);
     }
     res.redirect('/login?error=Identifiants invalides');
+});
+
+// --- PROFIL UTILISATEUR (Correction "Cannot GET /profil") ---
+app.get('/profil', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    try {
+        const result = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
+        res.render('profil', { user: result.rows[0], userName: req.session.userName, message: null });
+    } catch (err) { res.redirect('/'); }
 });
 
 // --- ACADÉMIE : ROUTES FORMATION ---
@@ -112,7 +123,7 @@ app.post('/formations/soumettre-quizz', async (req, res) => {
     res.redirect(`/formations/module/${module_id}`);
 });
 
-// --- DASHBOARD ADMIN ---
+// --- DASHBOARDS (ADMIN, ENTREPRISE, AMBASSADEUR) ---
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const users = await pool.query("SELECT * FROM users ORDER BY id DESC");
@@ -121,7 +132,6 @@ app.get('/admin/dashboard', async (req, res) => {
     res.render('admin-dashboard', { users: users.rows, missions: missions.rows, formationStats: formationStats.rows, userName: req.session.userName });
 });
 
-// --- DASHBOARD ENTREPRISE ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     try {
@@ -131,15 +141,22 @@ app.get('/entreprise/dashboard', async (req, res) => {
             JOIN users u ON s.user_id = u.id 
             JOIN formations_modules m ON s.module_id = m.id 
             WHERE u.entreprise_id = $1`, [req.session.userId]);
-        
         const stats = {
             approuve: missions.rows.filter(m => m.statut === 'approuve').length,
             reserve: missions.rows.filter(m => m.statut === 'reserve').length,
             actif: missions.rows.filter(m => m.statut === 'actif' || m.statut === 'disponible').length
         };
-
         res.render('entreprise-dashboard', { missions: missions.rows, employeesScores: empScores.rows, stats, userName: req.session.userName });
     } catch (err) { res.status(500).send("Erreur dashboard entreprise"); }
+});
+
+app.get('/ambassadeur/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
+    try {
+        const missions = await pool.query("SELECT * FROM missions WHERE statut = 'actif' OR statut = 'disponible'");
+        const totalGains = await pool.query("SELECT SUM(CAST(REGEXP_REPLACE(recompense, '[^0-9.]', '', 'g') AS NUMERIC)) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'", [req.session.userId]);
+        res.render('ambassadeur-dashboard', { missions: missions.rows, totalGains: totalGains.rows[0].total || 0, userName: req.session.userName });
+    } catch (err) { res.status(500).send("Erreur dashboard ambassadeur"); }
 });
 
 app.listen(port, () => console.log(`🚀 FORFEO LAB LIVE`));
