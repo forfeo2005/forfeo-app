@@ -1,80 +1,25 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon Profil | FORFEO LAB</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <style>
-        body { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
-        .profil-card { border: none; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .form-control-custom { background-color: #f1f5f9; border: none; border-radius: 15px; padding: 12px 20px; }
-        .btn-save { background: #0061ff; border: none; border-radius: 15px; font-weight: 600; padding: 12px; transition: 0.3s; }
-        .btn-save:hover { background: #0052db; transform: translateY(-2px); }
-    </style>
-</head>
-<body>
-
-    <nav class="navbar navbar-light bg-white border-bottom py-3">
+<head><meta charset="UTF-8"><title>Mon Profil | FORFEO LAB</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"></head>
+<body class="bg-light">
+    <nav class="navbar bg-white border-bottom py-3">
         <div class="container">
-            <a href="/" class="btn btn-outline-secondary rounded-pill btn-sm d-flex align-items-center">
-                <i class="bi bi-house-door me-2"></i> Accueil
-            </a>
-            <a class="navbar-brand fw-bold text-primary mx-auto" href="/">FORFEO LAB</a>
-            <a href="/logout" class="btn btn-danger btn-sm rounded-pill px-3">Déconnexion</a>
+            <a href="/" class="btn btn-outline-secondary rounded-pill btn-sm shadow-sm"><i class="bi bi-house"></i> Accueil</a>
+            <span class="navbar-brand fw-bold text-primary mx-auto">PARAMÈTRES</span>
+            <a href="/logout" class="btn btn-danger btn-sm rounded-pill shadow-sm">Déconnexion</a>
         </div>
     </nav>
-
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                
-                <div class="card profil-card p-4 p-md-5 bg-white text-center">
-                    <h3 class="fw-bold mb-4">Paramètres du compte</h3>
-
-                    <% if (message) { %>
-                        <div class="alert alert-success border-0 rounded-4 small mb-4">
-                            <i class="bi bi-check-circle-fill me-2"></i> <%= message %>
-                        </div>
-                    <% } %>
-
-                    <div class="mb-4 text-start">
-                        <label class="small text-muted fw-bold mb-2">NOM COMPLET</label>
-                        <div class="form-control-custom text-dark fw-semibold"><%= user.nom %></div>
-                    </div>
-
-                    <div class="mb-4 text-start">
-                        <label class="small text-muted fw-bold mb-2">ADRESSE COURRIEL</label>
-                        <div class="form-control-custom text-muted small"><%= user.email %></div>
-                    </div>
-
-                    <hr class="my-4 opacity-50">
-
-                    <form action="/profil/update-password" method="POST" class="text-start">
-                        <div class="mb-4">
-                            <label class="small text-muted fw-bold mb-2 text-uppercase">Nouveau mot de passe</label>
-                            <input type="password" name="new_password" class="form-control form-control-custom bg-white border" placeholder="••••••••" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-save w-100 shadow-sm">
-                            Sauvegarder les modifications
-                        </button>
-                    </form>
-
-                    <form action="/profil/delete-account" method="POST" class="mt-4" onsubmit="return confirm('Attention ! Cette action est irréversible. Voulez-vous vraiment supprimer votre compte ?');">
-                        <button type="submit" class="btn btn-link text-danger text-decoration-none small p-0 border-0">
-                            Supprimer mon compte
-                        </button>
-                    </form>
-                </div>
-
-                <p class="text-center text-muted small mt-4">
-                    Besoin d'aide ? <a href="mailto:support@forfeolab.com" class="text-primary text-decoration-none">Contactez le support</a>
-                </p>
-            </div>
+    <div class="container py-5" style="max-width: 500px;">
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+            <div class="mb-4"><i class="bi bi-person-circle text-primary" style="font-size: 4rem;"></i><h3 class="fw-bold mt-2"><%= user.nom %></h3><p class="text-muted"><%= user.email %></p></div>
+            <% if (message) { %><div class="alert alert-success rounded-pill"><%= message %></div><% } %>
+            <hr class="my-4">
+            <form action="/profil/update-password" method="POST" class="text-start">
+                <label class="small fw-bold text-muted mb-2">NOUVEAU MOT DE PASSE</label>
+                <input type="password" name="new_password" class="form-control rounded-pill mb-4 shadow-sm" required>
+                <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold shadow">Mettre à jour</button>
+            </form>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
