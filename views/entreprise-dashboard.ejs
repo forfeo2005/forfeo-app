@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Entreprise | FORFEO LAB</title>
+    <title>Espace Entreprise | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,14 +11,14 @@
         :root { --forfeo-blue: #007bff; --bg-light: #f4f7fb; }
         body { background-color: var(--bg-light); font-family: 'Inter', sans-serif; }
         .card-stat { border: none; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .badge-forfait { background: #eef4ff; color: var(--forfeo-blue); border: 1px solid #d0e1ff; font-weight: 700; }
         
-        /* OPTIMISATION MOBILE */
+        /* MOBILE CARDS */
         @media (max-width: 768px) {
+            .navbar { padding: 10px 15px !important; }
             table thead { display: none; }
-            table tr { display: block; background: white; margin-bottom: 1rem; border-radius: 15px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-            table td { display: flex; justify-content: space-between; border: none !important; padding: 8px 0; font-size: 0.9rem; }
-            table td::before { content: attr(data-label); font-weight: bold; color: #666; text-align: left; }
+            table tr { display: block; background: white; margin-bottom: 12px; border-radius: 15px; padding: 12px; border: 1px solid #eee; }
+            table td { display: flex; justify-content: space-between; align-items: center; border: none !important; padding: 6px 0; }
+            table td::before { content: attr(data-label); font-weight: bold; color: #64748b; }
         }
     </style>
 </head>
@@ -26,43 +26,42 @@
     <nav class="navbar bg-white border-bottom px-4 py-3 sticky-top">
         <a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a>
         <div class="d-flex align-items-center gap-2">
-            <span class="badge badge-forfait rounded-pill d-none d-md-inline">Plan: <%= stats.forfait %></span>
+            <span class="badge bg-primary-subtle text-primary rounded-pill d-none d-md-inline">Forfait : <%= stats.forfait %></span>
             <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill">Quitter</a>
         </div>
     </nav>
 
     <div class="container py-4">
         <div class="row mb-4 align-items-center">
-            <div class="col-8">
-                <h2 class="fw-bold mb-1">Votre Espace Qualité 🚀</h2>
-                <p class="text-muted small">Analysez et configurez vos audits mystères.</p>
+            <div class="col-7">
+                <h3 class="fw-bold mb-0">Espace Qualité 🚀</h3>
             </div>
-            <div class="col-4 text-end">
+            <div class="col-5 text-end">
                 <% if (stats.canPublish) { %>
-                    <button class="btn btn-primary rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#modalMission">Créer</button>
+                    <button class="btn btn-primary rounded-pill px-4 fw-bold shadow" data-bs-toggle="modal" data-bs-target="#modalMission">Créer</button>
                 <% } else { %>
-                    <a href="/forfaits" class="btn btn-warning rounded-pill px-3 fw-bold small">Upgrade</a>
+                    <a href="/forfaits" class="btn btn-warning rounded-pill px-3 fw-bold small shadow-sm">Premium</a>
                 <% } %>
             </div>
         </div>
 
-        <div class="row g-4">
+        <div class="row g-3">
             <div class="col-lg-8">
                 <div class="bg-white rounded-4 p-4 shadow-sm">
-                    <h5 class="fw-bold mb-4">Missions</h5>
+                    <h5 class="fw-bold mb-4">Audits Récents</h5>
                     <div class="table-responsive">
                         <table class="table align-middle">
-                            <thead class="text-muted small"><tr><th>MISSION</th><th>RÉCOMPENSE</th><th>STATUT</th><th class="text-end">ACTIONS</th></tr></thead>
+                            <thead class="text-muted small"><tr><th>MISSION</th><th>PRIX</th><th>STATUT</th><th class="text-end">DOCS</th></tr></thead>
                             <tbody>
                                 <% missions.forEach(m => { %>
                                     <tr>
                                         <td data-label="Mission"><strong><%= m.titre %></strong></td>
-                                        <td data-label="Récompense"><%= m.recompense %>$</td>
+                                        <td data-label="Prix"><%= m.recompense %>$</td>
                                         <td data-label="Statut"><span class="badge rounded-pill <%= m.statut === 'approuve' ? 'bg-success' : 'bg-warning' %>"><%= m.statut %></span></td>
-                                        <td data-label="Actions" class="text-end">
+                                        <td data-label="Action" class="text-end">
                                             <% if(m.statut === 'approuve') { %>
                                                 <a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-danger"><i class="bi bi-file-pdf"></i></a>
-                                            <% } %>
+                                            <% } else { %><small class="text-muted italic">---</small><% } %>
                                         </td>
                                     </tr>
                                 <% }) %>
@@ -71,20 +70,14 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-4">
+            <div class="col-lg-4 d-none d-lg-block">
                 <div class="card card-stat p-4">
-                    <h6 class="fw-bold mb-4 text-center">Statuts</h6>
+                    <h6 class="fw-bold mb-4 text-center">Répartition Statuts</h6>
                     <canvas id="statusChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
-    <script>
-        new Chart(document.getElementById('statusChart'), {
-            type: 'doughnut',
-            data: { labels: ['Actif', 'Terminé'], datasets: [{ data: [<%= missions.filter(m=>m.statut!=='approuve').length %>, <%= missions.filter(m=>m.statut==='approuve').length %>], backgroundColor: ['#ffc107', '#198754'] }] },
-            options: { cutout: '80%', plugins: { legend: { position: 'bottom' } } }
-        });
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
