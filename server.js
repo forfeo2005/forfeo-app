@@ -10,26 +10,22 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 10000;
 
-// --- CONNEXION BASE DE DONNÉES ---
 const pool = new Pool({ 
     connectionString: process.env.DATABASE_URL, 
     ssl: { rejectUnauthorized: false } 
 });
 
-// --- INITIALISATION DB ---
 async function initialiserDB() {
     try {
         await pool.query(`CREATE TABLE IF NOT EXISTS "session" ("sid" varchar NOT NULL PRIMARY KEY, "sess" json NOT NULL, "expire" timestamp(6) NOT NULL);`);
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS date_approbation TIMESTAMP;");
-        await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS type_mission VARCHAR(100);");
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS forfait VARCHAR(50) DEFAULT 'Freemium';");
         console.log("✅ Système Stable & Connecté à la DB");
     } catch (e) { console.log("Init Error:", e); }
 }
 initialiserDB();
 
-// --- WEBHOOK STRIPE (Automatisation du Forfait) ---
-// Note: Doit être AVANT express.json()
+// --- WEBHOOK STRIPE ---
 app.post('/webhook/stripe', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
@@ -40,7 +36,6 @@ app.post('/webhook/stripe', express.raw({type: 'application/json'}), async (req,
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
         await pool.query("UPDATE users SET forfait = 'Premium' WHERE email = $1", [session.customer_details.email]);
-        console.log(`💰 Paiement reçu ! Forfait Premium activé pour ${session.customer_details.email}`);
     }
     res.json({received: true});
 });
@@ -48,45 +43,20 @@ app.post('/webhook/stripe', express.raw({type: 'application/json'}), async (req,
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
     secret: 'forfeo_secret_2025',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
-
 app.set('view engine', 'ejs');
 
-// --- ROUTES DE NAVIGATION ---
+// --- ROUTES ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/login', (req, res) => res.render('login'));
-app.get('/register', (req, res) => res.render('register'));
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
-app.get('/forfaits', (req, res) => {
-    res.render('forfaits', { 
-        userName: req.session.userName,
-        stripeLink: "https://buy.stripe.com/dRm9AUf1E2S33s42Tsd7q09" // Votre lien direct
-    });
-});
-
-// --- LOGIN ---
-app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    try {
-        const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-        if (result.rows.length > 0 && await bcrypt.compare(password, result.rows[0].password)) {
-            req.session.userId = result.rows[0].id;
-            req.session.userName = result.rows[0].nom;
-            req.session.userRole = result.rows[0].role;
-            return res.redirect(`/${req.session.userRole}/dashboard`);
-        }
-        res.redirect('/login');
-    } catch (err) { res.status(500).send("Erreur Login"); }
-});
-
-// --- DASHBOARD ADMIN (Nettoyage SQL pour éviter Erreur Admin) ---
+// --- DASHBOARD ADMIN (Fix Erreur Numeric Empty String) ---
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     try {
@@ -97,9 +67,10 @@ app.get('/admin/dashboard', async (req, res) => {
             LEFT JOIN users u ON m.entreprise_id = u.id 
             ORDER BY m.id DESC`);
         
+        // FIX: On traite le vide comme '0', on enlève les symboles, puis on convertit
         const revenusData = await pool.query(`
             SELECT TO_CHAR(COALESCE(date_approbation, NOW()), 'Mon YYYY') as mois, 
-            SUM(CAST(REGEXP_REPLACE(recompense, '[^0-9.]', '', 'g') AS NUMERIC)) as total 
+            SUM(CAST(NULLIF(REGEXP_REPLACE(recompense, '[^0-9.]', '', 'g'), '') AS NUMERIC)) as total 
             FROM missions WHERE statut = 'approuve' 
             GROUP BY mois, date_approbation ORDER BY date_approbation ASC LIMIT 6`);
 
@@ -113,13 +84,15 @@ app.get('/admin/dashboard', async (req, res) => {
     }
 });
 
-// --- DASHBOARD AMBASSADEUR (Nettoyage SQL pour éviter Erreur Ambassadeur) ---
+// --- DASHBOARD AMBASSADEUR (Fix Erreur Numeric Empty String) ---
 app.get('/ambassadeur/dashboard', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
     try {
         const disponibles = await pool.query("SELECT * FROM missions WHERE statut = 'actif' ORDER BY id DESC");
+        
+        // FIX: Utilisation de NULLIF pour éviter de convertir une chaîne vide en nombre
         const gains = await pool.query(`
-            SELECT SUM(CAST(REGEXP_REPLACE(recompense, '[^0-9.]', '', 'g') AS NUMERIC)) as total 
+            SELECT SUM(COALESCE(CAST(NULLIF(REGEXP_REPLACE(recompense, '[^0-9.]', '', 'g'), '') AS NUMERIC), 0)) as total 
             FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'`, [req.session.userId]);
         
         res.render('ambassadeur-dashboard', { 
@@ -140,29 +113,23 @@ app.get('/entreprise/dashboard', async (req, res) => {
         const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC", [req.session.userId]);
         const user = await pool.query("SELECT forfait FROM users WHERE id = $1", [req.session.userId]);
         const forfait = user.rows[0]?.forfait || 'Freemium';
-
         res.render('entreprise-dashboard', { 
-            missions: missions.rows, 
-            userName: req.session.userName,
-            stats: { 
-                totale: missions.rows.length, 
-                forfait: forfait,
-                canPublish: (forfait !== 'Freemium' || missions.rows.length < 1)
-            }
+            missions: missions.rows, userName: req.session.userName,
+            stats: { totale: missions.rows.length, forfait: forfait, canPublish: (forfait !== 'Freemium' || missions.rows.length < 1) }
         });
     } catch (err) { res.status(500).send("Erreur Entreprise"); }
 });
 
-// --- CRÉATION DE MISSION ---
-app.post('/creer-mission', async (req, res) => {
-    const { titre, description, recompense, type_mission } = req.body;
-    try {
-        await pool.query(
-            "INSERT INTO missions (entreprise_id, titre, description, recompense, type_mission, statut) VALUES ($1, $2, $3, $4, $5, 'actif')",
-            [req.session.userId, titre, description, recompense, type_mission]
-        );
-        res.redirect('/entreprise/dashboard');
-    } catch (err) { res.status(500).send("Erreur"); }
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    if (result.rows.length > 0 && await bcrypt.compare(password, result.rows[0].password)) {
+        req.session.userId = result.rows[0].id;
+        req.session.userName = result.rows[0].nom;
+        req.session.userRole = result.rows[0].role;
+        return res.redirect(`/${req.session.userRole}/dashboard`);
+    }
+    res.redirect('/login');
 });
 
 app.listen(port, () => console.log(`🚀 FORFEO LAB sur port ${port}`));
