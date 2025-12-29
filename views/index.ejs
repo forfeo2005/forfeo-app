@@ -3,95 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forfeo LAB | Excellence Québec</title>
+    <title>FORFEO LAB | Excellence au Québec</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        :root { --primary: #007bff; --dark: #1a1a1a; }
-        body { font-family: 'Inter', sans-serif; color: var(--dark); }
-        .hero { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 100px 0; border-radius: 0 0 50px 50px; }
-        .video-box { background: #000; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .section-padding { padding: 80px 0; }
-        .step-num { width: 45px; height: 45px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin: 0 auto 15px; }
+        .hero { background: #f8fafc; padding: 100px 0; }
+        .btn-hero { padding: 15px 35px; border-radius: 50px; font-weight: bold; }
     </style>
 </head>
 <body>
-
-    <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top p-3">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/">FORFEO <span class="text-primary">LAB</span></a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item"><a class="nav-link px-3" href="/audit-mystere">Audit Mystère</a></li>
-                    <li class="nav-item"><a class="nav-link px-3" href="/forfaits">Forfaits</a></li>
-                    <li class="nav-item"><a class="nav-link px-3" href="/ambassadeurs">Devenir Ambassadeur</a></li>
-                    <li class="nav-item ms-lg-3"><a class="nav-link border rounded-pill px-4" href="/login">Connexion</a></li>
-                    <li class="nav-item ms-lg-2"><a class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" href="/register">S'inscrire</a></li>
-                </ul>
+            <a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a>
+            <div class="d-flex gap-2">
+                <% if (userName) { %>
+                    <a href="/profil" class="btn btn-outline-primary rounded-pill">Mon Profil</a>
+                <% } else { %>
+                    <a href="/login" class="btn btn-link text-decoration-none text-dark">Connexion</a>
+                    <a href="/register" class="btn btn-primary rounded-pill px-4">S'inscrire</a>
+                <% } %>
             </div>
         </div>
     </nav>
 
     <header class="hero text-center">
         <div class="container">
-            <h1 class="display-3 fw-bold mb-3">Forfeo LAB</h1>
-            <p class="lead fs-3 text-muted mb-4">L’endroit où les expériences locales deviennent mesurables, crédibles… et meilleures.</p>
-            <p class="col-lg-8 mx-auto mb-5">Forfeo LAB connecte les entreprises locales et les ambassadeurs-testeurs pour réaliser des audits mystères et recueillir des sondages clients.</p>
+            <h1 class="display-3 fw-bold mb-4">L'endroit où les expériences locales deviennent mesurables.</h1>
+            <p class="lead text-muted mb-5">Connectez les entreprises locales et les ambassadeurs-testeurs pour réaliser des audits mystères.</p>
             <div class="d-flex justify-content-center gap-3">
-                <a href="/register" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow">Devenir Ambassadeur</a>
-                <a href="/register" class="btn btn-outline-dark rounded-pill px-5 py-3 fw-bold">Inscrire mon entreprise</a>
+                <a href="/audit-mystere" class="btn btn-primary btn-hero shadow">Devenir Ambassadeur</a>
+                <a href="/register?role=entreprise" class="btn btn-outline-dark btn-hero">Inscrire mon entreprise</a>
             </div>
-            <div class="mt-4 small text-muted">✅ Rapports clairs • ✅ Améliorations actionnables • ✅ Confiance + ventes</div>
         </div>
     </header>
 
-    <section class="section-padding text-center">
+    <footer class="bg-dark text-white py-5 mt-auto">
         <div class="container">
-            <h2 class="fw-bold display-5 mb-5">FORFEO en action</h2>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="ratio ratio-16x9 video-box mb-3"><video src="" controls></video></div>
-                    <h6 class="fw-bold">Vidéo 1 — Avant / Après</h6>
-                    <p class="small text-muted">Exemple d’amélioration après un audit mystère</p>
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                    <h5 class="fw-bold text-primary mb-1">FORFEO LAB</h5>
+                    <p class="small text-white-50 mb-0">&copy; 2025 - Tous droits réservés au Québec.</p>
                 </div>
-                <div class="col-md-4">
-                    <div class="ratio ratio-16x9 video-box mb-3"><video src="" controls></video></div>
-                    <h6 class="fw-bold">Vidéo 2 — Mission Ambassadeur</h6>
-                    <p class="small text-muted">Comment se déroule un test sur le terrain</p>
-                </div>
-                <div class="col-md-4">
-                    <div class="ratio ratio-16x9 video-box mb-3"><video src="" controls></video></div>
-                    <h6 class="fw-bold">Vidéo 3 — Point de vue entreprise</h6>
-                    <p class="small text-muted">Ce que le commerçant reçoit et améliore</p>
+                <div class="col-md-6 text-center text-md-end">
+                    <div class="d-flex justify-content-center justify-content-md-end gap-3">
+                        <a href="/politique-confidentialite" class="text-white-50 text-decoration-none small">Confidentialité (Loi 25)</a>
+                        <span class="text-white-25">|</span>
+                        <a href="/conditions-utilisation" class="text-white-50 text-decoration-none small">Conditions d'utilisation</a>
+                    </div>
                 </div>
             </div>
+            <hr class="my-4 border-secondary opacity-25">
+            <p class="text-center x-small text-white-50" style="font-size: 0.75rem; opacity: 0.7;">
+                <strong>Avis Juridique :</strong> FORFEO LAB est une plateforme de mise en relation. Les Ambassadeurs sont des prestataires de services indépendants.
+            </p>
         </div>
-    </section>
-
-    <section class="section-padding bg-light text-center">
-        <div class="container">
-            <h2 class="fw-bold mb-4">C’est quoi Forfeo LAB ?</h2>
-            <p class="fs-5 mb-5 mx-auto col-lg-9">Forfeo LAB est le “laboratoire qualité” de l’écosystème Forfeo. On y retrouve des audits mystères, des sondages clients et des rapports professionnels.</p>
-            <div class="alert alert-primary rounded-pill d-inline-block px-5 py-3 fw-bold">🎯 Qualité = ventes : meilleure note, meilleur bouche-à-oreille.</div>
-        </div>
-    </section>
-
-    <section class="section-padding text-center">
-        <div class="container">
-            <h2 class="fw-bold mb-5">Comment ça marche</h2>
-            <div class="row g-4">
-                <div class="col-md-3"><div class="step-num">1</div><h6>L'entreprise s'inscrit</h6></div>
-                <div class="col-md-3"><div class="step-num">2</div><h6>Assignation</h6></div>
-                <div class="col-md-3"><div class="step-num">3</div><h6>Le test terrain</h6></div>
-                <div class="col-md-3"><div class="step-num">4</div><h6>Le rapport final</h6></div>
-            </div>
-        </div>
-    </section>
-
-    <footer class="bg-dark text-white text-center py-5">
-        <p class="mb-0 small opacity-50">Tester. Mesurer. Améliorer. — Forfeo LAB Québec</p>
     </footer>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/forfy-brain.js"></script>
 </body>
 </html>
