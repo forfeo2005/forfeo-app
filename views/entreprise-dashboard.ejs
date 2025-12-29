@@ -43,7 +43,7 @@
 
         <div class="row g-4">
             <div class="col-lg-8">
-                <div class="glass-card p-4">
+                <div class="glass-card p-4 shadow-sm">
                     <h5 class="fw-bold mb-4">Missions récentes</h5>
                     <div class="table-responsive">
                         <table class="table align-middle">
@@ -57,7 +57,7 @@
                                         <td data-label="Actions" class="text-end">
                                             <% if(m.statut === 'approuve') { %>
                                                 <a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-danger"><i class="bi bi-file-pdf"></i></a>
-                                            <% } else { %><small class="text-muted">---</small><% } %>
+                                            <% } else { %><small class="text-muted">---</small> <% } %>
                                         </td>
                                     </tr>
                                 <% }) %>
@@ -80,8 +80,8 @@
             <div class="modal-content p-4 rounded-4 border-0">
                 <h5 class="fw-bold mb-4">Nouvel Audit Mystère</h5>
                 <form action="/creer-mission" method="POST">
-                    <input type="text" name="titre" class="form-control mb-3" placeholder="Titre de la mission" required>
-                    <input type="text" name="type_mission" class="form-control mb-3" placeholder="Type (ex: Restauration)" required>
+                    <input type="text" name="titre" class="form-control mb-3" placeholder="Titre" required>
+                    <input type="text" name="type_mission" class="form-control mb-3" placeholder="Type" required>
                     <textarea name="description" class="form-control mb-3" rows="4" placeholder="Consignes..." required></textarea>
                     <input type="text" name="recompense" class="form-control mb-4" placeholder="Récompense (ex: 50$)" required>
                     <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold">Publier</button>
