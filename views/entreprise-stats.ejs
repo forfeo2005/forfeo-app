@@ -13,25 +13,25 @@
 <body>
     <nav class="navbar bg-white border-bottom px-4 py-3 sticky-top shadow-sm">
         <a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a>
-        <a href="/entreprise/dashboard" class="btn btn-outline-secondary btn-sm rounded-pill">Retour Dashboard</a>
+        <a href="/entreprise/dashboard" class="btn btn-outline-secondary btn-sm rounded-pill px-3">Dashboard</a>
     </nav>
 
     <div class="container py-5">
-        <h2 class="fw-bold mb-4">Analyse de votre Qualité de Service 📊</h2>
+        <h2 class="fw-bold mb-4">Analyse de Performance 📊</h2>
         
         <div class="row g-4">
             <div class="col-lg-8">
                 <div class="stats-card shadow-sm">
-                    <h5 class="fw-bold mb-4 text-muted">Missions accomplies par mois</h5>
+                    <h5 class="fw-bold mb-4 text-muted">Audits accomplis par mois</h5>
                     <canvas id="statsChart" height="150"></canvas>
                 </div>
             </div>
             <div class="col-lg-4">
-                <div class="stats-card shadow-sm h-100">
-                    <h5 class="fw-bold mb-4 text-muted">Résumé</h5>
-                    <div class="p-3 bg-light rounded-3 mb-3">
-                        <small class="text-muted d-block">Total Missions</small>
-                        <span class="fs-2 fw-bold text-primary"><%= stats.reduce((acc, curr) => acc + parseInt(curr.total), 0) %></span>
+                <div class="stats-card shadow-sm h-100 text-center">
+                    <h5 class="fw-bold mb-4 text-muted">Impact Total</h5>
+                    <div class="p-4 bg-light rounded-4">
+                        <small class="text-muted d-block">Missions Approuvées</small>
+                        <span class="display-4 fw-bold text-primary"><%= stats.reduce((acc, curr) => acc + parseInt(curr.total), 0) %></span>
                     </div>
                 </div>
             </div>
@@ -40,22 +40,20 @@
 
     <script>
         const ctx = document.getElementById('statsChart').getContext('2d');
-        const data = {
-            labels: <%- JSON.stringify(stats.map(s => s.mois)) %>,
-            datasets: [{
-                label: 'Missions Complétées',
-                data: <%- JSON.stringify(stats.map(s => s.total)) %>,
-                backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                borderColor: '#007bff',
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true
-            }]
-        };
-
         new Chart(ctx, {
             type: 'line',
-            data: data,
+            data: {
+                labels: <%- JSON.stringify(stats.map(s => s.mois)) %>,
+                datasets: [{
+                    label: 'Audits validés',
+                    data: <%- JSON.stringify(stats.map(s => s.total)) %>,
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
             options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
         });
     </script>
