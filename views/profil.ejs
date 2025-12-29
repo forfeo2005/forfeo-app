@@ -4,58 +4,43 @@
     <meta charset="UTF-8">
     <title>Mon Profil | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
-<body class="d-flex flex-column min-vh-100 bg-light">
+<body class="bg-light d-flex flex-column min-vh-100">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a>
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <a href="/" class="nav-link fw-bold text-dark small"><i class="bi bi-house-door"></i> Accueil</a>
+                <a href="/logout" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+
     <div class="container py-5 flex-grow-1" style="max-width: 600px;">
         <div class="card p-4 border-0 shadow rounded-4 mb-4">
-            <h4 class="fw-bold mb-4 text-center text-primary">Paramètres du compte</h4>
+            <h4 class="fw-bold mb-4 text-center">Paramètres du compte</h4>
             <% if (message) { %><div class="alert alert-success small py-2"><%= message %></div><% } %>
             <form action="/update-profil" method="POST">
                 <div class="mb-3">
                     <label class="small fw-bold text-muted">NOM COMPLET</label>
-                    <input type="text" name="nom" class="form-control" value="<%= user.nom %>">
+                    <input type="text" name="nom" class="form-control" value="<%= user.nom %>" required>
                 </div>
                 <div class="mb-4">
-                    <label class="small fw-bold text-muted">NOUVEAU MOT DE PASSE</label>
-                    <input type="password" name="newPassword" class="form-control" placeholder="Laisser vide si inchangé">
+                    <label class="small fw-bold text-muted">MOT DE PASSE</label>
+                    <input type="password" name="newPassword" class="form-control" placeholder="Laissez vide pour conserver l'actuel">
                 </div>
-                <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">Sauvegarder les modifications</button>
+                <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow-sm">Sauvegarder</button>
             </form>
-            <hr class="my-4">
-            <div class="text-center">
-                <a href="/logout" class="btn btn-outline-dark btn-sm rounded-pill px-4">Déconnexion</a>
-            </div>
         </div>
 
-        <form action="/admin/delete-user" method="POST" class="text-center" onsubmit="return confirm('Attention : suppression irréversible. Confirmer ?');">
-            <input type="hidden" name="id_a_supprimer" value="<%= user.id %>">
-            <button type="submit" class="btn btn-link text-danger small text-decoration-none">Supprimer mon compte définitivement</button>
-        </form>
+        <div class="card border-danger p-4 rounded-4 text-center bg-white shadow-sm">
+            <p class="text-danger small fw-bold mb-3">ZONE DE DANGER</p>
+            <form action="/admin/delete-user" method="POST" onsubmit="return confirm('Supprimer définitivement ?');">
+                <input type="hidden" name="id_a_supprimer" value="<%= user.id %>">
+                <button type="submit" class="btn btn-link text-danger small p-0 text-decoration-none">Supprimer mon compte définitivement</button>
+            </form>
+        </div>
     </div>
-
-    <footer class="bg-dark text-white py-5 mt-auto">
-        <div class="container text-center">
-            <div class="row align-items-center mb-4">
-                <div class="col-md-6 text-md-start mb-3 mb-md-0">
-                    <h5 class="fw-bold text-primary mb-1">FORFEO LAB</h5>
-                    <p class="small text-white-50 mb-0">&copy; 2025 - Tous droits réservés au Québec.</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <div class="d-flex justify-content-center justify-content-md-end gap-3 small">
-                        <a href="/politique-confidentialite" class="text-white-50 text-decoration-none hover-link">Confidentialité (Loi 25)</a>
-                        <span class="text-white-25">|</span>
-                        <a href="/conditions-utilisation" class="text-white-50 text-decoration-none hover-link">Conditions d'utilisation</a>
-                    </div>
-                </div>
-            </div>
-            <p class="x-small text-white-50 border-top border-secondary pt-3" style="font-size: 0.75rem; opacity: 0.6;">
-                <strong>Avis Juridique :</strong> FORFEO LAB est une plateforme de mise en relation technologique. 
-                Les Ambassadeurs (Testeurs) réalisent des mandats à titre de <strong>prestataires de services indépendants</strong> 
-                et ne sont pas des employés de la plateforme ou des entreprises clientes.
-            </p>
-        </div>
-    </footer>
-    <style>.hover-link:hover { color: #007bff !important; text-decoration: underline !important; }</style>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+    </body>
 </html>
