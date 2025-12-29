@@ -4,7 +4,6 @@ const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const path = require('path');
-const nodemailer = require('nodemailer');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 require('dotenv').config();
 
@@ -19,7 +18,7 @@ async function initialiserDB() {
         await pool.query(`CREATE TABLE IF NOT EXISTS "session" ("sid" varchar NOT NULL PRIMARY KEY, "sess" json NOT NULL, "expire" timestamp(6) NOT NULL);`);
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS premiere_connexion BOOLEAN DEFAULT TRUE;");
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS forfait VARCHAR(50) DEFAULT 'Freemium';");
-        console.log("✅ FORFEO LAB : Système Stable & Prêt");
+        console.log("✅ FORFEO LAB : Système Stable");
     } catch (e) { console.log("Init Error:", e); }
 }
 initialiserDB();
@@ -35,10 +34,36 @@ app.use(session({
 }));
 app.set('view engine', 'ejs');
 
-// --- ROUTES NAVIGATION ---
+// --- ROUTES DE NAVIGATION ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/login', (req, res) => res.render('login', { msg: req.query.msg || null }));
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
+app.get('/forfaits', (req, res) => res.render('forfaits', { userName: req.session.userName || null }));
+app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
+app.get('/ambassadeurs', (req, res) => res.render('register', { role: 'ambassadeur' }));
+
+// --- GESTION DU PROFIL (Fix Cannot GET /profil) ---
+app.get('/profil', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    try {
+        const result = await pool.query("SELECT nom, email FROM users WHERE id = $1", [req.session.userId]);
+        res.render('profil', { user: result.rows[0], message: req.query.msg || null, userName: req.session.userName });
+    } catch (err) { res.status(500).send("Erreur Profil"); }
+});
+
+app.post('/update-profil', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    const { nom, newPassword } = req.body;
+    try {
+        await pool.query("UPDATE users SET nom = $1 WHERE id = $2", [nom, req.session.userId]);
+        req.session.userName = nom;
+        if (newPassword && newPassword.trim() !== "") {
+            const hash = await bcrypt.hash(newPassword, 10);
+            await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hash, req.session.userId]);
+        }
+        res.redirect('/profil?msg=Profil mis à jour !');
+    } catch (err) { res.status(500).send("Erreur"); }
+});
 
 // --- DASHBOARD AMBASSADEUR ---
 app.get('/ambassadeur/dashboard', async (req, res) => {
@@ -59,7 +84,25 @@ app.get('/ambassadeur/dashboard', async (req, res) => {
             totalGains: gains.rows[0].total || 0,
             showWelcome: showWelcome 
         });
-    } catch (err) { res.status(500).send("Erreur Ambassadeur"); }
+    } catch (err) { res.status(500).send("Erreur Dashboard Ambassadeur"); }
+});
+
+// --- RÉSERVATION (Fix Cannot POST /postuler-mission) ---
+app.post('/postuler-mission', async (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'ambassadeur') return res.status(403).send("Non autorisé");
+    const { id_mission } = req.body;
+    try {
+        await pool.query("UPDATE missions SET ambassadeur_id = $1, statut = 'reserve' WHERE id = $2", [req.session.userId, id_mission]);
+        res.redirect('/ambassadeur/mes-missions');
+    } catch (err) { res.status(500).send("Erreur de réservation"); }
+});
+
+app.get('/ambassadeur/mes-missions', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
+    try {
+        const result = await pool.query("SELECT * FROM missions WHERE ambassadeur_id = $1 ORDER BY id DESC", [req.session.userId]);
+        res.render('ambassadeur-missions', { missions: result.rows, userName: req.session.userName });
+    } catch (err) { res.status(500).send("Erreur"); }
 });
 
 // --- DASHBOARD ENTREPRISE ---
