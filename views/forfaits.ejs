@@ -2,53 +2,71 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Nos Forfaits | FORFEO LAB</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forfaits & Tarification | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root { --forfeo-blue: #007bff; --bg-light: #f4f7fb; }
+        body { background-color: var(--bg-light); font-family: 'Inter', sans-serif; }
+        .pricing-card { border: none; border-radius: 24px; transition: 0.3s; background: white; }
+        .pricing-card.premium { border: 2px solid var(--forfeo-blue); box-shadow: 0 10px 30px rgba(0,123,255,0.1); }
+        .pricing-card:hover { transform: translateY(-10px); }
+        .feature-list { list-style: none; padding: 0; }
+        .feature-list li { margin-bottom: 12px; font-size: 0.95rem; }
+        .feature-list i { color: #10b981; margin-right: 10px; }
+        .price { font-size: 3rem; font-weight: 800; }
+        @media (max-width: 768px) { .price { font-size: 2.5rem; } }
+    </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg bg-white border-bottom p-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/">FORFEO <span class="text-primary">LAB</span></a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/audit-mystere">Audit Mystère</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold text-primary" href="/forfaits">Forfaits</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/ambassadeurs">Devenir Ambassadeur</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/login">Connexion</a></li>
-                </ul>
-            </div>
-        </div>
+<body>
+
+    <nav class="navbar bg-white border-bottom px-4 py-3 sticky-top shadow-sm">
+        <a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a>
+        <a href="/entreprise/dashboard" class="btn btn-outline-secondary btn-sm rounded-pill">Retour au Dashboard</a>
     </nav>
 
-    <div class="container my-5 py-5 text-center">
-        <h1 class="fw-bold mb-5">Choisissez votre plan d'excellence CAD$</h1>
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="fw-bold">Propulsez votre Qualité de Service 🚀</h1>
+            <p class="text-muted">Choisissez le plan adapté à la croissance de votre entreprise au Québec.</p>
+        </div>
+
         <div class="row g-4 justify-content-center">
-            <div class="col-md-4">
-                <div class="card p-4 border-0 shadow-sm rounded-4 h-100">
-                    <h5>Version Freemium</h5>
-                    <h2 class="fw-bold my-3">0,00 $ <small class="fs-6 text-muted">CAD</small></h2>
-                    <p class="small text-muted">Découvrez la plateforme Forfeo.</p>
-                    <button class="btn btn-outline-secondary rounded-pill w-100 disabled">Plan Actuel</button>
+            <div class="col-md-5 col-lg-4">
+                <div class="pricing-card p-5 h-100 shadow-sm">
+                    <h4 class="fw-bold mb-3">Découverte</h4>
+                    <div class="price mb-4">0$ <small class="fs-6 text-muted">/ à vie</small></div>
+                    <ul class="feature-list mb-5">
+                        <li><i class="bi bi-check-circle-fill"></i> 1 mission d'audit offerte</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Accès au dashboard de base</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Rapports PDF standard</li>
+                        <li class="text-muted"><i class="bi bi-x-circle text-danger"></i> Audits illimités</li>
+                    </ul>
+                    <a href="/register" class="btn btn-outline-primary w-100 rounded-pill py-3 fw-bold">Plan actuel</a>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card p-4 border border-primary shadow-sm rounded-4 h-100">
-                    <span class="badge bg-primary mb-2 rounded-pill w-50 m-auto">Mensuel</span>
-                    <h5 class="mt-2">Croissance</h5>
-                    <h2 class="fw-bold my-3">39,00 $ <small class="fs-6 text-muted">CAD/mois</small></h2>
-                    <a href="https://buy.stripe.com/4gMbJ21aO1NZ5Ac9hQd7q07" target="_blank" class="btn btn-primary rounded-pill w-100">Choisir Croissance</a>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card p-4 border border-warning shadow rounded-4 h-100">
-                    <span class="badge bg-warning text-dark mb-2 rounded-pill w-50 m-auto">Annuel</span>
-                    <h5 class="mt-2">Excellence</h5>
-                    <h2 class="fw-bold my-3">299,00 $ <small class="fs-6 text-muted">CAD/an</small></h2>
-                    <a href="https://buy.stripe.com/6oU5kE5r4boz4w8eCad7q06" target="_blank" class="btn btn-warning rounded-pill w-100 fw-bold">Choisir Excellence</a>
+
+            <div class="col-md-5 col-lg-4">
+                <div class="pricing-card premium p-5 h-100 position-relative">
+                    <span class="badge bg-primary rounded-pill position-absolute top-0 start-50 translate-middle px-4 py-2">RECOMMANDÉ</span>
+                    <h4 class="fw-bold mb-3">Premium</h4>
+                    <div class="price mb-4">149$ <small class="fs-6 text-muted">/ mois</small></div>
+                    <ul class="feature-list mb-5">
+                        <li><i class="bi bi-check-circle-fill"></i> Missions illimitées</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Support prioritaire 24/7</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Analyses poussées par IA</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Visibilité accrue des annonces</li>
+                    </ul>
+                    <form action="/create-checkout-session" method="POST">
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow">
+                            Passer au Premium
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-    <script src="/js/forfy-brain.js"></script>
+
 </body>
 </html>
