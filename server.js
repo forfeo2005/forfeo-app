@@ -29,40 +29,35 @@ app.use(session({
 
 app.set('view engine', 'ejs');
 
-// --- AUTO-MIGRATION DES TABLES (LMS & CERTIFICATS) ---
+// --- AUTO-MIGRATION : RÉPARATION ET CRÉATION DES TABLES ---
 async function setupDatabase() {
     try {
+        // 1. Réparation de la table users (Ajout entreprise_id si manquant)
+        await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS entreprise_id INTEGER;`);
+        
+        // 2. Création des tables LMS
         await pool.query(`
             CREATE TABLE IF NOT EXISTS formations_modules (id SERIAL PRIMARY KEY, titre VARCHAR(255), description TEXT, video_url VARCHAR(255));
             CREATE TABLE IF NOT EXISTS formations_questions (id SERIAL PRIMARY KEY, module_id INTEGER, question TEXT, option_a TEXT, option_b TEXT, option_c TEXT, reponse_correcte CHAR(1));
             CREATE TABLE IF NOT EXISTS formations_scores (id SERIAL PRIMARY KEY, user_id INTEGER, module_id INTEGER, meilleur_score INTEGER DEFAULT 0, tentatives INTEGER DEFAULT 0, statut VARCHAR(50), code_verif VARCHAR(12) UNIQUE, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
             
-            -- Insertion des modules par défaut s'ils n'existent pas
+            -- Insertion du module par défaut s'il est absent
             INSERT INTO formations_modules (id, titre, description, video_url) 
             VALUES (1, 'Harcèlement au Travail', 'Module obligatoire CNESST Québec.', 'https://www.youtube.com/embed/dQw4w9WgXcQ')
             ON CONFLICT (id) DO NOTHING;
         `);
-        console.log("✅ Base de données synchronisée.");
+        console.log("✅ Base de données synchronisée et réparée.");
     } catch (err) { console.error("❌ Erreur de synchronisation:", err); }
 }
 setupDatabase();
 
-// --- CONFIGURATION EMAIL ---
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: true,
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-});
-
-// --- ROUTES PUBLIQUES ---
+// --- ROUTES DE NAVIGATION & AUTH ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/register', (req, res) => res.render('register', { role: req.query.role || 'ambassadeur', error: null }));
 app.get('/login', (req, res) => res.render('login', { error: null, msg: req.query.msg || null }));
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 app.get('/verifier-certificat', (req, res) => res.render('verifier-certificat', { certificat: null, error: null, userName: req.session.userName || null }));
 
-// --- AUTHENTIFICATION ---
 app.post('/register', async (req, res) => {
     const { nom, email, password, role } = req.body;
     const hash = await bcrypt.hash(password, 10);
@@ -106,17 +101,14 @@ app.get('/formations/module/:id', async (req, res) => {
 
 app.post('/formations/soumettre-quizz', async (req, res) => {
     const { module_id, score_obtenu } = req.body;
-    const userId = req.session.userId;
     const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-    
     await pool.query(`
         INSERT INTO formations_scores (user_id, module_id, meilleur_score, tentatives, statut, code_verif) 
         VALUES ($1, $2, $3, 1, $4, $5)
         ON CONFLICT (user_id, module_id) DO UPDATE 
         SET meilleur_score = GREATEST(formations_scores.meilleur_score, EXCLUDED.meilleur_score), 
             tentatives = formations_scores.tentatives + 1`, 
-    [userId, module_id, score_obtenu, score_obtenu >= 12 ? 'réussi' : 'échec', code]);
-    
+    [req.session.userId, module_id, score_obtenu, score_obtenu >= 12 ? 'réussi' : 'échec', code]);
     res.redirect(`/formations/module/${module_id}`);
 });
 
@@ -125,32 +117,29 @@ app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const users = await pool.query("SELECT * FROM users ORDER BY id DESC");
     const missions = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id ORDER BY m.id DESC");
-    const formationStats = await pool.query(`
-        SELECT u_ent.nom as entreprise, COUNT(s.id) as total_certificats 
-        FROM formations_scores s 
-        JOIN users u_emp ON s.user_id = u_emp.id 
-        JOIN users u_ent ON u_emp.entreprise_id = u_ent.id 
-        WHERE s.meilleur_score >= 12 GROUP BY u_ent.nom`);
+    const formationStats = await pool.query(`SELECT u_ent.nom as entreprise, COUNT(s.id) as total FROM formations_scores s JOIN users u_emp ON s.user_id = u_emp.id JOIN users u_ent ON u_emp.entreprise_id = u_ent.id WHERE s.meilleur_score >= 12 GROUP BY u_ent.nom`);
     res.render('admin-dashboard', { users: users.rows, missions: missions.rows, formationStats: formationStats.rows, userName: req.session.userName });
 });
 
 // --- DASHBOARD ENTREPRISE ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
-    const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC", [req.session.userId]);
-    const empScores = await pool.query(`
-        SELECT u.nom as nom_employe, m.titre as nom_module, s.* FROM formations_scores s 
-        JOIN users u ON s.user_id = u.id 
-        JOIN formations_modules m ON s.module_id = m.id 
-        WHERE u.entreprise_id = $1`, [req.session.userId]);
-    
-    const stats = {
-        approuve: missions.rows.filter(m => m.statut === 'approuve').length,
-        reserve: missions.rows.filter(m => m.statut === 'reserve').length,
-        actif: missions.rows.filter(m => m.statut === 'actif' || m.statut === 'disponible').length
-    };
+    try {
+        const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC", [req.session.userId]);
+        const empScores = await pool.query(`
+            SELECT u.nom as nom_employe, m.titre as nom_module, s.* FROM formations_scores s 
+            JOIN users u ON s.user_id = u.id 
+            JOIN formations_modules m ON s.module_id = m.id 
+            WHERE u.entreprise_id = $1`, [req.session.userId]);
+        
+        const stats = {
+            approuve: missions.rows.filter(m => m.statut === 'approuve').length,
+            reserve: missions.rows.filter(m => m.statut === 'reserve').length,
+            actif: missions.rows.filter(m => m.statut === 'actif' || m.statut === 'disponible').length
+        };
 
-    res.render('entreprise-dashboard', { missions: missions.rows, employeesScores: empScores.rows, stats, userName: req.session.userName });
+        res.render('entreprise-dashboard', { missions: missions.rows, employeesScores: empScores.rows, stats, userName: req.session.userName });
+    } catch (err) { res.status(500).send("Erreur dashboard entreprise"); }
 });
 
-app.listen(port, () => console.log(`🚀 FORFEO LAB LIVE SUR PORT ${port}`));
+app.listen(port, () => console.log(`🚀 FORFEO LAB LIVE`));
