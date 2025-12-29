@@ -1,39 +1,34 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8"><title>Ambassadeur | FORFEO</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
+<head><meta charset="UTF-8"><title>Ambassadeur | FORFEO</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head>
 <body class="bg-light">
-    <nav class="navbar bg-white border-bottom py-3">
-        <div class="container"><a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a><div class="d-flex"><a href="/profil" class="btn btn-outline-secondary btn-sm rounded-pill me-2">Mon Profil</a><a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a></div></div>
-    </nav>
+    <nav class="navbar bg-white border-bottom py-3"><div class="container"><a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a><div class="d-flex"><a href="/profil" class="btn btn-sm btn-outline-secondary rounded-pill me-2">Mon Profil</a><a href="/logout" class="btn btn-sm btn-danger rounded-pill">Déconnexion</a></div></div></nav>
     <div class="container py-5">
-        <div class="row mb-5 align-items-center">
-            <div class="col-md-8"><h1 class="fw-bold">Bonjour, <%= userName %> 👋</h1></div>
-            <div class="col-md-4 text-end"><div class="bg-primary text-white p-3 rounded-4"><h6>Mes Gains</h6><h3 class="fw-bold m-0"><%= totalGains %>$ CAD</h3></div></div>
-        </div>
-        <h4 class="fw-bold mb-4">Missions disponibles</h4>
+        <div class="row mb-5 align-items-center"><div class="col-8"><h1 class="fw-bold">Bonjour, <%= userName %> 👋</h1></div><div class="col-4 text-end"><div class="bg-primary text-white p-3 rounded-4 shadow-sm"><h6>Mes Gains Totaux</h6><h3 class="fw-bold m-0"><%= totalGains %>$ CAD</h3></div></div></div>
+        
+        <h4 class="fw-bold mb-4">Missions disponibles au Québec</h4>
         <div class="row g-4 mb-5">
             <% missions.forEach(m => { %>
                 <div class="col-md-4">
                     <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                        <span class="badge bg-primary-subtle text-primary rounded-pill mb-2 w-fit">Audit Mystère</span>
                         <h5 class="fw-bold"><%= m.titre %></h5><p class="small text-muted"><%= m.description %></p>
                         <div class="d-flex justify-content-between align-items-center mt-auto">
-                            <span class="fw-bold text-success"><%= m.recompense %>$</span>
-                            <form action="/postuler-mission" method="POST"><input type="hidden" name="id_mission" value="<%= m.id %>"><button type="submit" class="btn btn-primary rounded-pill px-4">Postuler</button></form>
+                            <span class="fw-bold text-success fs-5"><%= m.recompense %>$</span>
+                            <form action="/postuler-mission" method="POST"><input type="hidden" name="id_mission" value="<%= m.id %>"><button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Postuler</button></form>
                         </div>
                     </div>
                 </div>
             <% }) %>
         </div>
+
         <h4 class="fw-bold mb-4">Historique de mes missions</h4>
         <div class="card border-0 shadow-sm rounded-4 p-4">
-            <table class="table">
+            <table class="table align-middle">
                 <thead><tr class="small text-muted"><th>MISSION</th><th>DATE</th><th>STATUT</th><th>RÉCOMPENSE</th></tr></thead>
                 <tbody>
                     <% historique.forEach(h => { %>
-                        <tr><td><%= h.titre %></td><td><%= new Date().toLocaleDateString() %></td><td><span class="badge bg-secondary rounded-pill"><%= h.statut %></span></td><td><%= h.recompense %>$</td></tr>
+                        <tr><td><%= h.titre %></td><td><%= new Date(h.updated_at || Date.now()).toLocaleDateString() %></td><td><span class="badge bg-secondary rounded-pill"><%= h.statut %></span></td><td><%= h.recompense %>$</td></tr>
                     <% }) %>
                 </tbody>
             </table>
