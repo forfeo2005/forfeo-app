@@ -3,91 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de bord Qualité | FORFEO LAB</title>
+    <title>Entreprise | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { background: #f8fafc; font-family: 'Inter', sans-serif; }
-        .navbar { background: white; border-bottom: 1px solid #e2e8f0; }
-        .card-table { border: none; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .badge-status { font-weight: 600; padding: 0.5em 1em; }
+        .card-stat { border: none; border-radius: 15px; transition: transform 0.2s; }
+        .card-stat:hover { transform: translateY(-5px); }
+        .chart-container { position: relative; height: 300px; width: 100%; }
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <nav class="navbar navbar-expand-lg navbar-light sticky-top py-3">
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top py-3">
         <div class="container">
             <a class="navbar-brand fw-bold text-primary fs-4" href="/">FORFEO LAB</a>
             <div class="ms-auto d-flex align-items-center gap-3">
-                <a href="/" class="nav-link fw-bold text-dark small"><i class="bi bi-house-door"></i> Accueil</a>
+                <a href="/" class="nav-link fw-bold text-dark small">Accueil</a>
                 <a href="/logout" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold">Déconnexion</a>
             </div>
         </div>
     </nav>
 
     <div class="container py-5 flex-grow-1">
-        <div class="d-flex justify-content-between align-items-center mb-5">
-            <h2 class="fw-bold m-0">Tableau de bord Qualité</h2>
-            <a href="/forfaits" class="btn btn-warning rounded-pill px-4 fw-bold shadow-sm">Passer au Premium 👑</a>
+        <h2 class="fw-bold mb-4">Analyse de Performance Qualité</h2>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="card card-stat bg-white shadow-sm p-4 border-start border-primary border-5">
+                    <h6 class="text-muted small text-uppercase fw-bold">Total Missions</h6>
+                    <h2 class="fw-bold m-0"><%= missions.length %></h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-stat bg-white shadow-sm p-4 border-start border-success border-5">
+                    <h6 class="text-muted small text-uppercase fw-bold">Rapports Approuvés</h6>
+                    <h2 class="fw-bold m-0 text-success"><%= stats.approuve %></h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-stat bg-white shadow-sm p-4 border-start border-info border-5">
+                    <h6 class="text-muted small text-uppercase fw-bold">En cours / Réservé</h6>
+                    <h2 class="fw-bold m-0 text-info"><%= stats.reserve %></h2>
+                </div>
+            </div>
         </div>
 
-        <div class="card card-table bg-white p-4">
-            <h5 class="fw-bold mb-4">Suivi des Audits</h5>
-            <div class="table-responsive">
-                <table class="table align-middle">
-                    <thead class="text-muted small">
-                        <tr>
-                            <th>MISSION</th>
-                            <th>STATUT</th>
-                            <th>DATE</th>
-                            <th class="text-end">ACTION</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (missions.length === 0) { %>
-                            <tr><td colspan="4" class="text-center py-5 text-muted">Aucune mission pour le moment.</td></tr>
-                        <% } %>
-                        <% missions.forEach(m => { %>
-                            <tr>
-                                <td class="fw-bold"><%= m.titre %></td>
-                                <td>
-                                    <% if (m.statut === 'approuve') { %>
-                                        <span class="badge rounded-pill bg-success-subtle text-success badge-status">Approuvé</span>
-                                    <% } else if (m.statut === 'reserve') { %>
-                                        <span class="badge rounded-pill bg-info-subtle text-info badge-status">Réservé</span>
-                                    <% } else { %>
-                                        <span class="badge rounded-pill bg-warning-subtle text-warning badge-status"><%= m.statut %></span>
-                                    <% } %>
-                                </td>
-                                <td class="text-muted">12/29/2025</td>
-                                <td class="text-end">
-                                    <% if (m.statut === 'approuve') { %>
-                                        <a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold">
-                                            <i class="bi bi-file-earmark-pdf"></i> Voir rapport
-                                        </a>
-                                    <% } else { %>
-                                        <button class="btn btn-sm btn-light rounded-pill px-3 disabled">Voir rapport</button>
-                                    <% } %>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h5 class="fw-bold mb-4">Répartition des statuts</h5>
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h5 class="fw-bold mb-4">Dernières Activités</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead class="text-muted small">
+                                <tr><th>MISSION</th><th>STATUT</th><th class="text-end">RAPPORT</th></tr>
+                            </thead>
+                            <tbody>
+                                <% missions.forEach(m => { %>
+                                    <tr>
+                                        <td class="fw-bold small"><%= m.titre %></td>
+                                        <td>
+                                            <span class="badge rounded-pill <%= m.statut === 'approuve' ? 'bg-success-subtle text-success' : 'bg-info-subtle text-info' %>">
+                                                <%= m.statut %>
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <% if (m.statut === 'approuve') { %>
+                                                <a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-danger px-3">PDF</a>
+                                            <% } else { %>
+                                                <i class="bi bi-clock text-muted"></i>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <footer class="bg-dark text-white py-5 mt-auto">
-        <div class="container text-center">
-            <div class="d-flex justify-content-center gap-3 small mb-3">
-                <a href="/politique-confidentialite" class="text-white-50 text-decoration-none">Confidentialité (Loi 25)</a>
-                <span class="text-white-25">|</span>
-                <a href="/conditions-utilisation" class="text-white-50 text-decoration-none">Conditions d'utilisation</a>
-            </div>
-            <p class="x-small text-white-50 mb-0" style="font-size: 0.75rem; opacity: 0.6;">
-                © 2025 FORFEO LAB | Plateforme conforme aux lois du Québec.
-            </p>
-        </div>
+    <script>
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Approuvés', 'Réservés', 'En attente'],
+                datasets: [{
+                    data: [<%= stats.approuve %>, <%= stats.reserve %>, <%= stats.en_attente %>],
+                    backgroundColor: ['#198754', '#0dcaf0', '#ffc107'],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    </script>
+
+    <footer class="bg-dark text-white py-4 mt-auto text-center">
+        <p class="small text-white-50">© 2025 FORFEO LAB | Conformité Loi 25 Québec</p>
     </footer>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
