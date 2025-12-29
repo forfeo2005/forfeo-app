@@ -1,28 +1,35 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"><title>Mon Profil | FORFEO</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head>
+<head>
+    <meta charset="UTF-8">
+    <title>Mon Profil | FORFEO LAB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
 <body class="bg-light">
-    <nav class="navbar navbar-white bg-white border-bottom py-3 shadow-sm">
-        <div class="container"><a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a><a href="/" class="btn btn-outline-secondary rounded-pill btn-sm">Accueil</a></div>
+    <nav class="navbar navbar-white bg-white border-bottom py-3">
+        <div class="container">
+            <a href="/" class="btn btn-outline-secondary rounded-pill btn-sm"><i class="bi bi-house-door"></i> Accueil</a>
+            <a class="navbar-brand fw-bold text-primary mx-auto" href="/">FORFEO LAB</a>
+            <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
+        </div>
     </nav>
     <div class="container py-5" style="max-width: 600px;">
-        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-            <h4 class="fw-bold mb-3">Informations du compte</h4>
-            <p><strong>Nom :</strong> <%= user.nom %></p>
-            <p><strong>Email :</strong> <%= user.email %></p>
-            <p><strong>Rôle :</strong> <%= user.role %></p>
-        </div>
-
-        <div class="card border-0 shadow-sm rounded-4 p-4">
-            <h4 class="fw-bold mb-3 text-primary">Changer le mot de passe</h4>
-            <% if (message) { %><div class="alert alert-success"><%= message %></div><% } %>
+        <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
+            <h4 class="fw-bold mb-4">Paramètres du compte</h4>
+            <% if (message) { %><div class="alert alert-success rounded-pill"><%= message %></div><% } %>
+            <div class="mb-4 text-start">
+                <label class="small text-muted fw-bold">NOM COMPLET</label>
+                <input type="text" class="form-control bg-light border-0 rounded-pill" value="<%= user.nom %>" readonly>
+            </div>
             <form action="/profil/update-password" method="POST">
-                <div class="mb-3">
-                    <label class="form-label">Nouveau mot de passe</label>
-                    <input type="password" name="new_password" class="form-control rounded-pill" required>
+                <div class="mb-4 text-start">
+                    <label class="small text-muted fw-bold">NOUVEAU MOT DE PASSE</label>
+                    <input type="password" name="new_password" class="form-control bg-white border rounded-pill" required>
                 </div>
-                <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">Sauvegarder</button>
+                <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold shadow">Sauvegarder</button>
             </form>
+            <button class="btn btn-link text-danger mt-4 small border-0">Supprimer mon compte</button>
         </div>
     </div>
 </body>
