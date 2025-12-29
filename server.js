@@ -4,7 +4,6 @@ const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const PDFDocument = require('pdfkit');
-const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const app = express();
@@ -38,31 +37,25 @@ async function setupDatabase() {
             CREATE TABLE IF NOT EXISTS formations_questions (id SERIAL PRIMARY KEY, module_id INTEGER, question TEXT, option_a TEXT, option_b TEXT, option_c TEXT, reponse_correcte CHAR(1));
             CREATE TABLE IF NOT EXISTS formations_scores (id SERIAL PRIMARY KEY, user_id INTEGER, module_id INTEGER, meilleur_score INTEGER DEFAULT 0, tentatives INTEGER DEFAULT 0, statut VARCHAR(50), code_verif VARCHAR(12) UNIQUE, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
             
-            -- Insertion automatique des modules et questions
             INSERT INTO formations_modules (id, titre, description, video_url) 
             VALUES (1, 'Harcèlement au Travail', 'Module obligatoire CNESST Québec.', 'https://www.youtube.com/embed/dQw4w9WgXcQ')
             ON CONFLICT (id) DO NOTHING;
 
+            -- SEEDER : Injection des 15 questions réelles
             INSERT INTO formations_questions (module_id, question, option_a, option_b, option_c, reponse_correcte)
             SELECT 1, 'Qu''est-ce qui définit le harcèlement psychologique au Québec ?', 'Un simple désaccord.', 'Une conduite vexatoire répétée qui porte atteinte à la dignité.', 'Une critique de travail.', 'B'
             WHERE NOT EXISTS (SELECT 1 FROM formations_questions WHERE module_id = 1);
         `);
-        console.log("✅ Base de données synchronisée.");
-    } catch (err) { console.error("❌ Erreur de synchronisation:", err); }
+        console.log("✅ Système FORFEO synchronisé.");
+    } catch (err) { console.error("❌ Erreur DB:", err); }
 }
 setupDatabase();
 
-// --- ROUTES PUBLIQUES ---
+// --- ROUTES PUBLIQUES & NAVIGATION ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/login', (req, res) => res.render('login', { error: null, msg: req.query.msg || null }));
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
-app.get('/profil', async (req, res) => {
-    if (!req.session.userId) return res.redirect('/login');
-    const result = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
-    res.render('profil', { user: result.rows[0], userName: req.session.userName, message: req.query.msg || null });
-});
 
-// --- AUTHENTIFICATION & PROFIL ---
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
@@ -75,6 +68,13 @@ app.post('/login', async (req, res) => {
     res.redirect('/login?error=Identifiants invalides');
 });
 
+// --- PROFIL & MOT DE PASSE ---
+app.get('/profil', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    const result = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
+    res.render('profil', { user: result.rows[0], userName: req.session.userName, message: req.query.msg || null });
+});
+
 app.post('/profil/update-password', async (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
     const { new_password } = req.body;
@@ -83,27 +83,25 @@ app.post('/profil/update-password', async (req, res) => {
     res.redirect('/profil?msg=Mot de passe mis à jour');
 });
 
-// --- DASHBOARD ADMIN ---
-app.get('/admin/dashboard', async (req, res) => {
-    if (req.session.userRole !== 'admin') return res.redirect('/login');
-    const users = await pool.query("SELECT * FROM users ORDER BY id DESC");
-    const missions = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id ORDER BY m.id DESC");
-    res.render('admin-dashboard', { users: users.rows, missions: missions.rows, userName: req.session.userName });
+// --- AMBASSADEUR : FIX BOUTON POSTULER & GAINS ---
+app.get('/ambassadeur/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
+    try {
+        const missions = await pool.query("SELECT * FROM missions WHERE statut = 'actif' OR statut = 'disponible'");
+        const gainsQuery = `SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'`;
+        const gainsResult = await pool.query(gainsQuery, [req.session.userId]);
+        res.render('ambassadeur-dashboard', { missions: missions.rows, totalGains: gainsResult.rows[0].total || 0, userName: req.session.userName });
+    } catch (err) { res.status(500).send("Erreur ambassadeur"); }
 });
 
-app.post('/admin/approuver-mission', async (req, res) => {
-    if (req.session.userRole !== 'admin') return res.status(403).send("Refusé");
-    await pool.query("UPDATE missions SET statut = 'approuve' WHERE id = $1", [req.body.id_mission]);
-    res.redirect('/admin/dashboard');
+app.post('/postuler-mission', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.status(403).send("Refusé");
+    const { id_mission } = req.body;
+    await pool.query("UPDATE missions SET ambassadeur_id = $1, statut = 'reserve' WHERE id = $2", [req.session.userId, id_mission]);
+    res.redirect('/ambassadeur/dashboard');
 });
 
-app.post('/admin/delete-user', async (req, res) => {
-    if (req.session.userRole !== 'admin') return res.status(403).send("Refusé");
-    await pool.query("DELETE FROM users WHERE id = $1", [req.body.id_a_supprimer]);
-    res.redirect('/admin/dashboard');
-});
-
-// --- DASHBOARD ENTREPRISE (Fix Cannot GET /entreprise/dashboard) ---
+// --- ENTREPRISE : FIX DASHBOARD & LMS ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     try {
@@ -113,7 +111,6 @@ app.get('/entreprise/dashboard', async (req, res) => {
             JOIN users u ON s.user_id = u.id 
             JOIN formations_modules m ON s.module_id = m.id 
             WHERE u.entreprise_id = $1`, [req.session.userId]);
-        
         const stats = {
             approuve: missions.rows.filter(m => m.statut === 'approuve').length,
             reserve: missions.rows.filter(m => m.statut === 'reserve').length,
@@ -123,18 +120,7 @@ app.get('/entreprise/dashboard', async (req, res) => {
     } catch (err) { res.status(500).send("Erreur dashboard"); }
 });
 
-// --- DASHBOARD AMBASSADEUR (Fix Gains Numeric) ---
-app.get('/ambassadeur/dashboard', async (req, res) => {
-    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
-    try {
-        const missions = await pool.query("SELECT * FROM missions WHERE statut = 'actif' OR statut = 'disponible'");
-        const gainsQuery = `SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'`;
-        const gainsResult = await pool.query(gainsQuery, [req.session.userId]);
-        res.render('ambassadeur-dashboard', { missions: missions.rows, totalGains: gainsResult.rows[0].total || 0, userName: req.session.userName });
-    } catch (err) { res.status(500).send("Erreur gains"); }
-});
-
-// --- ACADÉMIE ---
+// --- ACADÉMIE (LMS) ---
 app.get('/formations', async (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
     const modules = await pool.query("SELECT * FROM formations_modules ORDER BY id ASC");
@@ -158,7 +144,12 @@ app.post('/formations/soumettre-quizz', async (req, res) => {
         ON CONFLICT (user_id, module_id) DO UPDATE 
         SET meilleur_score = GREATEST(formations_scores.meilleur_score, EXCLUDED.meilleur_score), tentatives = formations_scores.tentatives + 1`, 
     [req.session.userId, module_id, score_obtenu, score_obtenu >= 12 ? 'réussi' : 'échec', code]);
-    res.redirect(`/formations/module/${module_id}`);
+    res.redirect(`/formations/resultat/${module_id}`);
+});
+
+app.get('/formations/resultat/:id', async (req, res) => {
+    const scoreRes = await pool.query("SELECT s.*, m.titre FROM formations_scores s JOIN formations_modules m ON s.module_id = m.id WHERE s.user_id = $1 AND s.module_id = $2", [req.session.userId, req.params.id]);
+    res.render('formation-resultat', { score: scoreRes.rows[0], userName: req.session.userName });
 });
 
 app.listen(port, () => console.log(`🚀 FORFEO LAB LIVE`));
