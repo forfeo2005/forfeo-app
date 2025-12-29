@@ -1,32 +1,89 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"><title>Entreprise | FORFEO</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head>
+<head>
+    <meta charset="UTF-8">
+    <title>Portail Entreprise | FORFEO LAB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
 <body class="bg-light">
-    <nav class="navbar bg-white border-bottom py-3">
+    <nav class="navbar navbar-light bg-white border-bottom py-3">
         <div class="container">
-            <span class="fw-bold">ENTREPRISE: <%= userName %></span> <div><a href="/profil" class="btn btn-sm btn-outline-secondary me-2">Profil</a><a href="/logout" class="btn btn-sm btn-danger">Déconnexion</a></div>
+            <span class="navbar-brand fw-bold text-primary"><i class="bi bi-building"></i> <%= userName %></span>
+            <div class="d-flex align-items-center">
+                <a href="/profil" class="btn btn-outline-secondary btn-sm rounded-pill me-2">Profil</a>
+                <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
+            </div>
         </div>
     </nav>
+
     <div class="container py-5">
-        <div class="row mb-5">
+        <div class="row g-4 mb-5">
             <div class="col-md-6">
-                <div class="card p-4 border-0 shadow-sm rounded-4">
-                    <h5 class="fw-bold">Forfait: <%= user.forfait %></h5>
-                    <a href="https://buy.stripe.com/votre_lien_149" class="btn btn-primary rounded-pill w-100">Passer au Forfait Pro (149$)</a> </div>
+                <div class="card border-0 shadow-sm p-4 rounded-4 bg-primary text-white h-100">
+                    <h6 class="text-uppercase opacity-75">Mon Forfait Actuel</h6>
+                    <h2 class="fw-bold"><%= user.forfait %></h2>
+                    <% if(user.forfait === 'Freemium') { %>
+                        <p class="small mb-4">Passez au Forfait Pro pour débloquer plus de missions.</p>
+                        <a href="https://buy.stripe.com/6oEbKy9zW9mN8U03cc" class="btn btn-light rounded-pill fw-bold w-100 shadow">
+                            Passer au Forfait Pro (149$)
+                        </a>
+                    <% } %>
+                </div>
             </div>
+
             <div class="col-md-6">
-                <div class="card p-4 border-0 shadow-sm rounded-4">
-                    <h5 class="fw-bold">Inscrire un Employé</h5>
+                <div class="card border-0 shadow-sm p-4 rounded-4 h-100">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-person-plus"></i> Inscrire un employé</h5>
                     <form action="/entreprise/ajouter-employe" method="POST">
-                        <input type="text" name="nom" placeholder="Nom" class="form-control mb-2" required>
-                        <input type="email" name="email" placeholder="Email" class="form-control mb-2" required>
-                        <input type="password" name="password" placeholder="Mot de passe" class="form-control mb-2" required>
-                        <button type="submit" class="btn btn-success w-100 rounded-pill">Inscrire</button>
+                        <div class="row g-2">
+                            <div class="col-12"><input type="text" name="nom" class="form-control rounded-pill mb-2" placeholder="Nom complet" required></div>
+                            <div class="col-12"><input type="email" name="email" class="form-control rounded-pill mb-2" placeholder="Email professionnel" required></div>
+                            <div class="col-12"><input type="password" name="password" class="form-control rounded-pill mb-2" placeholder="Mot de passe temporaire" required></div>
+                            <div class="col-12"><button type="submit" class="btn btn-success w-100 rounded-pill fw-bold">Créer le compte employé</button></div>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
-        <div class="card p-4 border-0 shadow-sm rounded-4"><h5 class="fw-bold">Suivi Formations</h5><table class="table"><thead><tr><th>EMPLOYÉ</th><th>SCORE</th><th>CERTIFICAT</th></tr></thead><tbody><% employeesScores.forEach(s => { %><tr><td><%= s.nom %></td><td><%= s.meilleur_score %>/15</td><td><% if(s.meilleur_score >= 12){ %><a href="/certificat/<%= s.code_verif %>" target="_blank">Télécharger PDF</a><% } %></td></tr><% }) %></tbody></table></div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-5">
+            <h4 class="fw-bold mb-4"><i class="bi bi-mortarboard"></i> Suivi des Formations</h4>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr class="small text-muted">
+                            <th>EMPLOYÉ</th>
+                            <th>MODULE</th>
+                            <th>SCORE</th>
+                            <th>CERTIFICAT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if(employeesScores.length === 0) { %>
+                            <tr><td colspan="4" class="text-center text-muted">Aucun employé n'a encore complété de formation.</td></tr>
+                        <% } else { %>
+                            <% employeesScores.forEach(s => { %>
+                                <tr>
+                                    <td class="fw-bold"><%= s.nom %></td>
+                                    <td><%= s.titre %></td>
+                                    <td class="fw-bold text-primary"><%= s.meilleur_score %>/15</td>
+                                    <td>
+                                        <% if(s.meilleur_score >= 12) { %>
+                                            <a href="/certificat/<%= s.code_verif %>" target="_blank" class="btn btn-sm btn-outline-dark rounded-pill">
+                                                <i class="bi bi-file-earmark-pdf"></i> Télécharger PDF
+                                            </a>
+                                        <% } else { %>
+                                            <span class="text-muted small">Non obtenu</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </body>
 </html>
