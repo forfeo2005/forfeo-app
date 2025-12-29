@@ -2,78 +2,109 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Console Admin | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root { --admin-dark: #1e293b; --accent-color: #3b82f6; }
+        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; }
+        .sidebar-brand { background-color: var(--admin-dark); color: white; padding: 20px; text-align: center; font-weight: 800; }
+        .card-stats { border: none; border-radius: 15px; transition: transform 0.2s; }
+        .card-stats:hover { transform: translateY(-5px); }
+        .table-container { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .badge-status { padding: 5px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; }
+    </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3">
-        <div class="container">
-            <span class="navbar-brand fw-bold text-danger">ADMIN CONSOLE</span>
-            <div class="d-flex align-items-center">
-                <span class="text-white me-3 fw-bold"><i class="bi bi-person-badge"></i> <%= userName %></span>
-                <a href="/profil" class="btn btn-outline-light btn-sm rounded-pill me-2">Profil</a>
-                <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container-fluid">
+            <span class="navbar-brand fw-bold ms-3">ADMIN <span class="text-primary">CONSOLE</span></span>
+            <div class="d-flex align-items-center me-3">
+                <span class="text-white-50 me-3 small">Connecté en tant que : <strong><%= userName %></strong></span>
+                <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                    <i class="bi bi-box-arrow-right"></i> Déconnexion
+                </a>
             </div>
         </div>
     </nav>
 
-    <div class="container py-5">
-        <div class="row g-4">
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm rounded-4 p-4 sticky-top" style="top: 20px;">
-                    <h5 class="fw-bold mb-4 text-primary">Créer une Mission</h5>
-                    <form action="/admin/ajouter-mission" method="POST">
-                        <div class="mb-3">
-                            <label class="small fw-bold">ENTREPRISE CIBLE</label>
-                            <select name="entreprise_id" class="form-select rounded-pill" required>
-                                <% users.filter(u => u.role === 'entreprise').forEach(ent => { %>
-                                    <option value="<%= ent.id %>"><%= ent.nom %></option>
-                                <% }) %>
-                            </select>
+    <div class="container-fluid py-4 px-4">
+        <div class="row g-4 mb-5">
+            <div class="col-md-3">
+                <div class="card card-stats bg-white p-3 shadow-sm">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-primary-subtle text-primary p-3 rounded-3 me-3">
+                            <i class="bi bi-people fs-4"></i>
                         </div>
-                        <div class="mb-3">
-                            <label class="small fw-bold">TITRE DE LA MISSION</label>
-                            <input type="text" name="titre" class="form-control rounded-pill" placeholder="Ex: Évaluer l'accueil" required>
+                        <div>
+                            <h6 class="text-muted mb-0">Utilisateurs</h6>
+                            <h4 class="fw-bold mb-0"><%= users.length %></h4>
                         </div>
-                        <div class="mb-3">
-                            <label class="small fw-bold">DESCRIPTION</label>
-                            <textarea name="description" class="form-control rounded-4" rows="3" placeholder="Instructions..." required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="small fw-bold">RÉCOMPENSE ($)</label>
-                            <input type="text" name="recompense" class="form-control rounded-pill" placeholder="Ex: 100$" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">Publier la mission</button>
-                    </form>
+                    </div>
                 </div>
             </div>
+            <div class="col-md-3">
+                <div class="card card-stats bg-white p-3 shadow-sm">
+                    <div class="d-flex align-items-center text-warning">
+                        <div class="flex-shrink-0 bg-warning-subtle p-3 rounded-3 me-3">
+                            <i class="bi bi-hourglass-split fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-0">En attente</h6>
+                            <h4 class="fw-bold mb-0"><%= missions.filter(m => m.statut === 'en_attente').length %></h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <div class="row g-4">
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-                    <h5 class="fw-bold mb-4">Gestion des Audits</h5>
+                <div class="table-container mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-shield-check text-primary me-2"></i> Approbation des Missions</h5>
+                    </div>
                     <div class="table-responsive">
-                        <table class="table align-middle">
-                            <thead class="bg-light">
-                                <tr class="small text-muted">
-                                    <th>ENTREPRISE</th>
-                                    <th>MISSION</th>
-                                    <th>STATUT</th>
-                                    <th>ACTION</th>
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr class="small text-muted text-uppercase">
+                                    <th>Entreprise</th>
+                                    <th>Titre de l'Audit</th>
+                                    <th>Type</th>
+                                    <th>Statut</th>
+                                    <th class="text-end">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                <% if (missions.length === 0) { %>
+                                    <tr><td colspan="5" class="text-center py-4 text-muted">Aucune mission enregistrée.</td></tr>
+                                <% } %>
                                 <% missions.forEach(m => { %>
                                     <tr>
-                                        <td><strong><%= m.entreprise_nom %></strong></td>
-                                        <td class="small"><%= m.titre %></td>
-                                        <td><span class="badge bg-secondary rounded-pill"><%= m.statut %></span></td>
+                                        <td><div class="fw-bold"><%= m.entreprise_nom %></div></td>
+                                        <td><%= m.titre %></td>
+                                        <td><span class="text-muted small"><%= m.type_audit %></span></td>
                                         <td>
-                                            <% if(m.statut === 'reserve') { %>
-                                                <form action="/admin/approuver-mission" method="POST">
+                                            <% if (m.statut === 'en_attente') { %>
+                                                <span class="badge-status bg-warning-subtle text-warning">En attente</span>
+                                            <% } else if (m.statut === 'actif') { %>
+                                                <span class="badge-status bg-success-subtle text-success">Actif / Publié</span>
+                                            <% } else { %>
+                                                <span class="badge-status bg-secondary-subtle text-secondary"><%= m.statut %></span>
+                                            <% } %>
+                                        </td>
+                                        <td class="text-end">
+                                            <% if (m.statut === 'en_attente') { %>
+                                                <form action="/admin/approuver-mission" method="POST" style="display:inline;">
                                                     <input type="hidden" name="id_mission" value="<%= m.id %>">
-                                                    <button type="submit" class="btn btn-success btn-sm rounded-pill">Approuver</button>
+                                                    <button type="submit" class="btn btn-success btn-sm rounded-pill px-3">
+                                                        Approuver
+                                                    </button>
                                                 </form>
+                                            <% } else { %>
+                                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
                                             <% } %>
                                         </td>
                                     </tr>
@@ -82,26 +113,29 @@
                         </table>
                     </div>
                 </div>
+            </div>
 
-                <div class="card border-0 shadow-sm rounded-4 p-4">
-                    <h5 class="fw-bold mb-4">Utilisateurs enregistrés</h5>
-                    <div class="table-responsive">
-                        <table class="table table-sm align-middle">
-                            <thead><tr class="small text-muted"><th>NOM</th><th>EMAIL</th><th>RÔLE</th></tr></thead>
-                            <tbody>
-                                <% users.forEach(u => { %>
-                                    <tr>
-                                        <td><%= u.nom %></td>
-                                        <td class="small"><%= u.email %></td>
-                                        <td><span class="badge bg-light text-dark border rounded-pill"><%= u.role %></span></td>
-                                    </tr>
-                                <% }) %>
-                            </tbody>
-                        </table>
+            <div class="col-lg-4">
+                <div class="table-container">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-person-gear text-primary me-2"></i> Utilisateurs</h5>
+                    <div class="list-group list-group-flush">
+                        <% users.forEach(u => { %>
+                            <div class="list-group-item px-0 py-3 bg-transparent">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold"><%= u.nom %></div>
+                                        <div class="small text-muted"><%= u.email %></div>
+                                    </div>
+                                    <span class="badge bg-light text-dark border rounded-pill small"><%= u.role %></span>
+                                </div>
+                            </div>
+                        <% }) %>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
