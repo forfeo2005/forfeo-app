@@ -1,20 +1,32 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"><title>Portail Entreprise | FORFEO</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head>
+<head><meta charset="UTF-8"><title>Entreprise | FORFEO</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head>
 <body class="bg-light">
-    <nav class="navbar bg-white border-bottom py-3"><div class="container"><a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a><span>Bienvenue, <%= userName %></span></div></nav>
-    <div class="container py-5">
-        <h3 class="fw-bold mb-4">Suivi des Formations de mes Employés</h3>
-        <div class="card border-0 shadow-sm rounded-4 p-4">
-            <table class="table align-middle">
-                <thead><tr class="text-muted small"><th>EMPLOYÉ</th><th>FORMATION</th><th>SCORE</th><th>STATUT</th></tr></thead>
-                <tbody>
-                    <% employeesScores.forEach(s => { %>
-                        <tr><td><%= s.nom_employe %></td><td><%= s.nom_module %></td><td class="fw-bold"><%= ((s.meilleur_score/15)*100).toFixed(0) %>%</td><td><span class="badge <%= s.meilleur_score >= 12 ? 'bg-success' : 'bg-warning' %>"><%= s.statut %></span></td></tr>
-                    <% }) %>
-                </tbody>
-            </table>
+    <nav class="navbar bg-white border-bottom py-3">
+        <div class="container">
+            <span class="fw-bold">ENTREPRISE: <%= userName %></span> <div><a href="/profil" class="btn btn-sm btn-outline-secondary me-2">Profil</a><a href="/logout" class="btn btn-sm btn-danger">Déconnexion</a></div>
         </div>
+    </nav>
+    <div class="container py-5">
+        <div class="row mb-5">
+            <div class="col-md-6">
+                <div class="card p-4 border-0 shadow-sm rounded-4">
+                    <h5 class="fw-bold">Forfait: <%= user.forfait %></h5>
+                    <a href="https://buy.stripe.com/votre_lien_149" class="btn btn-primary rounded-pill w-100">Passer au Forfait Pro (149$)</a> </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card p-4 border-0 shadow-sm rounded-4">
+                    <h5 class="fw-bold">Inscrire un Employé</h5>
+                    <form action="/entreprise/ajouter-employe" method="POST">
+                        <input type="text" name="nom" placeholder="Nom" class="form-control mb-2" required>
+                        <input type="email" name="email" placeholder="Email" class="form-control mb-2" required>
+                        <input type="password" name="password" placeholder="Mot de passe" class="form-control mb-2" required>
+                        <button type="submit" class="btn btn-success w-100 rounded-pill">Inscrire</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="card p-4 border-0 shadow-sm rounded-4"><h5 class="fw-bold">Suivi Formations</h5><table class="table"><thead><tr><th>EMPLOYÉ</th><th>SCORE</th><th>CERTIFICAT</th></tr></thead><tbody><% employeesScores.forEach(s => { %><tr><td><%= s.nom %></td><td><%= s.meilleur_score %>/15</td><td><% if(s.meilleur_score >= 12){ %><a href="/certificat/<%= s.code_verif %>" target="_blank">Télécharger PDF</a><% } %></td></tr><% }) %></tbody></table></div>
     </div>
 </body>
 </html>
