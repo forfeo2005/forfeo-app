@@ -3,7 +3,7 @@ const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
-const PDFDocument = require('pdfkit'); // Pour les PDF
+const PDFDocument = require('pdfkit');
 require('dotenv').config();
 
 const app = express();
@@ -41,17 +41,33 @@ async function setupDatabase() {
             INSERT INTO formations_modules (id, titre, description, video_url) 
             VALUES (1, 'Harcèlement au Travail', 'Module obligatoire CNESST Québec.', 'https://www.youtube.com/embed/dQw4w9WgXcQ')
             ON CONFLICT (id) DO NOTHING;
+
+            INSERT INTO formations_questions (module_id, question, option_a, option_b, option_c, reponse_correcte)
+            SELECT 1, 'Définition du harcèlement ?', 'Désaccord', 'Conduite vexatoire répétée', 'Critique', 'B' WHERE NOT EXISTS (SELECT 1 FROM formations_questions WHERE id = 1);
         `);
-        console.log("✅ FORFEO LAB : Base de données synchronisée.");
+        console.log("✅ FORFEO LAB : Système synchronisé.");
     } catch (err) { console.error("❌ Erreur DB Init:", err); }
 }
 setupDatabase();
 
-// --- ROUTES DE NAVIGATION & AUTH ---
+// --- ROUTES PUBLIQUES ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
+app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
+app.get('/politique-confidentialite', (req, res) => res.render('politique-confidentialite', { userName: req.session.userName || null }));
+app.get('/conditions-utilisation', (req, res) => res.render('conditions-utilisation', { userName: req.session.userName || null }));
 app.get('/register', (req, res) => res.render('register', { role: req.query.role || 'ambassadeur', error: null }));
 app.get('/login', (req, res) => res.render('login', { error: null, msg: req.query.msg || null }));
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
+
+// --- AUTHENTIFICATION ---
+app.post('/register', async (req, res) => {
+    const { nom, email, password, role } = req.body;
+    const hash = await bcrypt.hash(password, 10);
+    try {
+        await pool.query("INSERT INTO users (nom, email, password, role) VALUES ($1, $2, $3, $4)", [nom, email, hash, role]);
+        res.redirect('/login?msg=Compte créé');
+    } catch (err) { res.redirect('/register?error=Email utilisé'); }
+});
 
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
@@ -62,51 +78,42 @@ app.post('/login', async (req, res) => {
         req.session.userRole = result.rows[0].role;
         return res.redirect(`/${req.session.userRole}/dashboard`);
     }
-    res.redirect('/login?error=Invalide');
+    res.redirect('/login?error=Identifiants invalides');
 });
 
-// --- PORTAIL ENTREPRISE (AVEC STRIPE & AJOUT EMPLOYÉ) ---
+// --- DASHBOARDS ---
+app.get('/ambassadeur/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
+    const missions = await pool.query("SELECT * FROM missions WHERE statut = 'actif'");
+    const gains = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'", [req.session.userId]);
+    res.render('ambassadeur-dashboard', { missions: missions.rows, totalGains: gains.rows[0].total || 0, userName: req.session.userName });
+});
+
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
     const scores = await pool.query(`SELECT u.nom, m.titre, s.* FROM formations_scores s JOIN users u ON s.user_id = u.id JOIN formations_modules m ON s.module_id = m.id WHERE u.entreprise_id = $1`, [req.session.userId]);
-    const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1", [req.session.userId]);
-    res.render('entreprise-dashboard', { user: user.rows[0], employeesScores: scores.rows, missions: missions.rows, userName: req.session.userName });
+    const stats = { actif: 0, reserve: 0, approuve: 0 }; // À peupler selon vos missions
+    res.render('entreprise-dashboard', { user: user.rows[0], employeesScores: scores.rows, stats, userName: req.session.userName });
 });
 
-app.post('/entreprise/ajouter-employe', async (req, res) => {
-    const { nom, email, password } = req.body;
-    const hash = await bcrypt.hash(password, 10);
-    await pool.query("INSERT INTO users (nom, email, password, role, entreprise_id) VALUES ($1, $2, $3, 'employe', $4)", [nom, email, hash, req.session.userId]);
-    res.redirect('/entreprise/dashboard?msg=Employé ajouté');
+app.get('/employe/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'employe') return res.redirect('/login');
+    const modules = await pool.query("SELECT * FROM formations_modules ORDER BY id ASC");
+    res.render('employe-dashboard', { modules: modules.rows, userName: req.session.userName });
 });
 
-// --- PORTAIL ADMIN (GESTION MISSIONS & PDF) ---
-app.get('/admin/dashboard', async (req, res) => {
-    if (req.session.userRole !== 'admin') return res.redirect('/login');
-    const users = await pool.query("SELECT * FROM users ORDER BY id DESC");
-    const missions = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id ORDER BY m.id DESC");
-    res.render('admin-dashboard', { users: users.rows, missions: missions.rows, userName: req.session.userName });
+// --- PROFIL & SÉCURITÉ ---
+app.get('/profil', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
+    res.render('profil', { user: user.rows[0], userName: req.session.userName, message: req.query.msg || null });
 });
 
-app.post('/admin/ajouter-mission', async (req, res) => {
-    const { entreprise_id, titre, description, recompense } = req.body;
-    await pool.query("INSERT INTO missions (entreprise_id, titre, description, recompense, statut) VALUES ($1, $2, $3, $4, 'actif')", [entreprise_id, titre, description, recompense]);
-    res.redirect('/admin/dashboard');
-});
-
-// --- GÉNÉRATION DE CERTIFICAT PDF ---
-app.get('/certificat/:code', async (req, res) => {
-    const score = await pool.query("SELECT s.*, u.nom FROM formations_scores s JOIN users u ON s.user_id = u.id WHERE s.code_verif = $1", [req.params.code]);
-    if (score.rows.length === 0) return res.send("Certificat invalide");
-    
-    const doc = new PDFDocument();
-    res.setHeader('Content-Type', 'application/pdf');
-    doc.pipe(res);
-    doc.fontSize(25).text('CERTIFICAT DE RÉUSSITE', { align: 'center' });
-    doc.moveDown().fontSize(18).text(`Délivré à : ${score.rows[0].nom}`, { align: 'center' });
-    doc.text(`Code de vérification : ${score.rows[0].code_verif}`, { align: 'center' });
-    doc.end();
+app.post('/profil/update-password', async (req, res) => {
+    const hash = await bcrypt.hash(req.body.new_password, 10);
+    await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hash, req.session.userId]);
+    res.redirect('/profil?msg=Mot de passe mis à jour');
 });
 
 app.listen(port, () => console.log(`🚀 FORFEO LAB LIVE`));
