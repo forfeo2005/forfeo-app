@@ -29,7 +29,7 @@ async function initDB() {
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS forfait VARCHAR(50) DEFAULT 'Freemium';");
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS premiere_connexion BOOLEAN DEFAULT TRUE;");
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS date_approbation TIMESTAMP;");
-        console.log("✅ FORFEO LAB : Système synchronisé");
+        console.log("🚀 Port 10000\n✅ FORFEO LAB : Système synchronisé");
     } catch (e) { console.error(e); }
 }
 initDB();
@@ -52,7 +52,12 @@ app.get('/conditions-utilisation', (req, res) => res.render('conditions-utilisat
 // --- NAVIGATION ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/register', (req, res) => res.render('register', { role: req.query.role || 'ambassadeur' }));
-app.get('/login', (req, res) => res.render('login', { msg: req.query.msg || null }));
+
+// FIX: Route de connexion corrigée pour éviter "error is not defined"
+app.get('/login', (req, res) => {
+    res.render('login', { error: req.query.error || null, msg: req.query.msg || null });
+});
+
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 app.get('/forfaits', (req, res) => res.render('forfaits', { userName: req.session.userName || null }));
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
@@ -69,7 +74,7 @@ app.post('/update-profil', async (req, res) => {
     await pool.query("UPDATE users SET nom = $1 WHERE id = $2", [nom, req.session.userId]);
     if (newPassword && newPassword.trim() !== "") {
         const hash = await bcrypt.hash(newPassword, 10);
-        await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hash, req.session.userId]);
+        await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hash, hash]);
     }
     res.redirect('/profil?msg=Profil mis à jour');
 });
@@ -143,7 +148,7 @@ app.post('/login', async (req, res) => {
         req.session.userRole = result.rows[0].role;
         return res.redirect(`/${req.session.userRole}/dashboard`);
     }
-    res.redirect('/login?msg=Erreur');
+    res.redirect('/login?error=Identifiants incorrects');
 });
 
 app.listen(port, () => console.log(`🚀 Port ${port}`));
