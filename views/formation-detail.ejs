@@ -7,58 +7,55 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         body { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
-        .video-container { border-radius: 25px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); background: #000; }
-        .quiz-card { border: none; border-radius: 20px; background: white; }
-        .option-container { border: 2px solid #e2e8f0; border-radius: 15px; padding: 15px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
-        .option-container:hover { border-color: #0061ff; background-color: #f0f7ff; }
-        .option-container input { display: none; }
-        .option-container input:checked + label { color: #0061ff; font-weight: bold; }
+        .video-box { border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .quiz-section { background: white; border-radius: 20px; padding: 40px; }
+        .option-label { display: block; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: 0.2s; }
+        .option-label:hover { border-color: #0061ff; background: #f0f7ff; }
+        input[type="radio"]:checked + .option-label { border-color: #0061ff; background: #f0f7ff; font-weight: bold; }
     </style>
 </head>
 <body>
     <nav class="navbar bg-white border-bottom py-3">
         <div class="container">
             <a href="/employe/dashboard" class="btn btn-outline-secondary rounded-pill btn-sm"><i class="bi bi-arrow-left"></i> Retour</a>
-            <span class="navbar-brand fw-bold mx-auto">FORMATION : <%= module.titre %></span>
+            <span class="navbar-brand fw-bold mx-auto text-primary">MODULE : <%= module.titre %></span>
         </div>
     </nav>
 
     <div class="container py-5">
         <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="video-container mb-5">
+            <div class="col-lg-9">
+                <div class="video-box mb-5">
                     <div class="ratio ratio-16x9">
-                        <iframe src="<%= module.video_url %>" title="Vidéo de formation" allowfullscreen></iframe>
+                        <iframe src="<%= module.video_url %>" allowfullscreen></iframe>
                     </div>
                 </div>
 
-                <div class="card quiz-card p-4 p-md-5 shadow-sm">
-                    <h3 class="fw-bold mb-4 text-center">Examen de Validation</h3>
-                    <form action="/formations/soumettre-quizz" method="POST" id="quizForm">
+                <div class="quiz-section shadow-sm">
+                    <h3 class="fw-bold mb-4">Examen de Validation</h3>
+                    <form action="/formations/soumettre-quizz" method="POST">
                         <input type="hidden" name="module_id" value="<%= module.id %>">
                         
                         <% questions.forEach((q, index) => { %>
                             <div class="mb-5">
                                 <h5 class="fw-bold mb-3"><%= index + 1 %>. <%= q.question %></h5>
-                                <div class="options">
-                                    <div class="option-container">
-                                        <input type="radio" name="q<%= q.id %>" value="A" id="q<%= q.id %>a" required>
-                                        <label class="w-100 m-0" for="q<%= q.id %>a">A) <%= q.option_a %></label>
-                                    </div>
-                                    <div class="option-container">
-                                        <input type="radio" name="q<%= q.id %>" value="B" id="q<%= q.id %>b">
-                                        <label class="w-100 m-0" for="q<%= q.id %>b">B) <%= q.option_b %></label>
-                                    </div>
-                                    <div class="option-container">
-                                        <input type="radio" name="q<%= q.id %>" value="C" id="q<%= q.id %>c">
-                                        <label class="w-100 m-0" for="q<%= q.id %>c">C) <%= q.option_c %></label>
-                                    </div>
+                                <div class="mb-2">
+                                    <input type="radio" name="q<%= q.id %>" value="A" id="q<%= q.id %>a" class="btn-check" required>
+                                    <label class="option-label" for="q<%= q.id %>a">A) <%= q.option_a %></label>
+                                </div>
+                                <div class="mb-2">
+                                    <input type="radio" name="q<%= q.id %>" value="B" id="q<%= q.id %>b" class="btn-check">
+                                    <label class="option-label" for="q<%= q.id %>b">B) <%= q.option_b %></label>
+                                </div>
+                                <div class="mb-2">
+                                    <input type="radio" name="q<%= q.id %>" value="C" id="q<%= q.id %>c" class="btn-check">
+                                    <label class="option-label" for="q<%= q.id %>c">C) <%= q.option_c %></label>
                                 </div>
                             </div>
                         <% }) %>
 
                         <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold shadow">
-                            Soumettre mes réponses
+                            Terminer l'examen
                         </button>
                     </form>
                 </div>
