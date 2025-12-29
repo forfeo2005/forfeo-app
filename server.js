@@ -2,6 +2,7 @@ const express = require('express');
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session); // Stockage persistant
 const path = require('path');
 const { OpenAI } = require("openai");
 const nodemailer = require('nodemailer');
@@ -10,7 +11,10 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 8080;
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+const pool = new Pool({ 
+    connectionString: process.env.DATABASE_URL, 
+    ssl: { rejectUnauthorized: false } 
+});
 
 // --- CONFIGURATION NODEMAILER ---
 const transporter = nodemailer.createTransport({
@@ -18,30 +22,54 @@ const transporter = nodemailer.createTransport({
     auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
 });
 
-// --- INITIALISATION DB ---
+// --- INITIALISATION DB (AVEC TABLE SESSION) ---
 async function initialiserDB() {
     try {
+        // Création de la table session pour connect-pg-simple
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS "session" (
+              "sid" varchar NOT NULL COLLATE "default",
+              "sess" json NOT NULL,
+              "expire" timestamp(6) NOT NULL
+            ) WITH (OIDS=FALSE);
+            ALTER TABLE "session" DROP CONSTRAINT IF EXISTS "session_pkey";
+            ALTER TABLE "session" ADD CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
+            CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+        `);
+        
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS date_approbation TIMESTAMP");
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS photo_preuve TEXT");
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS note_audit INTEGER DEFAULT 0");
-        console.log("✅ Base de données synchronisée (Notes & Analyse).");
-    } catch (e) { console.log("DB à jour."); }
+        console.log("✅ Base de données et Sessions synchronisées.");
+    } catch (e) { console.error("Erreur Initialisation DB:", e); }
 }
 initialiserDB();
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(session({ secret: 'forfeo_secret', resave: false, saveUninitialized: false }));
+
+// --- CONFIGURATION SESSION PERSISTANTE ---
+app.use(session({
+    store: new pgSession({
+        pool: pool,                // Utilise notre connexion existante
+        tableName: 'session'       // Nom de la table en DB
+    }),
+    secret: 'forfeo_secret_2025_qc', 
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 } // Session valide 30 jours
+}));
+
 app.set('view engine', 'ejs');
 
-// --- ROUTES DE NAVIGATION ---
+// --- ROUTES (Toutes préservées et fonctionnelles) ---
+
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/register', (req, res) => res.render('register'));
 app.get('/login', (req, res) => res.render('login'));
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
-// --- AUTHENTIFICATION ---
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -71,7 +99,7 @@ app.get('/admin/dashboard', async (req, res) => {
             SELECT TO_CHAR(date_approbation, 'Mon YYYY') as mois, 
                    SUM(recompense::numeric) as total 
             FROM missions WHERE statut = 'approuve' 
-            GROUP BY mois ORDER BY MIN(date_approbation) ASC LIMIT 6`);
+            GROUP BY mois, date_approbation ORDER BY date_approbation ASC LIMIT 6`);
 
         res.render('admin-dashboard', { 
             entreprises: entreprises.rows, rapports: rapports.rows, 
@@ -80,7 +108,7 @@ app.get('/admin/dashboard', async (req, res) => {
     } catch (err) { res.status(500).send("Erreur Admin"); }
 });
 
-// --- APPROBATION AVEC NOTE ET EMAIL ---
+// --- APPROBATION ---
 app.post('/admin/approuver-audit', async (req, res) => {
     const { id_mission, note_audit } = req.body;
     try {
@@ -96,18 +124,25 @@ app.post('/admin/approuver-audit', async (req, res) => {
                 from: `"FORFEO LAB" <${process.env.EMAIL_USER}>`,
                 to: mission.email,
                 subject: 'Mission Approuvée ! 💰',
-                text: `Félicitations ${mission.nom}, votre audit "${mission.titre}" a été validé avec une note de ${note_audit}/5. Récompense : ${mission.recompense}$.`
+                text: `Félicitations ${mission.nom}, votre audit "${mission.titre}" a été validé avec une note de ${note_audit}/5.`
             });
         }
         res.redirect('/admin/dashboard');
-    } catch (err) { res.status(500).send("Erreur d'approbation"); }
+    } catch (err) { res.status(500).send("Erreur"); }
 });
 
-// --- DASHBOARD ENTREPRISE ---
+// --- DASHBOARDS RÔLES ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC", [req.session.userId]);
-    res.render('entreprise-dashboard', { missions: missions.rows, userName: req.session.userName });
+    res.render('entreprise-dashboard', { missions: missions.rows, userName: req.session.userName, stats: {forfait: 'Premium'} });
+});
+
+app.get('/ambassadeur/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
+    const disponibles = await pool.query("SELECT * FROM missions WHERE statut = 'actif' ORDER BY id DESC");
+    const gains = await pool.query("SELECT SUM(recompense::numeric) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'", [req.session.userId]);
+    res.render('ambassadeur-dashboard', { missions: disponibles.rows, userName: req.session.userName, totalGains: gains.rows[0].total || 0 });
 });
 
 app.listen(port, () => console.log(`🚀 FORFEO LAB actif sur port ${port}`));
