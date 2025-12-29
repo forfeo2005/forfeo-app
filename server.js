@@ -17,7 +17,10 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejec
 // --- CONFIGURATION NODEMAILER ---
 const transporter = nodemailer.createTransport({
     service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+    auth: { 
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS 
+    }
 });
 
 // --- INITIALISATION DB ---
@@ -25,8 +28,9 @@ async function initialiserDB() {
     try {
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS date_approbation TIMESTAMP");
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS photo_preuve TEXT");
-        console.log("✅ Base de données synchronisée pour l'analyse.");
-    } catch (e) { console.log("DB déjà à jour."); }
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS forfait VARCHAR(50) DEFAULT 'Freemium'");
+        console.log("✅ Base de données synchronisée.");
+    } catch (e) { console.log("DB à jour."); }
 }
 initialiserDB();
 
@@ -36,12 +40,43 @@ app.use(express.urlencoded({ extended: true }));
 app.use(session({ secret: 'forfeo_secret', resave: false, saveUninitialized: false }));
 app.set('view engine', 'ejs');
 
-// --- RÉPARATION DES ROUTES (Fix Cannot GET) ---
+// --- ROUTES DE NAVIGATION (Fix Cannot GET /register etc.) ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
 app.get('/forfaits', (req, res) => res.render('forfaits', { userName: req.session.userName || null }));
 app.get('/ambassadeurs', (req, res) => res.render('ambassadeurs', { userName: req.session.userName || null }));
+app.get('/register', (req, res) => res.render('register'));
 app.get('/login', (req, res) => res.render('login'));
+
+// --- AUTHENTIFICATION (Fix Cannot POST /login) ---
+app.post('/register', async (req, res) => {
+    const { nom, email, password, role } = req.body;
+    try {
+        const hash = await bcrypt.hash(password, 10);
+        await pool.query("INSERT INTO users (nom, email, password, role) VALUES ($1, $2, $3, $4)", [nom, email, hash, role]);
+        res.redirect('/login');
+    } catch (err) { res.status(500).send("Erreur d'inscription"); }
+});
+
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+        if (result.rows.length > 0 && await bcrypt.compare(password, result.rows[0].password)) {
+            req.session.userId = result.rows[0].id;
+            req.session.userName = result.rows[0].nom;
+            req.session.userRole = result.rows[0].role;
+            // Redirection dynamique selon le rôle
+            return res.redirect(`/${req.session.userRole}/dashboard`);
+        }
+        res.send("<script>alert('Identifiants incorrects'); window.location.href='/login';</script>");
+    } catch (err) { res.status(500).send("Erreur serveur"); }
+});
+
+app.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/');
+});
 
 // --- DASHBOARD ADMIN FUTURISTE ---
 app.get('/admin/dashboard', async (req, res) => {
@@ -54,15 +89,13 @@ app.get('/admin/dashboard', async (req, res) => {
             JOIN users u ON m.entreprise_id = u.id 
             ORDER BY m.id DESC`);
         
-        // Données pour le graphique de revenus (6 derniers mois)
         const revenusData = await pool.query(`
             SELECT TO_CHAR(date_approbation, 'Mon YYYY') as mois, 
                    SUM(recompense::numeric) as total 
             FROM missions 
             WHERE statut = 'approuve' 
             GROUP BY mois 
-            ORDER BY MIN(date_approbation) ASC 
-            LIMIT 6`);
+            ORDER BY MIN(date_approbation) ASC LIMIT 6`);
 
         res.render('admin-dashboard', { 
             entreprises: entreprises.rows, 
@@ -78,10 +111,8 @@ app.post('/admin/approuver-audit', async (req, res) => {
     const { id_mission } = req.body;
     try {
         const missionResult = await pool.query(`
-            SELECT m.*, u.email, u.nom 
-            FROM missions m 
-            JOIN users u ON m.ambassadeur_id = u.id 
-            WHERE m.id = $1`, [id_mission]);
+            SELECT m.*, u.email, u.nom FROM missions m 
+            JOIN users u ON m.ambassadeur_id = u.id WHERE m.id = $1`, [id_mission]);
         
         if (missionResult.rows.length > 0) {
             const mission = missionResult.rows[0];
@@ -95,19 +126,30 @@ app.post('/admin/approuver-audit', async (req, res) => {
             });
         }
         res.redirect('/admin/dashboard');
-    } catch (err) { res.status(500).send("Erreur d'approbation"); }
+    } catch (err) { res.status(500).send("Erreur"); }
 });
 
-// --- RÉPARATION DASHBOARD ENTREPRISE ---
+// --- DASHBOARDS AUTRES RÔLES ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC", [req.session.userId]);
     const user = await pool.query("SELECT forfait FROM users WHERE id = $1", [req.session.userId]);
-    res.render('entreprise-dashboard', { 
-        missions: missions.rows, 
-        userName: req.session.userName,
-        stats: { forfait: user.rows[0]?.forfait || 'Freemium' } 
-    });
+    
+    const stats = {
+        totale: missions.rows.length,
+        enCours: missions.rows.filter(m => m.statut === 'actif' || m.statut === 'reserve').length,
+        termine: missions.rows.filter(m => m.statut === 'termine' || m.statut === 'approuve').length,
+        totalInvesti: missions.rows.reduce((acc, m) => acc + (parseFloat(m.recompense) || 0), 0),
+        forfait: user.rows[0]?.forfait || 'Freemium'
+    };
+    res.render('entreprise-dashboard', { missions: missions.rows, userName: req.session.userName, stats: stats });
 });
 
-app.listen(port, () => console.log(`🚀 FORFEO LAB sur port ${port}`));
+app.get('/ambassadeur/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
+    const disponibles = await pool.query("SELECT * FROM missions WHERE statut = 'actif' ORDER BY id DESC");
+    const gains = await pool.query("SELECT SUM(recompense::numeric) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'", [req.session.userId]);
+    res.render('ambassadeur-dashboard', { missions: disponibles.rows, userName: req.session.userName, totalGains: gains.rows[0].total || 0 });
+});
+
+app.listen(port, () => console.log(`🚀 FORFEO LAB actif sur port ${port}`));
