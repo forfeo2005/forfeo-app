@@ -16,7 +16,6 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false } 
 });
 
-// --- CONFIGURATION EMAIL ---
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,
@@ -24,7 +23,6 @@ const transporter = nodemailer.createTransport({
     auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
 });
 
-// --- INITIALISATION DB ---
 async function initDB() {
     try {
         await pool.query(`CREATE TABLE IF NOT EXISTS "session" ("sid" varchar NOT NULL PRIMARY KEY, "sess" json NOT NULL, "expire" timestamp(6) NOT NULL);`);
@@ -47,9 +45,9 @@ app.use(session({
 }));
 app.set('view engine', 'ejs');
 
-// --- ROUTES LÉGALES ---
+// --- ROUTES JURIDIQUES ---
 app.get('/politique-confidentialite', (req, res) => res.render('politique-confidentialite', { userName: req.session.userName || null }));
-app.get('/conditions-utilisation', (req, res) => res.send("Page Conditions en rédaction..."));
+app.get('/conditions-utilisation', (req, res) => res.render('conditions-utilisation', { userName: req.session.userName || null }));
 
 // --- NAVIGATION ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
@@ -116,7 +114,7 @@ app.get('/entreprise/statistiques', async (req, res) => {
     res.render('entreprise-stats', { stats: statsQuery.rows, userName: req.session.userName });
 });
 
-// --- PDF ---
+// --- PDF & AUTH ---
 app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     const result = await pool.query("SELECT * FROM missions WHERE id = $1", [req.params.id]);
     const mission = result.rows[0];
@@ -126,11 +124,9 @@ app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     doc.pipe(res);
     doc.fontSize(20).text('Rapport FORFEO LAB', { align: 'center' });
     doc.moveDown().fontSize(12).text(`Mission: ${mission.titre}`);
-    doc.text(`Statut: ${mission.statut}`);
     doc.end();
 });
 
-// --- AUTH ---
 app.post('/register', async (req, res) => {
     const { nom, email, password, role } = req.body;
     const hash = await bcrypt.hash(password, 10);
