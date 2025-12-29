@@ -31,22 +31,21 @@ app.set('view engine', 'ejs');
 // --- RÉPARATION ET SYNCHRONISATION DB ---
 async function setupDatabase() {
     try {
-        // Ajout des colonnes manquantes
         await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS type_audit VARCHAR(100) DEFAULT 'Audit Standard';`);
         await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS entreprise_id INTEGER;`);
-        await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS forfait VARCHAR(50) DEFAULT 'Freemium';`);
         
-        // Contrainte d'unicité pour les scores (Fix ON CONFLICT)
+        // S'assurer que recompense est bien du texte pour accepter "50$" ou convertir proprement
+        // Ici on force le type VARCHAR pour éviter l'erreur syntax numeric
+        await pool.query(`ALTER TABLE missions ALTER COLUMN recompense TYPE VARCHAR(50);`);
+
         await pool.query(`
-            DO $$ 
-            BEGIN 
+            DO $$ BEGIN 
                 IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'unique_user_module') THEN
                     ALTER TABLE formations_scores ADD CONSTRAINT unique_user_module UNIQUE (user_id, module_id);
                 END IF;
             END $$;
         `);
 
-        // Création des tables
         await pool.query(`
             CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, nom VARCHAR(255), email VARCHAR(255) UNIQUE, password VARCHAR(255), role VARCHAR(50), entreprise_id INTEGER, forfait VARCHAR(50) DEFAULT 'Freemium');
             CREATE TABLE IF NOT EXISTS missions (id SERIAL PRIMARY KEY, entreprise_id INTEGER, ambassadeur_id INTEGER, titre VARCHAR(255), type_audit VARCHAR(100), description TEXT, recompense VARCHAR(50), statut VARCHAR(50) DEFAULT 'en_attente');
@@ -57,17 +56,13 @@ async function setupDatabase() {
             INSERT INTO formations_modules (id, titre, description, video_url) 
             VALUES (1, 'Harcèlement au Travail', 'Module obligatoire CNESST Québec.', 'https://www.youtube.com/embed/dQw4w9WgXcQ')
             ON CONFLICT (id) DO NOTHING;
-
-            INSERT INTO formations_questions (id, module_id, question, option_a, option_b, option_c, reponse_correcte)
-            VALUES (1, 1, 'Définition du harcèlement ?', 'Conflit simple', 'Conduite vexatoire répétée', 'Critique travail', 'B')
-            ON CONFLICT (id) DO NOTHING;
         `);
-        console.log("✅ FORFEO LAB : Base de données synchronisée.");
+        console.log("✅ FORFEO LAB : Base de données synchronisée et corrigée.");
     } catch (err) { console.error("❌ Erreur DB Setup:", err); }
 }
 setupDatabase();
 
-// --- ROUTES PUBLIQUES ---
+// --- ROUTES ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
 app.get('/politique-confidentialite', (req, res) => res.render('politique-confidentialite', { userName: req.session.userName || null }));
@@ -76,7 +71,6 @@ app.get('/register', (req, res) => res.render('register', { role: req.query.role
 app.get('/login', (req, res) => res.render('login', { error: null, msg: req.query.msg || null, userName: null }));
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
-// --- AUTHENTIFICATION ---
 app.post('/register', async (req, res) => {
     const { nom, email, password, role } = req.body;
     const hash = await bcrypt.hash(password, 10);
@@ -98,7 +92,7 @@ app.post('/login', async (req, res) => {
     res.redirect('/login?error=Invalide');
 });
 
-// --- ADMIN ---
+// --- ADMIN DASHBOARD ---
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const missions = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id ORDER BY m.id DESC");
@@ -111,7 +105,7 @@ app.post('/admin/approuver-mission', async (req, res) => {
     res.redirect('/admin/dashboard');
 });
 
-// --- ENTREPRISE ---
+// --- ENTREPRISE DASHBOARD ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
@@ -122,8 +116,10 @@ app.get('/entreprise/dashboard', async (req, res) => {
 
 app.post('/entreprise/creer-audit', async (req, res) => {
     const { titre, type_audit, description, recompense } = req.body;
+    // Nettoyage de la chaîne récompense pour éviter les crashs si la colonne redevient numeric par erreur
+    const cleanRecompense = recompense.replace('$', '').trim();
     await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut) VALUES ($1, $2, $3, $4, $5, 'en_attente')", 
-    [req.session.userId, titre, type_audit || 'Audit Standard', description, recompense]);
+    [req.session.userId, titre, type_audit || 'Audit Standard', description, cleanRecompense]);
     res.redirect('/entreprise/dashboard?msg=Audit_envoye');
 });
 
@@ -140,8 +136,9 @@ app.get('/ambassadeur/dashboard', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
     const missions = await pool.query("SELECT * FROM missions WHERE statut = 'actif'");
     const historique = await pool.query("SELECT * FROM missions WHERE ambassadeur_id = $1 ORDER BY id DESC", [req.session.userId]);
-    const gains = await pool.query("SELECT SUM(CAST(recompense AS NUMERIC)) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'", [req.session.userId]);
-    res.render('ambassadeur-dashboard', { missions: missions.rows, historique: historique.rows, totalGains: gains.rows[0].total || 0, userName: req.session.userName });
+    // Calcul sécurisé des gains
+    const gainsResult = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'", [req.session.userId]);
+    res.render('ambassadeur-dashboard', { missions: missions.rows, historique: historique.rows, totalGains: gainsResult.rows[0].total || 0, userName: req.session.userName });
 });
 
 app.post('/postuler-mission', async (req, res) => {
@@ -171,7 +168,6 @@ app.post('/formations/soumettre-quizz', async (req, res) => {
     res.redirect('/employe/dashboard');
 });
 
-// --- PROFIL ---
 app.get('/profil', async (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
     const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
