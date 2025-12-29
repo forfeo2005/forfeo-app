@@ -2,20 +2,15 @@
 <html lang="fr">
 <head><meta charset="UTF-8"><title>Portail Entreprise | FORFEO</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head>
 <body class="bg-light">
-    <nav class="navbar bg-white border-bottom py-3"><div class="container"><a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a><a href="/logout" class="btn btn-danger btn-sm">Déconnexion</a></div></nav>
+    <nav class="navbar bg-white border-bottom py-3"><div class="container"><a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a><span>Bienvenue, <%= userName %></span></div></nav>
     <div class="container py-5">
-        <h2 class="fw-bold mb-5 text-center">Gestion des Formations Employés</h2>
+        <h3 class="fw-bold mb-4">Suivi des Formations de mes Employés</h3>
         <div class="card border-0 shadow-sm rounded-4 p-4">
             <table class="table align-middle">
-                <thead><tr class="text-muted small"><th>EMPLOYÉ</th><th>MODULE</th><th>SCORE</th><th>STATUT</th></tr></thead>
+                <thead><tr class="text-muted small"><th>EMPLOYÉ</th><th>FORMATION</th><th>SCORE</th><th>STATUT</th></tr></thead>
                 <tbody>
                     <% employeesScores.forEach(s => { %>
-                        <tr>
-                            <td><%= s.nom_employe %></td>
-                            <td><%= s.nom_module %></td>
-                            <td class="fw-bold"><%= ((s.meilleur_score/15)*100).toFixed(0) %>%</td>
-                            <td><span class="badge <%= s.meilleur_score >= 12 ? 'bg-success' : 'bg-warning' %>"><%= s.statut %></span></td>
-                        </tr>
+                        <tr><td><%= s.nom_employe %></td><td><%= s.nom_module %></td><td class="fw-bold"><%= ((s.meilleur_score/15)*100).toFixed(0) %>%</td><td><span class="badge <%= s.meilleur_score >= 12 ? 'bg-success' : 'bg-warning' %>"><%= s.statut %></span></td></tr>
                     <% }) %>
                 </tbody>
             </table>
