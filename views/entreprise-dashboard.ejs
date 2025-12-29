@@ -1,57 +1,31 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Portail Entreprise | FORFEO LAB</title>
+    <meta charset="UTF-8"><title>Portail Entreprise | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
 <body class="bg-light">
     <nav class="navbar bg-white border-bottom py-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a>
-            <div>
-                <span class="me-3 fw-bold">Admin: <%= userName %></span>
-                <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
-            </div>
-        </div>
+        <div class="container"><a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a><div class="d-flex align-items-center"><span class="me-3 fw-bold">Admin: <%= userName %></span><a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a></div></div>
     </nav>
-
     <div class="container py-5">
         <h2 class="fw-bold mb-4">Tableau de bord de gestion</h2>
-
         <div class="row g-4 mb-5">
-            <div class="col-md-4"><div class="card border-0 shadow-sm p-4 rounded-4 text-center"><h6 class="text-muted">MISSIONS ACTIVES</h6><h2 class="fw-bold text-primary"><%= stats.actif %></h2></div></div>
-            <div class="col-md-4"><div class="card border-0 shadow-sm p-4 rounded-4 text-center"><h6 class="text-muted">EN ATTENTE</h6><h2 class="fw-bold text-warning"><%= stats.reserve %></h2></div></div>
-            <div class="col-md-4"><div class="card border-0 shadow-sm p-4 rounded-4 text-center"><h6 class="text-muted">AUDITS COMPLÉTÉS</h6><h2 class="fw-bold text-success"><%= stats.approuve %></h2></div></div>
+            <div class="col-md-4"><div class="card border-0 shadow-sm p-4 rounded-4 text-center"><h6>MISSIONS ACTIVES</h6><h2 class="fw-bold text-primary"><%= stats.actif %></h2></div></div>
+            <div class="col-md-4"><div class="card border-0 shadow-sm p-4 rounded-4 text-center"><h6>EN ATTENTE</h6><h2 class="fw-bold text-warning"><%= stats.reserve %></h2></div></div>
+            <div class="col-md-4"><div class="card border-0 shadow-sm p-4 rounded-4 text-center"><h6>AUDITS COMPLÉTÉS</h6><h2 class="fw-bold text-success"><%= stats.approuve %></h2></div></div>
         </div>
-
-        <div class="card border-0 shadow-sm rounded-4 p-4 mb-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
             <h4 class="fw-bold mb-4"><i class="bi bi-mortarboard"></i> Suivi des Formations Employés</h4>
-            <div class="table-responsive">
-                <table class="table align-middle">
-                    <thead class="bg-light">
-                        <tr class="small text-muted">
-                            <th>EMPLOYÉ</th>
-                            <th>FORMATION</th>
-                            <th>SCORE</th>
-                            <th>TENTATIVES</th>
-                            <th>STATUT</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% employeesScores.forEach(s => { %>
-                            <tr>
-                                <td class="fw-bold"><%= s.nom_employe %></td>
-                                <td><%= s.nom_module %></td>
-                                <td class="fw-bold"><%= ((s.meilleur_score/15)*100).toFixed(0) %>%</td>
-                                <td><%= s.tentatives %>/3</td>
-                                <td><span class="badge <%= s.meilleur_score >= 12 ? 'bg-success' : 'bg-warning' %> rounded-pill"><%= s.statut %></span></td>
-                            </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
-            </div>
+            <table class="table align-middle">
+                <thead><tr class="small text-muted"><th>EMPLOYÉ</th><th>FORMATION</th><th>SCORE</th><th>TENTATIVES</th><th>STATUT</th></tr></thead>
+                <tbody>
+                    <% employeesScores.forEach(s => { %>
+                        <tr><td><%= s.nom_employe %></td><td><%= s.nom_module %></td><td class="fw-bold"><%= ((s.meilleur_score/15)*100).toFixed(0) %>%</td><td><%= s.tentatives %>/3</td><td><span class="badge <%= s.meilleur_score >= 12 ? 'bg-success' : 'bg-warning' %> rounded-pill"><%= s.statut %></span></td></tr>
+                    <% }) %>
+                </tbody>
+            </table>
         </div>
     </div>
 </body>
