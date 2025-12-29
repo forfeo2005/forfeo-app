@@ -19,13 +19,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_2025_final_prod_key',
+    secret: 'forfeo_2025_ultimate_fix',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
 app.set('view engine', 'ejs');
 
-// --- ROUTES DE NAVIGATION (Fix "Cannot GET") ---
+// --- ROUTES DE NAVIGATION ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/register', (req, res) => res.render('register', { role: req.query.role || 'ambassadeur' }));
 app.get('/login', (req, res) => res.render('login', { error: req.query.error || null, msg: req.query.msg || null }));
@@ -35,7 +35,7 @@ app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: 
 app.get('/politique-confidentialite', (req, res) => res.render('politique-confidentialite', { userName: req.session.userName || null }));
 app.get('/conditions-utilisation', (req, res) => res.render('conditions-utilisation', { userName: req.session.userName || null }));
 
-// --- TRAITEMENT AUTH (Fix "Cannot POST") ---
+// --- TRAITEMENT AUTH ---
 app.post('/register', async (req, res) => {
     const { nom, email, password, role } = req.body;
     const hash = await bcrypt.hash(password, 10);
@@ -57,7 +57,7 @@ app.post('/login', async (req, res) => {
     res.redirect('/login?error=Identifiants invalides');
 });
 
-// --- DASHBOARD ADMIN (Approbation & Gestion) ---
+// --- DASHBOARD ADMIN ---
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const users = await pool.query("SELECT * FROM users ORDER BY id DESC");
@@ -71,7 +71,7 @@ app.post('/admin/approuver-mission', async (req, res) => {
     res.redirect('/admin/dashboard');
 });
 
-// --- DASHBOARD ENTREPRISE (PDF & Stats) ---
+// --- DASHBOARD ENTREPRISE ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC", [req.session.userId]);
@@ -90,17 +90,44 @@ app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     doc.end();
 });
 
-// --- DASHBOARD AMBASSADEUR (Gains & Réservation) ---
+// --- DASHBOARD AMBASSADEUR (FIX CRASH NUMERIC "") ---
 app.get('/ambassadeur/dashboard', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
     const missions = await pool.query("SELECT * FROM missions WHERE statut = 'actif'");
-    const gains = await pool.query("SELECT SUM(CAST(REGEXP_REPLACE(recompense, '[^0-9.]', '', 'g') AS NUMERIC)) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'", [req.session.userId]);
-    res.render('ambassadeur-dashboard', { missions: missions.rows, userName: req.session.userName, totalGains: gains.rows[0].total || 0 });
+    
+    // Nettoyage SQL robuste contre les chaînes vides et symboles monétaires
+    const gainsQuery = `
+        SELECT SUM(
+            CASE 
+                WHEN NULLIF(REGEXP_REPLACE(recompense, '[^0-9.]', '', 'g'), '') IS NULL THEN 0 
+                ELSE CAST(REGEXP_REPLACE(recompense, '[^0-9.]', '', 'g') AS NUMERIC) 
+            END
+        ) as total 
+        FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'`;
+    
+    try {
+        const gainsResult = await pool.query(gainsQuery, [req.session.userId]);
+        res.render('ambassadeur-dashboard', { 
+            missions: missions.rows, 
+            userName: req.session.userName, 
+            totalGains: gainsResult.rows[0].total || 0 
+        });
+    } catch (err) {
+        console.error("Erreur calcul gains:", err);
+        res.render('ambassadeur-dashboard', { missions: missions.rows, userName: req.session.userName, totalGains: 0 });
+    }
 });
 
 app.post('/postuler-mission', async (req, res) => {
     await pool.query("UPDATE missions SET ambassadeur_id = $1, statut = 'reserve' WHERE id = $2", [req.session.userId, req.body.id_mission]);
     res.redirect('/ambassadeur/dashboard');
+});
+
+// --- PROFIL ---
+app.get('/profil', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    const result = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
+    res.render('profil', { user: result.rows[0], message: req.query.msg || null, userName: req.session.userName });
 });
 
 app.listen(port, () => console.log(`🚀 FORFEO LAB Live sur port ${port}`));
