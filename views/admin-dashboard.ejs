@@ -2,59 +2,102 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Console Admin | FORFEO LAB</title>
+    <title>ADMIN CONSOLE | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background: #f4f7f6; font-family: 'Inter', sans-serif; }
+        .admin-header { background: white; border-bottom: 2px solid #dc3545; }
+        .card-admin { border: none; border-radius: 15px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+    </style>
 </head>
-<body class="bg-light d-flex flex-column min-vh-100">
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm sticky-top">
+<body class="d-flex flex-column min-vh-100">
+    <nav class="navbar navbar-expand-lg navbar-light admin-header py-3">
         <div class="container">
-            <a class="navbar-brand fw-bold text-danger" href="/">ADMIN CONSOLE</a>
+            <a class="navbar-brand fw-bold text-danger fs-4" href="/">ADMIN CONSOLE</a>
             <div class="ms-auto d-flex align-items-center gap-3">
                 <a href="/" class="nav-link fw-bold text-dark small"><i class="bi bi-house-door"></i> Accueil</a>
-                <a href="/profil" class="nav-link fw-bold text-dark small"><i class="bi bi-person-circle"></i> Profil</a>
-                <a href="/logout" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">Déconnexion</a>
+                <a href="/profil" class="nav-link fw-bold text-dark small"><i class="bi bi-person"></i> Profil</a>
+                <a href="/logout" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold">Déconnexion</a>
             </div>
         </div>
     </nav>
 
     <div class="container py-5 flex-grow-1">
-        <h2 class="fw-bold mb-4">Gestion des Utilisateurs</h2>
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-            <table class="table table-hover mb-0">
-                <thead class="bg-dark text-white">
-                    <tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Forfait</th><th>Action</th></tr>
-                </thead>
-                <tbody>
-                    <% users.forEach(u => { %>
+        <h3 class="fw-bold mb-4">Gestion des Rapports d'Audits</h3>
+        <div class="card card-admin bg-white p-4 mb-5">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="bg-light">
                         <tr>
-                            <td><%= u.nom %></td>
-                            <td><%= u.email %></td>
-                            <td><span class="badge bg-secondary"><%= u.role %></span></td>
-                            <td><%= u.forfait %></td>
-                            <td>
-                                <form action="/admin/delete-user" method="POST" onsubmit="return confirm('Supprimer ?');">
-                                    <input type="hidden" name="id_a_supprimer" value="<%= u.id %>">
-                                    <button class="btn btn-sm btn-outline-danger border-0"><i class="bi bi-trash"></i></button>
-                                </form>
-                            </td>
+                            <th>Entreprise</th>
+                            <th>Mission</th>
+                            <th>Statut Actuel</th>
+                            <th class="text-end">Action</th>
                         </tr>
-                    <% }) %>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <% missions.forEach(m => { %>
+                            <tr>
+                                <td class="fw-bold"><%= m.entreprise_nom %></td>
+                                <td><%= m.titre %></td>
+                                <td><span class="badge bg-secondary rounded-pill"><%= m.statut %></span></td>
+                                <td class="text-end">
+                                    <% if (m.statut !== 'approuve') { %>
+                                        <form action="/admin/approuver-mission" method="POST" style="display:inline;">
+                                            <input type="hidden" name="id_mission" value="<%= m.id %>">
+                                            <button type="submit" class="btn btn-success btn-sm rounded-pill px-3 fw-bold">
+                                                Approuver
+                                            </button>
+                                        </form>
+                                    <% } else { %>
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h3 class="fw-bold mb-4">Gestion des Utilisateurs</h3>
+        <div class="card card-admin bg-white p-4">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="text-muted small">
+                        <tr>
+                            <th>NOM</th>
+                            <th>EMAIL</th>
+                            <th>RÔLE</th>
+                            <th>FORFAIT</th>
+                            <th class="text-end">ACTION</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% users.forEach(u => { %>
+                            <tr>
+                                <td class="fw-bold text-uppercase"><%= u.nom %></td>
+                                <td><%= u.email %></td>
+                                <td><span class="badge bg-dark-subtle text-dark border"><%= u.role %></span></td>
+                                <td><%= u.forfait %></td>
+                                <td class="text-end">
+                                    <form action="/admin/delete-user" method="POST" onsubmit="return confirm('Supprimer cet utilisateur ?');">
+                                        <input type="hidden" name="id_a_supprimer" value="<%= u.id %>">
+                                        <button class="btn btn-link text-danger p-0"><i class="bi bi-trash-fill"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <footer class="bg-dark text-white py-5 mt-auto">
+    <footer class="bg-dark text-white py-4 mt-auto">
         <div class="container text-center">
-            <div class="d-flex justify-content-center gap-3 small mb-3">
-                <a href="/politique-confidentialite" class="text-white-50 text-decoration-none">Confidentialité (Loi 25)</a>
-                <span class="text-white-25">|</span>
-                <a href="/conditions-utilisation" class="text-white-50 text-decoration-none">Conditions d'utilisation</a>
-            </div>
-            <p class="x-small text-white-50" style="font-size: 0.75rem; opacity: 0.6;">
-                © 2025 FORFEO LAB. Plateforme de mise en relation au Québec.
-            </p>
+            <p class="small text-white-50">© 2025 FORFEO LAB | Console d'Administration Sécurisée</p>
         </div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
