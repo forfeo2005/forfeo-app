@@ -15,6 +15,7 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false } 
 });
 
+// --- INITIALISATION DB ---
 async function initialiserDB() {
     try {
         await pool.query(`CREATE TABLE IF NOT EXISTS "session" ("sid" varchar NOT NULL PRIMARY KEY, "sess" json NOT NULL, "expire" timestamp(6) NOT NULL);`);
@@ -36,6 +37,7 @@ app.post('/webhook/stripe', express.raw({type: 'application/json'}), async (req,
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
         await pool.query("UPDATE users SET forfait = 'Premium' WHERE email = $1", [session.customer_details.email]);
+        console.log(`💰 Forfait Premium activé pour ${session.customer_details.email}`);
     }
     res.json({received: true});
 });
@@ -54,6 +56,7 @@ app.set('view engine', 'ejs');
 // --- ROUTES ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/login', (req, res) => res.render('login'));
+app.get('/register', (req, res) => res.render('register'));
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
 // --- DASHBOARD ADMIN (Fix Erreur Numeric Empty String) ---
@@ -67,10 +70,10 @@ app.get('/admin/dashboard', async (req, res) => {
             LEFT JOIN users u ON m.entreprise_id = u.id 
             ORDER BY m.id DESC`);
         
-        // FIX: On traite le vide comme '0', on enlève les symboles, puis on convertit
+        // On traite le vide comme '0', on enlève les symboles, puis on convertit proprement
         const revenusData = await pool.query(`
             SELECT TO_CHAR(COALESCE(date_approbation, NOW()), 'Mon YYYY') as mois, 
-            SUM(CAST(NULLIF(REGEXP_REPLACE(recompense, '[^0-9.]', '', 'g'), '') AS NUMERIC)) as total 
+            SUM(COALESCE(CAST(NULLIF(REGEXP_REPLACE(recompense, '[^0-9.]', '', 'g'), '') AS NUMERIC), 0)) as total 
             FROM missions WHERE statut = 'approuve' 
             GROUP BY mois, date_approbation ORDER BY date_approbation ASC LIMIT 6`);
 
@@ -90,7 +93,7 @@ app.get('/ambassadeur/dashboard', async (req, res) => {
     try {
         const disponibles = await pool.query("SELECT * FROM missions WHERE statut = 'actif' ORDER BY id DESC");
         
-        // FIX: Utilisation de NULLIF pour éviter de convertir une chaîne vide en nombre
+        // Protection contre les chaînes vides dans les récompenses
         const gains = await pool.query(`
             SELECT SUM(COALESCE(CAST(NULLIF(REGEXP_REPLACE(recompense, '[^0-9.]', '', 'g'), '') AS NUMERIC), 0)) as total 
             FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'`, [req.session.userId]);
@@ -122,14 +125,16 @@ app.get('/entreprise/dashboard', async (req, res) => {
 
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
-    const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-    if (result.rows.length > 0 && await bcrypt.compare(password, result.rows[0].password)) {
-        req.session.userId = result.rows[0].id;
-        req.session.userName = result.rows[0].nom;
-        req.session.userRole = result.rows[0].role;
-        return res.redirect(`/${req.session.userRole}/dashboard`);
-    }
-    res.redirect('/login');
+    try {
+        const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+        if (result.rows.length > 0 && await bcrypt.compare(password, result.rows[0].password)) {
+            req.session.userId = result.rows[0].id;
+            req.session.userName = result.rows[0].nom;
+            req.session.userRole = result.rows[0].role;
+            return res.redirect(`/${req.session.userRole}/dashboard`);
+        }
+        res.redirect('/login');
+    } catch (err) { res.status(500).send("Erreur"); }
 });
 
 app.listen(port, () => console.log(`🚀 FORFEO LAB sur port ${port}`));
