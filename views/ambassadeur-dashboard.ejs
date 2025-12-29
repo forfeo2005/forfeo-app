@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Ambassadeur | FORFEO LAB</title>
+    <title>Ambassadeur | FORFEO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
@@ -11,45 +11,48 @@
         <div class="container">
             <a class="navbar-brand fw-bold text-primary" href="/">FORFEO LAB</a>
             <div class="ms-auto d-flex align-items-center gap-3">
-                <a href="/" class="nav-link fw-bold text-dark small"><i class="bi bi-house-door"></i> Accueil</a>
-                <a href="/profil" class="nav-link fw-bold text-dark small"><i class="bi bi-person-circle"></i> Profil</a>
-                <a href="/logout" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">Déconnexion</a>
+                <a href="/" class="nav-link fw-bold text-dark small">Accueil</a>
+                <a href="/logout" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold">Déconnexion</a>
             </div>
         </div>
     </nav>
 
     <div class="container py-5 flex-grow-1">
-        <div class="d-flex justify-content-between align-items-center mb-5">
-            <h2 class="fw-bold">Gains : <span class="text-success"><%= totalGains %>$</span></h2>
-            <a href="/ambassadeur/mes-missions" class="btn btn-primary rounded-pill px-4 fw-bold">Mes Missions</a>
+        <div class="row align-items-center mb-5">
+            <div class="col-md-8">
+                <h1 class="fw-bold">Bonjour, <%= userName %> 👋</h1>
+                <p class="text-muted">Prêt pour votre prochaine mission d'audit ?</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="bg-primary text-white p-3 rounded-4 shadow-sm">
+                    <small>Mes Gains Totaux</small>
+                    <h2 class="fw-bold mb-0"><%= totalGains %>$ CAD</h2>
+                </div>
+            </div>
         </div>
+
+        <h3 class="fw-bold mb-4">Missions disponibles au Québec</h3>
         <div class="row g-4">
             <% missions.forEach(m => { %>
                 <div class="col-md-4">
-                    <div class="card p-4 border-0 shadow-sm rounded-4 h-100">
-                        <h5 class="fw-bold mb-3"><%= m.titre %></h5>
-                        <form action="/postuler-mission" method="POST">
-                            <input type="hidden" name="id_mission" value="<%= m.id %>">
-                            <button class="btn btn-outline-primary w-100 rounded-pill fw-bold">Réserver</button>
-                        </form>
+                    <div class="card h-100 border-0 shadow-sm rounded-4 p-3">
+                        <div class="card-body">
+                            <span class="badge bg-soft-primary text-primary mb-2">Audit Mystère</span>
+                            <h5 class="fw-bold"><%= m.titre %></h5>
+                            <p class="text-muted small"><%= m.description.substring(0, 100) %>...</p>
+                            <div class="d-flex justify-content-between align-items-center mt-4">
+                                <span class="fw-bold text-success"><%= m.recompense %></span>
+                                <button class="btn btn-outline-primary btn-sm rounded-pill px-4">Postuler</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             <% }) %>
         </div>
     </div>
 
-    <footer class="bg-dark text-white py-5 mt-auto">
-        <div class="container text-center">
-            <div class="d-flex justify-content-center gap-3 small mb-3">
-                <a href="/politique-confidentialite" class="text-white-50 text-decoration-none">Confidentialité (Loi 25)</a>
-                <span class="text-white-25">|</span>
-                <a href="/conditions-utilisation" class="text-white-50 text-decoration-none">Conditions d'utilisation</a>
-            </div>
-            <p class="x-small text-white-50" style="font-size: 0.75rem; opacity: 0.6;">
-                <strong>Note :</strong> Vous agissez à titre de <strong>travailleur autonome</strong> indépendant au Québec.
-            </p>
-        </div>
+    <footer class="bg-dark text-white py-4 mt-auto text-center">
+        <p class="small text-white-50">© 2025 FORFEO LAB | Statut Travailleur Autonome Québec</p>
     </footer>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
