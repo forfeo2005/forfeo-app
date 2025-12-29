@@ -10,7 +10,7 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 10000;
 
-// --- CONFIGURATION BASE DE DONNÉES ---
+// --- CONNEXION BASE DE DONNÉES ---
 const pool = new Pool({ 
     connectionString: process.env.DATABASE_URL, 
     ssl: { rejectUnauthorized: false } 
@@ -27,6 +27,7 @@ async function initDB() {
     try {
         await pool.query(`CREATE TABLE IF NOT EXISTS "session" ("sid" varchar NOT NULL PRIMARY KEY, "sess" json NOT NULL, "expire" timestamp(6) NOT NULL);`);
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS forfait VARCHAR(50) DEFAULT 'Freemium';");
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS premiere_connexion BOOLEAN DEFAULT TRUE;");
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS date_completion TIMESTAMP;");
         console.log("✅ Base de données synchronisée");
     } catch (e) { console.error("Erreur DB:", e); }
@@ -46,13 +47,13 @@ app.use(session({
 
 app.set('view engine', 'ejs');
 
-// --- ROUTES DE NAVIGATION ---
+// --- NAVIGATION ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/login', (req, res) => res.render('login', { msg: req.query.msg || null }));
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 app.get('/forfaits', (req, res) => res.render('forfaits', { userName: req.session.userName || null }));
 
-// --- GESTION DU PROFIL ---
+// --- PROFIL (Fix Cannot GET /profil) ---
 app.get('/profil', async (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
     const result = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
@@ -60,33 +61,17 @@ app.get('/profil', async (req, res) => {
 });
 
 app.post('/update-profil', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
     const { nom, newPassword } = req.body;
     await pool.query("UPDATE users SET nom = $1 WHERE id = $2", [nom, req.session.userId]);
-    if (newPassword) {
+    if (newPassword && newPassword.trim() !== "") {
         const hash = await bcrypt.hash(newPassword, 10);
         await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hash, req.session.userId]);
     }
     res.redirect('/profil?msg=Profil mis à jour');
 });
 
-// --- STATISTIQUES ENTREPRISE (Graphique) ---
-app.get('/entreprise/statistiques', async (req, res) => {
-    if (req.session.userRole !== 'entreprise') return res.redirect('/login');
-    try {
-        const statsQuery = await pool.query(`
-            SELECT TO_CHAR(date_completion, 'Mon') as mois, COUNT(*) as total
-            FROM missions 
-            WHERE entreprise_id = $1 AND statut = 'approuve' AND date_completion IS NOT NULL
-            GROUP BY mois ORDER BY MIN(date_completion)`, [req.session.userId]);
-        
-        res.render('entreprise-stats', { 
-            stats: statsQuery.rows, 
-            userName: req.session.userName 
-        });
-    } catch (err) { res.status(500).send("Erreur Stats"); }
-});
-
-// --- POSTULER & NOTIFICATION EMAIL ---
+// --- RÉSERVATION (Fix Cannot POST /postuler-mission) ---
 app.post('/postuler-mission', async (req, res) => {
     if (!req.session.userId) return res.status(403).send("Non autorisé");
     const { id_mission } = req.body;
@@ -98,7 +83,7 @@ app.post('/postuler-mission', async (req, res) => {
         if (info.rows.length > 0) {
             await pool.query("UPDATE missions SET ambassadeur_id = $1, statut = 'reserve' WHERE id = $2", [req.session.userId, id_mission]);
             
-            // Envoi Email
+            // Notification Email
             const mailOptions = {
                 from: '"FORFEO LAB" <no-reply@forfeo.com>',
                 to: info.rows[0].email,
@@ -108,16 +93,45 @@ app.post('/postuler-mission', async (req, res) => {
             transporter.sendMail(mailOptions);
         }
         res.redirect('/ambassadeur/mes-missions');
-    } catch (err) { res.status(500).send("Erreur"); }
+    } catch (err) { res.status(500).send("Erreur réservation"); }
 });
 
-// --- SUPPRESSION ---
-app.post('/admin/delete-user', async (req, res) => {
-    const { id_a_supprimer } = req.body;
-    await pool.query("DELETE FROM missions WHERE entreprise_id = $1 OR ambassadeur_id = $1", [id_a_supprimer]);
-    await pool.query("DELETE FROM users WHERE id = $1", [id_a_supprimer]);
-    if (id_a_supprimer == req.session.userId) req.session.destroy();
-    res.redirect('/login?msg=Compte supprimé');
+// --- STATISTIQUES ENTREPRISE ---
+app.get('/entreprise/statistiques', async (req, res) => {
+    if (req.session.userRole !== 'entreprise') return res.redirect('/login');
+    try {
+        const statsQuery = await pool.query(`
+            SELECT TO_CHAR(date_completion, 'Mon') as mois, COUNT(*) as total
+            FROM missions 
+            WHERE entreprise_id = $1 AND statut = 'approuve' AND date_completion IS NOT NULL
+            GROUP BY mois ORDER BY MIN(date_completion)`, [req.session.userId]);
+        
+        res.render('entreprise-stats', { stats: statsQuery.rows, userName: req.session.userName });
+    } catch (err) { res.status(500).send("Erreur Stats"); }
+});
+
+// --- DASHBOARDS ---
+app.get('/ambassadeur/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
+    const userRes = await pool.query("SELECT premiere_connexion FROM users WHERE id = $1", [req.session.userId]);
+    const showWelcome = userRes.rows[0].premiere_connexion;
+    if (showWelcome) await pool.query("UPDATE users SET premiere_connexion = FALSE WHERE id = $1", [req.session.userId]);
+    
+    const disponibles = await pool.query("SELECT * FROM missions WHERE statut = 'actif' ORDER BY id DESC");
+    const gains = await pool.query(`SELECT SUM(COALESCE(CAST(NULLIF(REGEXP_REPLACE(recompense, '[^0-9.]', '', 'g'), '') AS NUMERIC), 0)) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'`, [req.session.userId]);
+    
+    res.render('ambassadeur-dashboard', { missions: disponibles.rows, userName: req.session.userName, totalGains: gains.rows[0].total || 0, showWelcome });
+});
+
+app.get('/entreprise/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'entreprise') return res.redirect('/login');
+    const userRes = await pool.query("SELECT premiere_connexion, forfait FROM users WHERE id = $1", [req.session.userId]);
+    const showWelcome = userRes.rows[0].premiere_connexion;
+    const forfait = userRes.rows[0].forfait || 'Freemium';
+    if (showWelcome) await pool.query("UPDATE users SET premiere_connexion = FALSE WHERE id = $1", [req.session.userId]);
+
+    const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC", [req.session.userId]);
+    res.render('entreprise-dashboard', { missions: missions.rows, userName: req.session.userName, showWelcome, stats: { totale: missions.rows.length, forfait, canPublish: (forfait === 'Premium' || missions.rows.length < 1) } });
 });
 
 // --- AUTHENTIFICATION ---
@@ -131,6 +145,15 @@ app.post('/login', async (req, res) => {
         return res.redirect(`/${req.session.userRole}/dashboard`);
     }
     res.redirect('/login?msg=Erreur');
+});
+
+// --- SUPPRESSION ---
+app.post('/admin/delete-user', async (req, res) => {
+    const { id_a_supprimer } = req.body;
+    await pool.query("DELETE FROM missions WHERE entreprise_id = $1 OR ambassadeur_id = $1", [id_a_supprimer]);
+    await pool.query("DELETE FROM users WHERE id = $1", [id_a_supprimer]);
+    if (id_a_supprimer == req.session.userId) req.session.destroy();
+    res.redirect('/login?msg=Compte supprimé');
 });
 
 app.listen(port, () => console.log(`🚀 Serveur actif sur port ${port}`));
