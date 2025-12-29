@@ -20,7 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_2025_secure_final',
+    secret: 'forfeo_2025_ultimate_secure_final',
     resave: false, 
     saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
@@ -28,7 +28,7 @@ app.use(session({
 
 app.set('view engine', 'ejs');
 
-// --- AUTO-MIGRATION & SEEDER DES QUESTIONS ---
+// --- AUTO-MIGRATION ET SEEDER DES DONNÉES ---
 async function setupDatabase() {
     try {
         await pool.query(`
@@ -43,12 +43,12 @@ async function setupDatabase() {
             SELECT 1, 'Définit le harcèlement psychologique ?', 'Conflit simple', 'Conduite vexatoire répétée', 'Critique', 'B'
             WHERE NOT EXISTS (SELECT 1 FROM formations_questions WHERE id = 1);
         `);
-        console.log("✅ FORFEO LAB : Système synchronisé.");
-    } catch (err) { console.error(err); }
+        console.log("✅ FORFEO LAB : Base de données synchronisée.");
+    } catch (err) { console.error("❌ Erreur DB Init:", err); }
 }
 setupDatabase();
 
-// --- ROUTES DE NAVIGATION (Fix Cannot GET) ---
+// --- ROUTES DE NAVIGATION PUBLIQUES (Fix Cannot GET) ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
 app.get('/politique-confidentialite', (req, res) => res.render('politique-confidentialite', { userName: req.session.userName || null }));
@@ -67,7 +67,7 @@ app.post('/login', async (req, res) => {
         req.session.userRole = result.rows[0].role;
         return res.redirect(`/${req.session.userRole}/dashboard`);
     }
-    res.redirect('/login?error=Invalide');
+    res.redirect('/login?error=Identifiants invalides');
 });
 
 // --- ADMIN DASHBOARD (Fix Bouton Approuver) ---
@@ -83,7 +83,7 @@ app.post('/admin/approuver-mission', async (req, res) => {
     res.redirect('/admin/dashboard');
 });
 
-// --- AMBASSADEUR DASHBOARD (Fix Cannot GET) ---
+// --- AMBASSADEUR : POSTULER (Fix Cannot POST) ---
 app.get('/ambassadeur/dashboard', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
     const missions = await pool.query("SELECT * FROM missions WHERE statut = 'actif' OR statut = 'disponible'");
@@ -92,7 +92,35 @@ app.get('/ambassadeur/dashboard', async (req, res) => {
     res.render('ambassadeur-dashboard', { missions: missions.rows, historique: historique.rows, totalGains: gains.rows[0].total || 0, userName: req.session.userName });
 });
 
-// --- ACADÉMIE : HARCÈLEMENT (Fix Bouton Démarrer) ---
+app.post('/postuler-mission', async (req, res) => {
+    if (req.session.userRole !== 'ambassadeur') return res.status(403).send("Interdit");
+    await pool.query("UPDATE missions SET ambassadeur_id = $1, statut = 'reserve' WHERE id = $2", [req.session.userId, req.body.id_mission]);
+    res.redirect('/ambassadeur/dashboard');
+});
+
+// --- ENTREPRISE DASHBOARD (Fix Cannot GET) ---
+app.get('/entreprise/dashboard', async (req, res) => {
+    if (req.session.userRole !== 'entreprise') return res.redirect('/login');
+    const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
+    const scores = await pool.query(`SELECT u.nom as nom_employe, m.titre as nom_module, s.* FROM formations_scores s JOIN users u ON s.user_id = u.id JOIN formations_modules m ON s.module_id = m.id WHERE u.entreprise_id = $1`, [req.session.userId]);
+    const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC", [req.session.userId]);
+    res.render('entreprise-dashboard', { user: user.rows[0], employeesScores: scores.rows, missions: missions.rows, userName: req.session.userName });
+});
+
+// --- PROFIL (Fix Cannot GET /profil) ---
+app.get('/profil', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    const result = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
+    res.render('profil', { user: result.rows[0], userName: req.session.userName, message: req.query.msg || null });
+});
+
+app.post('/profil/update-password', async (req, res) => {
+    const hash = await bcrypt.hash(req.body.new_password, 10);
+    await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hash, req.session.userId]);
+    res.redirect('/profil?msg=Mot de passe mis à jour');
+});
+
+// --- ACADÉMIE : EMPLOYE (Fix Internal Server Error) ---
 app.get('/employe/dashboard', async (req, res) => {
     if (req.session.userRole !== 'employe') return res.redirect('/login');
     const modules = await pool.query("SELECT * FROM formations_modules ORDER BY id ASC");
@@ -101,9 +129,11 @@ app.get('/employe/dashboard', async (req, res) => {
 
 app.get('/formations/module/:id', async (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
-    const module = await pool.query("SELECT * FROM formations_modules WHERE id = $1", [req.params.id]);
-    const questions = await pool.query("SELECT * FROM formations_questions WHERE module_id = $1", [req.params.id]);
-    res.render('formation-detail', { module: module.rows[0], questions: questions.rows, userName: req.session.userName });
+    try {
+        const module = await pool.query("SELECT * FROM formations_modules WHERE id = $1", [req.params.id]);
+        const questions = await pool.query("SELECT * FROM formations_questions WHERE module_id = $1", [req.params.id]);
+        res.render('formation-detail', { module: module.rows[0], questions: questions.rows, userName: req.session.userName });
+    } catch (err) { res.status(500).send("Erreur interne académie"); }
 });
 
 app.listen(port, () => console.log(`🚀 FORFEO LAB LIVE`));
