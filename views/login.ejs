@@ -5,24 +5,47 @@
     <title>Connexion | FORFEO LAB</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="bg-light">
-    <div class="container py-5" style="max-width: 450px;">
-        <div class="card p-4 shadow border-0 rounded-4">
-            <h2 class="fw-bold text-center mb-4">Connexion</h2>
-            <% if (msg) { %><div class="alert alert-info py-2 small"><%= msg %></div><% } %>
+<body class="d-flex flex-column min-vh-100 bg-light">
+    <div class="container py-5 flex-grow-1 d-flex align-items-center justify-content-center">
+        <div class="card p-4 shadow border-0 rounded-4" style="max-width: 400px; width: 100%;">
+            <h2 class="text-center fw-bold mb-4">Connexion</h2>
+            <% if (error) { %> <div class="alert alert-danger small"><%= error %></div> <% } %>
             <form action="/login" method="POST">
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">COURRIEL</label>
-                    <input type="email" name="email" class="form-control rounded-3" required>
+                    <input type="email" name="email" class="form-control" placeholder="Courriel" required>
                 </div>
                 <div class="mb-4">
-                    <label class="form-label small fw-bold">MOT DE PASSE</label>
-                    <input type="password" name="password" class="form-control rounded-3" required>
+                    <input type="password" name="password" class="form-control" placeholder="Mot de passe" required>
                 </div>
                 <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold">Se connecter</button>
             </form>
             <p class="text-center mt-3 small">Pas de compte ? <a href="/register">S'inscrire</a></p>
         </div>
     </div>
-    </body>
+
+    <footer class="bg-dark text-white py-5 mt-auto">
+        <div class="container text-center">
+            <div class="row align-items-center mb-4">
+                <div class="col-md-6 text-md-start mb-3 mb-md-0">
+                    <h5 class="fw-bold text-primary mb-1">FORFEO LAB</h5>
+                    <p class="small text-white-50 mb-0">&copy; 2025 - Tous droits réservés au Québec.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="d-flex justify-content-center justify-content-md-end gap-3 small">
+                        <a href="/politique-confidentialite" class="text-white-50 text-decoration-none hover-link">Confidentialité (Loi 25)</a>
+                        <span class="text-white-25">|</span>
+                        <a href="/conditions-utilisation" class="text-white-50 text-decoration-none hover-link">Conditions d'utilisation</a>
+                    </div>
+                </div>
+            </div>
+            <p class="x-small text-white-50 border-top border-secondary pt-3" style="font-size: 0.75rem; opacity: 0.6;">
+                <strong>Avis Juridique :</strong> FORFEO LAB est une plateforme de mise en relation technologique. 
+                Les Ambassadeurs (Testeurs) réalisent des mandats à titre de <strong>prestataires de services indépendants</strong> 
+                et ne sont pas des employés de la plateforme ou des entreprises clientes.
+            </p>
+        </div>
+    </footer>
+    <style>.hover-link:hover { color: #007bff !important; text-decoration: underline !important; }</style>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>
