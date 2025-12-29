@@ -9,7 +9,15 @@
     <div class="container py-5 flex-grow-1 d-flex align-items-center justify-content-center">
         <div class="card p-4 shadow border-0 rounded-4" style="max-width: 400px; width: 100%;">
             <h2 class="text-center fw-bold mb-4">Connexion</h2>
-            <% if (error) { %> <div class="alert alert-danger small"><%= error %></div> <% } %>
+            
+            <% if (typeof error !== 'undefined' && error) { %> 
+                <div class="alert alert-danger small py-2"><%= error %></div> 
+            <% } %>
+
+            <% if (typeof msg !== 'undefined' && msg) { %> 
+                <div class="alert alert-success small py-2"><%= msg %></div> 
+            <% } %>
+
             <form action="/login" method="POST">
                 <div class="mb-3">
                     <input type="email" name="email" class="form-control" placeholder="Courriel" required>
@@ -32,20 +40,18 @@
                 </div>
                 <div class="col-md-6 text-md-end">
                     <div class="d-flex justify-content-center justify-content-md-end gap-3 small">
-                        <a href="/politique-confidentialite" class="text-white-50 text-decoration-none hover-link">Confidentialité (Loi 25)</a>
+                        <a href="/politique-confidentialite" class="text-white-50 text-decoration-none">Confidentialité (Loi 25)</a>
                         <span class="text-white-25">|</span>
-                        <a href="/conditions-utilisation" class="text-white-50 text-decoration-none hover-link">Conditions d'utilisation</a>
+                        <a href="/conditions-utilisation" class="text-white-50 text-decoration-none">Conditions d'utilisation</a>
                     </div>
                 </div>
             </div>
             <p class="x-small text-white-50 border-top border-secondary pt-3" style="font-size: 0.75rem; opacity: 0.6;">
                 <strong>Avis Juridique :</strong> FORFEO LAB est une plateforme de mise en relation technologique. 
-                Les Ambassadeurs (Testeurs) réalisent des mandats à titre de <strong>prestataires de services indépendants</strong> 
-                et ne sont pas des employés de la plateforme ou des entreprises clientes.
+                Les Ambassadeurs (Testeurs) réalisent des mandats à titre de <strong>prestataires de services indépendants</strong> et ne sont pas des employés.
             </p>
         </div>
     </footer>
-    <style>.hover-link:hover { color: #007bff !important; text-decoration: underline !important; }</style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
