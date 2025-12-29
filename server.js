@@ -14,6 +14,7 @@ const port = process.env.PORT || 10000;
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
+// --- INITIALISATION DB ---
 async function initialiserDB() {
     try {
         await pool.query(`CREATE TABLE IF NOT EXISTS "session" ("sid" varchar NOT NULL PRIMARY KEY, "sess" json NOT NULL, "expire" timestamp(6) NOT NULL);`);
@@ -40,11 +41,13 @@ app.set('view engine', 'ejs');
 // --- ROUTES NAVIGATION ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/forfaits', (req, res) => res.render('forfaits', { userName: req.session.userName || null }));
+app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
+app.get('/ambassadeurs', (req, res) => res.render('ambassadeurs', { userName: req.session.userName || null }));
 app.get('/login', (req, res) => res.render('login'));
 app.get('/register', (req, res) => res.render('register'));
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
-// --- DASHBOARD ADMIN (Correction SQL) ---
+// --- DASHBOARD ADMIN (Fix Erreur Numeric) ---
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     try {
@@ -55,7 +58,6 @@ app.get('/admin/dashboard', async (req, res) => {
             LEFT JOIN users u ON m.entreprise_id = u.id 
             ORDER BY m.id DESC`);
         
-        // FIX: Suppression du symbole $ avant la conversion numérique
         const revenusData = await pool.query(`
             SELECT TO_CHAR(COALESCE(date_approbation, NOW()), 'Mon YYYY') as mois, 
             SUM(CAST(REGEXP_REPLACE(recompense, '[^0-9.]', '', 'g') AS NUMERIC)) as total 
@@ -66,19 +68,14 @@ app.get('/admin/dashboard', async (req, res) => {
             entreprises: entreprises.rows, rapports: rapports.rows, 
             userName: req.session.userName, chartData: revenusData.rows 
         });
-    } catch (err) { 
-        console.error(err);
-        res.status(500).send("Erreur Admin"); 
-    }
+    } catch (err) { res.status(500).send("Erreur Admin"); }
 });
 
-// --- DASHBOARD AMBASSADEUR (Correction SQL) ---
+// --- DASHBOARD AMBASSADEUR ---
 app.get('/ambassadeur/dashboard', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
     try {
         const disponibles = await pool.query("SELECT * FROM missions WHERE statut = 'actif' ORDER BY id DESC");
-        
-        // FIX: Suppression du symbole $ avant la conversion numérique
         const gains = await pool.query(`
             SELECT SUM(CAST(REGEXP_REPLACE(recompense, '[^0-9.]', '', 'g') AS NUMERIC)) as total 
             FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'`, [req.session.userId]);
@@ -88,13 +85,10 @@ app.get('/ambassadeur/dashboard', async (req, res) => {
             userName: req.session.userName, 
             totalGains: gains.rows[0].total || 0 
         });
-    } catch (err) { 
-        console.error(err);
-        res.status(500).send("Erreur Ambassadeur"); 
-    }
+    } catch (err) { res.status(500).send("Erreur Ambassadeur"); }
 });
 
-// --- DASHBOARD ENTREPRISE (Fix Bouton Créer) ---
+// --- DASHBOARD ENTREPRISE ---
 app.get('/entreprise/dashboard', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     try {
