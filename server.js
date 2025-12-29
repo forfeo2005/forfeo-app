@@ -10,11 +10,7 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 10000;
 
-// --- CONNEXION BASE DE DONNÉES ---
-const pool = new Pool({ 
-    connectionString: process.env.DATABASE_URL, 
-    ssl: { rejectUnauthorized: false } 
-});
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
 // --- INITIALISATION DB ---
 async function initialiserDB() {
@@ -22,8 +18,8 @@ async function initialiserDB() {
         await pool.query(`CREATE TABLE IF NOT EXISTS "session" ("sid" varchar NOT NULL PRIMARY KEY, "sess" json NOT NULL, "expire" timestamp(6) NOT NULL);`);
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS premiere_connexion BOOLEAN DEFAULT TRUE;");
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS forfait VARCHAR(50) DEFAULT 'Freemium';");
-        console.log("✅ FORFEO LAB : Base de données prête et connectée");
-    } catch (e) { console.log("Erreur Init DB:", e); }
+        console.log("✅ FORFEO LAB : Système Stable & Connecté");
+    } catch (e) { console.log("Init Error:", e); }
 }
 initialiserDB();
 
@@ -34,10 +30,9 @@ app.use(express.urlencoded({ extended: true }));
 // --- GESTION DES SESSIONS (Persistance sur Render) ---
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_2025_secure_key',
-    resave: false, 
-    saveUninitialized: false,
-    cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 } // 30 jours
+    secret: 'forfeo_secret_2025_prod',
+    resave: false, saveUninitialized: false,
+    cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
 
 app.set('view engine', 'ejs');
@@ -45,7 +40,6 @@ app.set('view engine', 'ejs');
 // --- ROUTES DE NAVIGATION ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/login', (req, res) => res.render('login', { msg: req.query.msg || null }));
-app.get('/register', (req, res) => res.render('register'));
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 app.get('/forfaits', (req, res) => res.render('forfaits', { userName: req.session.userName || null }));
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
@@ -55,13 +49,9 @@ app.get('/ambassadeurs', (req, res) => res.render('register', { role: 'ambassade
 app.get('/profil', async (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
     try {
-        const result = await pool.query("SELECT nom, email, role, forfait FROM users WHERE id = $1", [req.session.userId]);
-        res.render('profil', { 
-            user: result.rows[0], 
-            message: req.query.msg || null, 
-            userName: req.session.userName 
-        });
-    } catch (err) { res.status(500).send("Erreur de chargement du profil"); }
+        const result = await pool.query("SELECT id, nom, email, role, forfait FROM users WHERE id = $1", [req.session.userId]);
+        res.render('profil', { user: result.rows[0], message: req.query.msg || null, userName: req.session.userName });
+    } catch (err) { res.status(500).send("Erreur Profil"); }
 });
 
 app.post('/update-profil', async (req, res) => {
@@ -74,8 +64,8 @@ app.post('/update-profil', async (req, res) => {
             const hash = await bcrypt.hash(newPassword, 10);
             await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hash, req.session.userId]);
         }
-        res.redirect('/profil?msg=Profil mis à jour avec succès !');
-    } catch (err) { res.status(500).send("Erreur lors de la mise à jour"); }
+        res.redirect('/profil?msg=Profil mis à jour !');
+    } catch (err) { res.status(500).send("Erreur Mise à jour"); }
 });
 
 // --- DASHBOARD AMBASSADEUR ---
@@ -92,22 +82,20 @@ app.get('/ambassadeur/dashboard', async (req, res) => {
             FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'`, [req.session.userId]);
         
         res.render('ambassadeur-dashboard', { 
-            missions: disponibles.rows, 
-            userName: req.session.userName, 
-            totalGains: gains.rows[0].total || 0,
-            showWelcome: showWelcome 
+            missions: disponibles.rows, userName: req.session.userName, 
+            totalGains: gains.rows[0].total || 0, showWelcome: showWelcome 
         });
-    } catch (err) { res.status(500).send("Erreur Dashboard Ambassadeur"); }
+    } catch (err) { res.status(500).send("Erreur Dashboard"); }
 });
 
-// --- RÉSERVATION (Fix Cannot POST /postuler-mission) ---
+// --- RESERVATION (Fix Cannot POST /postuler-mission) ---
 app.post('/postuler-mission', async (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'ambassadeur') return res.status(403).send("Non autorisé");
     const { id_mission } = req.body;
     try {
         await pool.query("UPDATE missions SET ambassadeur_id = $1, statut = 'reserve' WHERE id = $2", [req.session.userId, id_mission]);
         res.redirect('/ambassadeur/mes-missions');
-    } catch (err) { res.status(500).send("Erreur lors de la réservation"); }
+    } catch (err) { res.status(500).send("Erreur réservation"); }
 });
 
 app.get('/ambassadeur/mes-missions', async (req, res) => {
@@ -118,42 +106,19 @@ app.get('/ambassadeur/mes-missions', async (req, res) => {
     } catch (err) { res.status(500).send("Erreur chargement missions"); }
 });
 
-// --- DASHBOARD ENTREPRISE ---
-app.get('/entreprise/dashboard', async (req, res) => {
-    if (req.session.userRole !== 'entreprise') return res.redirect('/login');
+// --- SUPPRESSION DE COMPTE ---
+app.post('/admin/delete-user', async (req, res) => {
+    if (!req.session.userId) return res.status(403).send("Non autorisé");
+    const { id_a_supprimer } = req.body;
     try {
-        const userRes = await pool.query("SELECT premiere_connexion, forfait FROM users WHERE id = $1", [req.session.userId]);
-        const showWelcome = userRes.rows[0].premiere_connexion;
-        const forfait = userRes.rows[0].forfait || 'Freemium';
-        if (showWelcome) await pool.query("UPDATE users SET premiere_connexion = FALSE WHERE id = $1", [req.session.userId]);
-
-        const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY id DESC", [req.session.userId]);
-        res.render('entreprise-dashboard', { 
-            missions: missions.rows, 
-            userName: req.session.userName, 
-            showWelcome: showWelcome,
-            stats: { 
-                totale: missions.rows.length, 
-                forfait: forfait, 
-                canPublish: (forfait === 'Premium' || missions.rows.length < 1) 
-            }
-        });
-    } catch (err) { res.status(500).send("Erreur Entreprise"); }
-});
-
-// --- AUTHENTIFICATION ---
-app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    try {
-        const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-        if (result.rows.length > 0 && await bcrypt.compare(password, result.rows[0].password)) {
-            req.session.userId = result.rows[0].id;
-            req.session.userName = result.rows[0].nom;
-            req.session.userRole = result.rows[0].role;
-            return res.redirect(`/${req.session.userRole}/dashboard`);
+        await pool.query("DELETE FROM missions WHERE entreprise_id = $1 OR ambassadeur_id = $1", [id_a_supprimer]);
+        await pool.query("DELETE FROM users WHERE id = $1", [id_a_supprimer]);
+        if (id_a_supprimer == req.session.userId) {
+            req.session.destroy();
+            return res.redirect('/login?msg=Compte supprimé');
         }
-        res.redirect('/login?msg=Identifiants incorrects');
-    } catch (err) { res.redirect('/login?msg=Erreur'); }
+        res.redirect('/admin/dashboard?msg=Utilisateur supprimé');
+    } catch (err) { res.status(500).send("Erreur suppression"); }
 });
 
-app.listen(port, () => console.log(`🚀 FORFEO LAB actif sur le port ${port}`));
+app.listen(port, () => console.log(`🚀 FORFEO LAB sur port ${port}`));
