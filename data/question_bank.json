@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "titre": "Excellence du Service à la Clientèle",
+    "description": "Les bases pour créer un effet WOW et fidéliser la clientèle québécoise.",
+    "duree": "30 min",
+    "image_icon": "bi-emoji-smile",
+    "questions": [
+      { "id": "M1-Q1", "mise_en_situation": "Un client entre pendant que vous êtes au téléphone.", "question": "Réaction ?", "choix_a": "L'ignorer.", "choix_b": "Contact visuel et sourire pour signifier que vous arrivez.", "choix_c": "Raccrocher au nez de l'autre.", "bonne_reponse": "B", "explication": "Le contact visuel valide la présence sans couper l'appel." },
+      { "id": "M1-Q2", "mise_en_situation": "Un client régulier arrive.", "question": "Accueil ?", "choix_a": "Bonjour.", "choix_b": "Bonjour M. Tremblay ! Content de vous revoir.", "choix_c": "Suivant !", "bonne_reponse": "B", "explication": "La personnalisation fidélise." },
+      { "id": "M1-Q3", "mise_en_situation": "Vous ne connaissez pas la réponse.", "question": "Que dire ?", "choix_a": "Je sais pas.", "choix_b": "Je vais vérifier l'information pour vous tout de suite.", "choix_c": "Demandez à l'autre.", "bonne_reponse": "B", "explication": "L'honnêteté proactive rassure." },
+      { "id": "M1-Q4", "mise_en_situation": "Départ du client.", "question": "Conclusion ?", "choix_a": "Bye.", "choix_b": "Merci de votre visite et à bientôt !", "choix_c": "Rien.", "bonne_reponse": "B", "explication": "La dernière impression reste." },
+      { "id": "M1-Q5", "mise_en_situation": "File d'attente longue.", "question": "Action ?", "choix_a": "Baisser la tête.", "choix_b": "Reconnaître l'attente : 'Je serai à vous dans un instant'.", "choix_c": "Partir en pause.", "bonne_reponse": "B", "explication": "Reconnaître l'attente diminue la frustration." },
+      { "id": "M1-Q6", "mise_en_situation": "Client hésitant.", "question": "Approche ?", "choix_a": "Attendre.", "choix_b": "Poser une question ouverte pour cibler le besoin.", "choix_c": "Vendre le plus cher.", "bonne_reponse": "B", "explication": "Conseiller aide à vendre." },
+      { "id": "M1-Q7", "mise_en_situation": "Client perdu.", "question": "Action ?", "choix_a": "Aller vers lui : 'Puis-je vous aider ?'.", "choix_b": "Regarder.", "choix_c": "Rien.", "bonne_reponse": "A", "explication": "Être proactif." },
+      { "id": "M1-Q8", "mise_en_situation": "Mise en attente téléphonique.", "question": "Méthode ?", "choix_a": "Mettre la musique.", "choix_b": "Dire 'Un instant'.", "choix_c": "Demander la permission avant de mettre en attente.", "bonne_reponse": "C", "explication": "Le respect du temps." },
+      { "id": "M1-Q9", "mise_en_situation": "Oubli de portefeuille.", "question": "Réaction ?", "choix_a": "Annuler tout.", "choix_b": "Mettre de côté avec empathie.", "choix_c": "Soupirer.", "bonne_reponse": "B", "explication": "Dédramatiser la situation." },
+      { "id": "M1-Q10", "mise_en_situation": "Compliment reçu.", "question": "Réponse ?", "choix_a": "Normal.", "choix_b": "Merci, ça fait plaisir !", "choix_c": "Ok.", "bonne_reponse": "B", "explication": "Accepter la gratitude." },
+      { "id": "M1-Q11", "mise_en_situation": "Fermeture dans 5 min.", "question": "Client entre.", "choix_a": "On ferme !", "choix_b": "Accueillir, mais mentionner poliment l'heure.", "choix_c": "Éteindre les lumières.", "bonne_reponse": "B", "explication": "Courtoisie jusqu'à la fin." },
+      { "id": "M1-Q12", "mise_en_situation": "Service non offert.", "question": "Refus ?", "choix_a": "Non.", "choix_b": "Nous ne faisons pas cela, mais voici une alternative.", "choix_c": "Allez ailleurs.", "bonne_reponse": "B", "explication": "Toujours offrir une solution." },
+      { "id": "M1-Q13", "mise_en_situation": "Discussion collègue vs Client.", "question": "Priorité ?", "choix_a": "Finir la phrase.", "choix_b": "Le client passe avant tout.", "choix_c": "Ignorer le client.", "bonne_reponse": "B", "explication": "Client roi." },
+      { "id": "M1-Q14", "mise_en_situation": "Enfant bruyant.", "question": "Attitude ?", "choix_a": "Regard noir.", "choix_b": "Sourire au parent, être patient.", "choix_c": "Chasser.", "bonne_reponse": "B", "explication": "Empathie pour le parent." },
+      { "id": "M1-Q15", "mise_en_situation": "Erreur facture.", "question": "Correction ?", "choix_a": "Rien dire.", "choix_b": "S'excuser et corriger immédiatement.", "choix_c": "Nier.", "bonne_reponse": "B", "explication": "L'erreur est humaine, la correction est professionnelle." }
+    ]
+  },
+  {
+    "id": 2,
+    "titre": "Communication & Écoute Active",
+    "description": "Le ton, l'empathie et la reformulation.",
+    "duree": "40 min",
+    "image_icon": "bi-ear",
+    "questions": [
+      { "id": "M2-Q1", "mise_en_situation": "Client explique un problème.", "question": "Que faire ?", "choix_a": "Préparer la réponse.", "choix_b": "Écouter et hocher la tête.", "choix_c": "Interrompre.", "bonne_reponse": "B", "explication": "Écoute active." },
+      { "id": "M2-Q2", "mise_en_situation": "Fin d'explication.", "question": "Ensuite ?", "choix_a": "Reformuler pour valider.", "choix_b": "Ok.", "choix_c": "Pourquoi ?", "bonne_reponse": "A", "explication": "Éviter les malentendus." },
+      { "id": "M2-Q3", "mise_en_situation": "Courriel mécontent.", "question": "Ton ?", "choix_a": "Froid.", "choix_b": "Empathique et professionnel.", "choix_c": "Amical.", "bonne_reponse": "B", "explication": "Prendre au sérieux." },
+      { "id": "M2-Q4", "mise_en_situation": "Chat en ligne.", "question": "Style ?", "choix_a": "Oui/Non.", "choix_b": "Phrases complètes et polies.", "choix_c": "Émojis seulement.", "bonne_reponse": "B", "explication": "Image de marque." },
+      { "id": "M2-Q5", "mise_en_situation": "Accent fort du client.", "question": "Compréhension ?", "choix_a": "Faire semblant.", "choix_b": "Demander poliment de répéter.", "choix_c": "Parler fort.", "bonne_reponse": "B", "explication": "S'assurer de comprendre." },
+      { "id": "M2-Q6", "mise_en_situation": "Rupture de stock.", "question": "Annonce ?", "choix_a": "Y'en a plus.", "choix_b": "Désolé, rupture temporaire, retour mardi.", "choix_c": "Trop tard.", "bonne_reponse": "B", "explication": "Donner une perspective." },
+      { "id": "M2-Q7", "mise_en_situation": "Appel téléphonique.", "question": "Ouverture ?", "choix_a": "Allô.", "choix_b": "Forfeo, [Nom], bonjour !", "choix_c": "Attendez.", "bonne_reponse": "B", "explication": "Identification claire." },
+      { "id": "M2-Q8", "mise_en_situation": "Langage corporel.", "question": "Posture ?", "choix_a": "Bras croisés.", "choix_b": "Ouverte et souriante.", "choix_c": "Dos tourné.", "bonne_reponse": "B", "explication": "Communication non-verbale." },
+      { "id": "M2-Q9", "mise_en_situation": "Client novice.", "question": "Explication ?", "choix_a": "Jargon technique.", "choix_b": "Vulgariser et simplifier.", "choix_c": "Voir site web.", "bonne_reponse": "B", "explication": "S'adapter à l'interlocuteur." },
+      { "id": "M2-Q10", "mise_en_situation": "Client bavard.", "question": "Gestion ?", "choix_a": "Ignorer.", "choix_b": "Résumer poliment pour conclure.", "choix_c": "Le faire taire.", "bonne_reponse": "B", "explication": "Gérer le temps." },
+      { "id": "M2-Q11", "mise_en_situation": "Mauvais produit apporté.", "question": "Erreur ?", "choix_a": "Nier.", "choix_b": "S'excuser et corriger.", "choix_c": "Soupirer.", "bonne_reponse": "B", "explication": "Responsabilité." },
+      { "id": "M2-Q12", "mise_en_situation": "Réponse affichée.", "question": "Action ?", "choix_a": "Pointer du doigt.", "choix_b": "Donner la réponse verbalement.", "choix_c": "Lire l'affiche.", "bonne_reponse": "B", "explication": "Service, pas éducation." },
+      { "id": "M2-Q13", "mise_en_situation": "Empathie.", "question": "Définition ?", "choix_a": "Pitié.", "choix_b": "Comprendre l'émotion de l'autre.", "choix_c": "Être d'accord.", "bonne_reponse": "B", "explication": "Connexion humaine." },
+      { "id": "M2-Q14", "mise_en_situation": "Transfert d'appel.", "question": "Méthode ?", "choix_a": "Passer directement.", "choix_b": "Expliquer la situation au collègue avant.", "choix_c": "Raccrocher.", "bonne_reponse": "B", "explication": "Transfert chaud." },
+      { "id": "M2-Q15", "mise_en_situation": "Remerciement client.", "question": "Suite ?", "choix_a": "Rien.", "choix_b": "Répondre que c'était un plaisir.", "choix_c": "Vendre.", "bonne_reponse": "B", "explication": "Clôture positive." }
+    ]
+  },
+  {
+    "id": 3,
+    "titre": "Gestion des Situations Difficiles",
+    "description": "Désamorcer les conflits avec calme.",
+    "duree": "45 min",
+    "image_icon": "bi-shield-check",
+    "questions": [
+      { "id": "M3-Q1", "mise_en_situation": "Client crie.", "question": "Réaction ?", "choix_a": "Crier.", "choix_b": "Rester calme et écouter.", "choix_c": "Fuir.", "bonne_reponse": "B", "explication": "Le calme désamorce." },
+      { "id": "M3-Q2", "mise_en_situation": "Client a tort.", "question": "Approche ?", "choix_a": "Prouver le tort.", "choix_b": "Reconnaître l'émotion sans valider les faits.", "choix_c": "Sécurité.", "bonne_reponse": "B", "explication": "L'émotion prime sur la raison au début." },
+      { "id": "M3-Q3", "mise_en_situation": "Refus remboursement.", "question": "Annonce ?", "choix_a": "Non.", "choix_b": "Expliquer politique + offrir alternative.", "choix_c": "Impossible.", "bonne_reponse": "B", "explication": "Le 'Non, mais...'." },
+      { "id": "M3-Q4", "mise_en_situation": "Insulte personnelle.", "question": "Limite ?", "choix_a": "Insulter.", "choix_b": "Refuser le langage calmement mais rester pro.", "choix_c": "Pleurer.", "bonne_reponse": "B", "explication": "Respect mutuel." },
+      { "id": "M3-Q5", "mise_en_situation": "Service lent.", "question": "Proactif ?", "choix_a": "Cacher.", "choix_b": "Informer et offrir une attention.", "choix_c": "Se plaindre.", "bonne_reponse": "B", "explication": "Transparence." },
+      { "id": "M3-Q6", "mise_en_situation": "Menace avis Google.", "question": "Action ?", "choix_a": "S'en foutre.", "choix_b": "Tenter de corriger sur place.", "choix_c": "Payer.", "bonne_reponse": "B", "explication": "Récupération de service." },
+      { "id": "M3-Q7", "mise_en_situation": "Pas de solution immédiate.", "question": "Suivi ?", "choix_a": "Attendre.", "choix_b": "Tenir informé du délai.", "choix_c": "Oublier.", "bonne_reponse": "B", "explication": "Communication constante." },
+      { "id": "M3-Q8", "mise_en_situation": "Problème récurrent.", "question": "Attitude ?", "choix_a": "Blâmer client.", "choix_b": "S'excuser doublement et prendre en charge.", "choix_c": "Ironie.", "bonne_reponse": "B", "explication": "Prise en charge totale." },
+      { "id": "M3-Q9", "mise_en_situation": "Contestation facture.", "question": "Action ?", "choix_a": "Défendre.", "choix_b": "Revoir ligne par ligne ensemble.", "choix_c": "Comptabilité.", "bonne_reponse": "B", "explication": "Transparence." },
+      { "id": "M3-Q10", "mise_en_situation": "Impasse.", "question": "Escalade ?", "choix_a": "Rien à faire.", "choix_b": "Proposer le gestionnaire comme aide.", "choix_c": "Numéro 1-800.", "bonne_reponse": "B", "explication": "Montrer qu'on cherche une solution." },
+      { "id": "M3-Q11", "mise_en_situation": "Repas décevant.", "question": "Solution ?", "choix_a": "Nier.", "choix_b": "Remplacer le plat.", "choix_c": "Café gratuit.", "bonne_reponse": "B", "explication": "Correction directe." },
+      { "id": "M3-Q12", "mise_en_situation": "Retard client.", "question": "Table ?", "choix_a": "Tant pis.", "choix_b": "Chercher alternative.", "choix_c": "Disputer.", "bonne_reponse": "B", "explication": "Flexibilité." },
+      { "id": "M3-Q13", "mise_en_situation": "Veut parler au patron absent.", "question": "Réponse ?", "choix_a": "Pas là.", "choix_b": "Prendre message pour rappel.", "choix_c": "Demain.", "bonne_reponse": "B", "explication": "Continuité." },
+      { "id": "M3-Q14", "mise_en_situation": "Méthode LAT.", "question": "T ?", "choix_a": "Talk.", "choix_b": "Thank (Remercier).", "choix_c": "Terminate.", "bonne_reponse": "B", "explication": "Gratitude pour le feedback." },
+      { "id": "M3-Q15", "mise_en_situation": "Après conflit.", "question": "Soi-même ?", "choix_a": "Décompresser.", "choix_b": "Raconter au suivant.", "choix_c": "Cacher.", "bonne_reponse": "A", "explication": "Gestion du stress." }
+    ]
+  },
+  {
+    "id": 4,
+    "titre": "Culture Qualité & Feedback",
+    "description": "Utiliser le feedback pour grandir.",
+    "duree": "25 min",
+    "image_icon": "bi-graph-up-arrow",
+    "questions": [
+      { "id": "M4-Q1", "mise_en_situation": "Toilette sale signalée.", "question": "Action ?", "choix_a": "Pas mon job.", "choix_b": "Remercier et nettoyer.", "choix_c": "Ignorer.", "bonne_reponse": "B", "explication": "Responsabilité partagée." },
+      { "id": "M4-Q2", "mise_en_situation": "Feedback du patron.", "question": "Réaction ?", "choix_a": "Argumenter.", "choix_b": "Écouter pour s'améliorer.", "choix_c": "Bouder.", "bonne_reponse": "B", "explication": "Esprit de croissance." },
+      { "id": "M4-Q3", "mise_en_situation": "Produit abîmé.", "question": "Action ?", "choix_a": "Laisser.", "choix_b": "Retirer.", "choix_c": "Cacher.", "bonne_reponse": "B", "explication": "Proactivité." },
+      { "id": "M4-Q4", "mise_en_situation": "Suggestion client.", "question": "Suivi ?", "choix_a": "Oublier.", "choix_b": "Transmettre.", "choix_c": "Critiquer.", "bonne_reponse": "B", "explication": "Source d'innovation." },
+      { "id": "M4-Q5", "mise_en_situation": "Avis Google.", "question": "Utilité ?", "choix_a": "Ego.", "choix_b": "Rassurer futurs clients.", "choix_c": "Rien.", "bonne_reponse": "B", "explication": "Preuve sociale." },
+      { "id": "M4-Q6", "mise_en_situation": "Mauvais audit.", "question": "Équipe ?", "choix_a": "Punir.", "choix_b": "Plan d'action.", "choix_c": "Nier.", "bonne_reponse": "B", "explication": "Amélioration." },
+      { "id": "M4-Q7", "mise_en_situation": "Uniforme froissé.", "question": "Grave ?", "choix_a": "Non.", "choix_b": "Oui, image de marque.", "choix_c": "Peu importe.", "bonne_reponse": "B", "explication": "Présentation." },
+      { "id": "M4-Q8", "mise_en_situation": "Favoritisme portion.", "question": "Bon ?", "choix_a": "Oui.", "choix_b": "Non, constance requise.", "choix_c": "Parfois.", "bonne_reponse": "B", "explication": "Équité." },
+      { "id": "M4-Q9", "mise_en_situation": "Commande prête.", "question": "Dernier geste ?", "choix_a": "Donner.", "choix_b": "Vérifier contenu.", "choix_c": "Rien.", "bonne_reponse": "B", "explication": "Zéro erreur." },
+      { "id": "M4-Q10", "mise_en_situation": "Collègue laxiste.", "question": "Action ?", "choix_a": "Ignorer.", "choix_b": "Lui en parler.", "choix_c": "Crier.", "bonne_reponse": "B", "explication": "Standards d'équipe." },
+      { "id": "M4-Q11", "mise_en_situation": "Avant l'achat.", "question": "Exemple ?", "choix_a": "Propreté stationnement.", "choix_b": "Facture.", "choix_c": "SAV.", "bonne_reponse": "A", "explication": "Parcours global." },
+      { "id": "M4-Q12", "mise_en_situation": "Avis 5 étoiles.", "question": "Effet ?", "choix_a": "Rien.", "choix_b": "Motivation.", "choix_c": "Suspect.", "bonne_reponse": "B", "explication": "Reconnaissance." },
+      { "id": "M4-Q13", "mise_en_situation": "Sondage comptoir.", "question": "Action ?", "choix_a": "Décoration.", "choix_b": "Inviter à remplir.", "choix_c": "Cacher.", "bonne_reponse": "B", "explication": "Collecte de données." },
+      { "id": "M4-Q14", "mise_en_situation": "Règle 10-4.", "question": "Quoi ?", "choix_a": "Pause.", "choix_b": "Contact visuel et verbal.", "choix_c": "Distance.", "bonne_reponse": "B", "explication": "Standards d'accueil." },
+      { "id": "M4-Q15", "mise_en_situation": "Amélioration continue.", "question": "Déf ?", "choix_a": "Travailler plus.", "choix_b": "Faire mieux chaque jour.", "choix_c": "Changer.", "bonne_reponse": "B", "explication": "Kaizen." }
+    ]
+  },
+  {
+    "id": 5,
+    "titre": "Professionnalisme & Collaboration",
+    "description": "Fiabilité et image de marque.",
+    "duree": "35 min",
+    "image_icon": "bi-people",
+    "questions": [
+      { "id": "M5-Q1", "mise_en_situation": "Début 9h00.", "question": "Arrivée ?", "choix_a": "9h05.", "choix_b": "8h50 prêt.", "choix_c": "9h00 café.", "bonne_reponse": "B", "explication": "Ponctualité." },
+      { "id": "M5-Q2", "mise_en_situation": "Collègue débordé.", "question": "Action ?", "choix_a": "Regarder.", "choix_b": "Aider.", "choix_c": "Critiquer.", "bonne_reponse": "B", "explication": "Esprit d'équipe." },
+      { "id": "M5-Q3", "mise_en_situation": "Cellulaire perso.", "question": "Règle ?", "choix_a": "Jamais devant client.", "choix_b": "Parfois.", "choix_c": "Toujours.", "bonne_reponse": "A", "explication": "Focus client." },
+      { "id": "M5-Q4", "mise_en_situation": "Critique du patron.", "question": "Devant client ?", "choix_a": "Oui.", "choix_b": "Jamais, non professionnel.", "choix_c": "Peu importe.", "bonne_reponse": "B", "explication": "Loyauté." },
+      { "id": "M5-Q5", "mise_en_situation": "Concurrent.", "question": "En parler ?", "choix_a": "Critiquer.", "choix_b": "Rester neutre et valoriser nos forces.", "choix_c": "Complimenter.", "bonne_reponse": "B", "explication": "Fair play." },
+      { "id": "M5-Q6", "mise_en_situation": "Maladie.", "question": "Prévenir ?", "choix_a": "Non.", "choix_b": "Le plus tôt possible.", "choix_c": "5 min avant.", "bonne_reponse": "B", "explication": "Fiabilité." },
+      { "id": "M5-Q7", "mise_en_situation": "Langage.", "question": "Éviter ?", "choix_a": "Merci.", "choix_b": "Sacres et argot.", "choix_c": "Bonjour.", "bonne_reponse": "B", "explication": "Bienséance." },
+      { "id": "M5-Q8", "mise_en_situation": "Nouveau collègue.", "question": "Attitude ?", "choix_a": "Ignorer.", "choix_b": "Aider et former.", "choix_c": "Se moquer.", "bonne_reponse": "B", "explication": "Mentorat." },
+      { "id": "M5-Q9", "mise_en_situation": "Client connu.", "question": "Facebook ?", "choix_a": "Oui.", "choix_b": "Non, confidentialité.", "choix_c": "Amis seulement.", "bonne_reponse": "B", "explication": "Discrétion." },
+      { "id": "M5-Q10", "mise_en_situation": "Erreur caisse.", "question": "Action ?", "choix_a": "Cacher.", "choix_b": "Signaler honnêtement.", "choix_c": "Accuser autre.", "bonne_reponse": "B", "explication": "Intégrité." },
+      { "id": "M5-Q11", "mise_en_situation": "Positivisme.", "question": "Pourquoi ?", "choix_a": "Contagieux et agréable.", "choix_b": "Obligé.", "choix_c": "Inutile.", "bonne_reponse": "A", "explication": "Climat de travail." },
+      { "id": "M5-Q12", "mise_en_situation": "Tenue.", "question": "Standard ?", "choix_a": "Maison.", "choix_b": "Propre et conforme.", "choix_c": "Habillé.", "bonne_reponse": "B", "explication": "Image." },
+      { "id": "M5-Q13", "mise_en_situation": "Photo arrière-boutique.", "question": "Réseaux ?", "choix_a": "Oui.", "choix_b": "Non, sécurité.", "choix_c": "Snapchat.", "bonne_reponse": "B", "explication": "Confidentialité commerciale." },
+      { "id": "M5-Q14", "mise_en_situation": "Conflit collègue.", "question": "Lieu ?", "choix_a": "Devant clients.", "choix_b": "En privé.", "choix_c": "Facebook.", "bonne_reponse": "B", "explication": "Professionnalisme." },
+      { "id": "M5-Q15", "mise_en_situation": "Fin de quart désordre.", "question": "Action ?", "choix_a": "Partir.", "choix_b": "Nettoyer pour le suivant.", "choix_c": "Laisser.", "bonne_reponse": "B", "explication": "Respect." }
+    ]
+  }
+]
