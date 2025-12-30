@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Tableau de Bord Admin | FORFEO</title>
+    <title>Admin | FORFEO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/premium-dashboard.css">
 </head>
@@ -18,14 +18,15 @@
         </div>
 
         <div class="glass-card mb-5">
-            <h5 class="fw-bold mb-3">Gestion des Audits</h5>
+            <h5 class="fw-bold mb-3">Gestion des Audits & Sondages</h5>
             <table class="premium-table">
-                <thead><tr><th>ENTREPRISE</th><th>TITRE</th><th>STATUT</th><th>ACTION</th></tr></thead>
+                <thead><tr><th>ENTREPRISE</th><th>TITRE</th><th>TYPE</th><th>STATUT</th><th>ACTION</th></tr></thead>
                 <tbody>
                     <% missions.forEach(m => { %>
                         <tr>
                             <td class="fw-bold"><%= m.entreprise_nom %></td>
                             <td><%= m.titre %></td>
+                            <td><span class="badge bg-secondary"><%= m.type_audit %></span></td>
                             <td>
                                 <% if(m.statut === 'actif') { %><span class="badge bg-success">PUBLIÉ</span><% } %>
                                 <% if(m.statut === 'en_attente') { %><span class="badge bg-warning text-dark">EN ATTENTE</span><% } %>
@@ -37,17 +38,12 @@
                                 <% if (m.statut === 'en_attente') { %>
                                     <form action="/admin/approuver-mission" method="POST">
                                         <input type="hidden" name="id_mission" value="<%= m.id %>">
-                                        <button class="btn btn-sm btn-success rounded-pill px-3">Publier l'annonce</button>
+                                        <button class="btn btn-sm btn-success rounded-pill px-3">Publier</button>
                                     </form>
-                                
                                 <% } else if (m.statut === 'soumis') { %>
-                                    <a href="/admin/rapport/<%= m.id %>" class="btn btn-sm btn-primary rounded-pill px-3">
-                                        Examiner Rapport
-                                    </a>
-                                
+                                    <a href="/admin/rapport/<%= m.id %>" class="btn btn-sm btn-primary rounded-pill px-3">Examiner</a>
                                 <% } else if (m.statut === 'approuve') { %>
                                     <i class="bi bi-check-all text-success fs-5"></i>
-                                
                                 <% } else { %>
                                     <span class="text-muted small">--</span>
                                 <% } %>
