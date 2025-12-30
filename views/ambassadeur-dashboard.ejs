@@ -9,7 +9,6 @@
 </head>
 <body>
     <div class="premium-bg"></div>
-    
     <div class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-5">
             <h3 class="fw-bold">Bonjour, <%= userName %> 👋</h3>
@@ -21,41 +20,28 @@
 
         <div class="glass-card bg-primary text-white mb-5 p-4" style="background: linear-gradient(135deg, #0061ff, #3b82f6);">
             <div class="d-flex justify-content-between align-items-end">
-                <div>
-                    <div class="opacity-75 small fw-bold uppercase mb-1">Gains Totaux</div>
-                    <div class="display-3 fw-bold"><%= totalGains %> $ CAD</div>
-                </div>
-                <div class="text-end opacity-75">
-                    <div class="h4 mb-0"><%= historique.filter(h => h.statut === 'approuve').length %></div>
-                    <div class="small">Missions Validées</div>
-                </div>
+                <div><div class="opacity-75 small fw-bold uppercase mb-1">Gains Totaux</div><div class="display-3 fw-bold"><%= totalGains %> $ CAD</div></div>
+                <div class="text-end opacity-75"><div class="h4 mb-0"><%= historique.filter(h => h.statut === 'approuve').length %></div><div class="small">Missions Validées</div></div>
             </div>
         </div>
 
         <h4 class="fw-bold mb-4">📍 Missions Disponibles</h4>
         <div class="row g-4 mb-5">
-            <% if(missions.length === 0) { %>
-                <div class="col-12 text-muted text-center py-5 glass-card">Aucune nouvelle mission pour le moment.</div>
-            <% } %>
+            <% if(missions.length === 0) { %><div class="col-12 text-muted text-center py-5 glass-card">Aucune nouvelle mission.</div><% } %>
             <% missions.forEach(m => { %>
                 <div class="col-md-4">
                     <div class="glass-card h-100 d-flex flex-column">
-                        <div class="d-flex justify-content-between mb-3">
-                            <span class="badge bg-primary-subtle text-primary"><%= m.type_audit %></span>
-                            <span class="fw-bold text-success"><%= m.recompense %>$</span>
-                        </div>
+                        <div class="d-flex justify-content-between mb-3"><span class="badge bg-primary-subtle text-primary"><%= m.type_audit %></span><span class="fw-bold text-success"><%= m.recompense %>$</span></div>
                         <h5 class="fw-bold"><%= m.titre %></h5>
-                        
                         <% if(m.adresse) { %>
                             <p class="small text-muted mb-2"><i class="bi bi-geo-alt"></i> <%= m.adresse %></p>
                             <a href="<%= m.google_map_link %>" target="_blank" class="btn btn-light btn-sm w-100 mb-3 text-primary"><i class="bi bi-map"></i> Voir sur la carte</a>
                         <% } else if (m.client_nom) { %>
                             <p class="small text-muted mb-3"><i class="bi bi-person"></i> Client : <%= m.client_nom %></p>
                         <% } %>
-
                         <form action="/ambassadeur/postuler" method="POST" class="mt-auto">
                             <input type="hidden" name="id_mission" value="<%= m.id %>">
-                            <button class="btn btn-primary w-100 rounded-pill">Réserver la mission</button>
+                            <button class="btn btn-primary w-100 rounded-pill">Réserver</button>
                         </form>
                     </div>
                 </div>
@@ -63,110 +49,52 @@
         </div>
         
         <div class="glass-card">
-            <h5 class="fw-bold mb-4">📋 Mes Missions en cours</h5>
+            <h5 class="fw-bold mb-4">📋 Mes Missions</h5>
             <table class="premium-table">
                 <thead><tr><th>Mission</th><th>Statut</th><th>Action</th></tr></thead>
                 <tbody>
                     <% historique.forEach(h => { %>
                         <tr>
                             <td class="fw-bold"><%= h.titre %></td>
-                            <td>
-                                <% if(h.statut_paiement === 'paye') { %>
-                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> PAYÉ</span>
-                                <% } else { %>
-                                    <span class="badge-status <%= h.statut %>"><%= h.statut %></span>
-                                <% } %>
-                            </td>
+                            <td><% if(h.statut_paiement === 'paye') { %><span class="badge bg-success">PAYÉ</span><% } else { %><span class="badge-status <%= h.statut %>"><%= h.statut %></span><% } %></td>
                             <td>
                                 <% if(h.statut === 'reserve') { %>
-                                    
-                                    <% if(h.type_audit.includes('Sondage') || h.type_audit.includes('Satisfaction')) { %>
-                                        <% 
-                                            let corpsEmail = `Bonjour ${h.client_nom},\n\nJe vous contacte au nom de FORFEO LAB pour recueillir votre avis.\n\nPourriez-vous répondre à ces 3 questions rapides ?\n1. Niveau de satisfaction (1-5) ?\n2. Recommanderiez-vous nos services ?\n3. Un commentaire ?\n\nMerci de votre temps.`;
-                                            let sujetEmail = `Votre avis compte - Enquête ${h.titre}`;
-                                        %>
-                                        <a href="mailto:<%= h.client_email %>?subject=<%= encodeURIComponent(sujetEmail) %>&body=<%= encodeURIComponent(corpsEmail) %>" class="btn btn-sm btn-info text-white rounded-pill me-2">
-                                            <i class="bi bi-envelope"></i> Envoyer Questionnaire
-                                        </a>
+                                    <% if(h.type_audit.includes('Sondage')) { %>
+                                        <a href="mailto:<%= h.client_email %>?subject=Enquête&body=Bonjour..." class="btn btn-sm btn-info text-white rounded-pill me-2"><i class="bi bi-envelope"></i> Email</a>
                                     <% } %>
-
-                                    <button class="btn btn-sm btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modal<%= h.id %>">
-                                        <% if(h.type_audit.includes('Sondage')) { %> Noter Réponses <% } else { %> Remplir Rapport <% } %>
-                                    </button>
-
+                                    <button class="btn btn-sm btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modal<%= h.id %>">Remplir Rapport</button>
+                                    
                                     <div class="modal fade" id="modal<%= h.id %>" tabindex="-1">
                                         <div class="modal-dialog modal-lg">
                                             <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title fw-bold"><%= h.type_audit %></h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
+                                                <div class="modal-header"><h5 class="modal-title fw-bold"><%= h.type_audit %></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                                                 <div class="modal-body bg-light">
                                                     <form action="/ambassadeur/soumettre-rapport" method="POST">
                                                         <input type="hidden" name="mission_id" value="<%= h.id %>">
-                                                        <input type="hidden" name="nom_ambassadeur" value="<%= userName %>">
-                                                        <input type="hidden" name="nom_entreprise" value="<%= h.titre %>">
-
-                                                        <% if(h.type_audit === 'Rapport Expérience' || h.type_audit.includes('Standard')) { %>
-                                                            <div class="card p-3 border-0 shadow-sm mb-3">
-                                                                <h6 class="text-primary fw-bold mb-3">Infos Visite</h6>
-                                                                <div class="row">
-                                                                    <div class="col-6"><label class="small fw-bold">Date de visite</label><input type="date" name="date_visite" class="form-control" required></div>
-                                                                    <div class="col-6">
-                                                                        <label class="small fw-bold">Type</label>
-                                                                        <select name="type_experience" class="form-select"><option>Restaurant</option><option>Hôtel</option><option>Magasin</option></select>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="card p-3 border-0 shadow-sm mb-3">
-                                                                <h6 class="text-primary fw-bold mb-3">Évaluation</h6>
-                                                                <div class="mb-3">
-                                                                    <label class="small fw-bold">Description générale</label>
-                                                                    <textarea name="description" class="form-control" rows="3" required></textarea>
-                                                                </div>
-                                                                <div class="row">
-                                                                    <div class="col-6"><label class="small fw-bold text-success">Points Forts</label><textarea name="points_forts" class="form-control" rows="2"></textarea></div>
-                                                                    <div class="col-6"><label class="small fw-bold text-danger">À Améliorer</label><textarea name="points_ameliorer" class="form-control" rows="2"></textarea></div>
-                                                                </div>
-                                                                <div class="mt-3">
-                                                                    <label class="fw-bold">Note Globale / 10</label>
-                                                                    <input type="number" name="note_globale" class="form-control" min="0" max="10" step="0.5" required>
-                                                                </div>
-                                                            </div>
-
-                                                        <% } else if (h.type_audit.includes('Qualité') || h.type_audit.includes('Propreté')) { %>
-                                                            <div class="card p-3 border-0 shadow-sm mb-3">
-                                                                <h6 class="text-primary fw-bold">Critères Qualité</h6>
-                                                                <div class="mb-3"><label class="small fw-bold">Accueil</label><select name="accueil" class="form-select"><option>Excellent</option><option>Bon</option><option>Moyen</option><option>Mauvais</option></select></div>
-                                                                <div class="mb-3"><label class="small fw-bold">Propreté</label><select name="proprete" class="form-select"><option>Impeccable</option><option>Acceptable</option><option>Sale</option></select></div>
-                                                                <div class="mb-3"><label class="small fw-bold">Vitesse</label><select name="vitesse" class="form-select"><option>Rapide</option><option>Correct</option><option>Lent</option></select></div>
-                                                                <div><label class="small fw-bold">Commentaire Détaillé</label><textarea name="commentaire_detaille" class="form-control" rows="3"></textarea></div>
-                                                            </div>
-
-                                                        <% } else { %>
-                                                            <div class="alert alert-info small">Transcrivez les réponses de <strong><%= h.client_nom %></strong>.</div>
+                                                        <% if(h.type_audit.includes('Sondage')) { %>
                                                             <div class="card p-3 border-0 shadow-sm mb-3">
                                                                 <h6 class="text-primary fw-bold">Ressenti Client</h6>
                                                                 <div class="mb-3"><label class="small fw-bold">Satisfaction</label><select name="niveau_satisfaction" class="form-select"><option>Très Satisfait</option><option>Satisfait</option><option>Neutre</option><option>Insatisfait</option></select></div>
-                                                                <div class="mb-3"><label class="small fw-bold">Recommandation</label><select name="recommandation" class="form-select"><option>Oui</option><option>Peut-être</option><option>Non</option></select></div>
-                                                                <div class="mb-3"><label class="small fw-bold">Note Finale / 10</label><input type="number" name="note_finale" class="form-control" max="10"></div>
-                                                                <div><label class="small fw-bold">Avis Client (Verbatim)</label><textarea name="commentaire_libre" class="form-control" rows="3"></textarea></div>
+                                                                <div class="mb-3"><label class="small fw-bold">Recommandation</label><select name="recommandation" class="form-select"><option>Oui</option><option>Non</option></select></div>
+                                                                <div class="mb-3"><label class="small fw-bold">Note / 10</label><input type="number" name="note_finale" class="form-control" max="10"></div>
+                                                                <div><label class="small fw-bold">Avis Client</label><textarea name="commentaire_libre" class="form-control" rows="3"></textarea></div>
+                                                            </div>
+                                                        <% } else { %>
+                                                            <div class="card p-3 border-0 shadow-sm mb-3">
+                                                                <h6 class="text-primary fw-bold">Évaluation</h6>
+                                                                <div class="mb-2"><label class="small fw-bold">Description</label><textarea name="description" class="form-control" rows="2" required></textarea></div>
+                                                                <div class="mb-2"><label class="small fw-bold text-success">Points Forts</label><textarea name="points_forts" class="form-control" rows="1"></textarea></div>
+                                                                <div class="mb-2"><label class="small fw-bold text-danger">À Améliorer</label><textarea name="points_ameliorer" class="form-control" rows="1"></textarea></div>
+                                                                <div class="mt-2"><label class="fw-bold">Note / 10</label><input type="number" name="note_globale" class="form-control" max="10" required></div>
                                                             </div>
                                                         <% } %>
-
-                                                        <div class="form-check mb-3"><input type="checkbox" required class="form-check-input"><label class="small text-muted">Données certifiées exactes.</label></div>
-                                                        <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Envoyer le Rapport</button>
+                                                        <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Envoyer</button>
                                                     </form>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-
-                                <% } else if (h.statut === 'soumis') { %>
-                                    <span class="badge bg-secondary">En Attente Validation</span>
-                                <% } else { %>
-                                    <i class="bi bi-check-circle-fill text-success"></i> Terminé
-                                <% } %>
+                                <% } else if (h.statut === 'soumis') { %> <span class="badge bg-secondary">En Attente</span> <% } else { %> <i class="bi bi-check-circle-fill text-success"></i> Terminé <% } %>
                             </td>
                         </tr>
                     <% }) %>
