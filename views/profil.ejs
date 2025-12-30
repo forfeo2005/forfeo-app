@@ -10,29 +10,34 @@
     <div class="premium-bg"></div>
     <div class="container py-5" style="max-width: 600px;">
         <div class="glass-card">
-            <h3 class="fw-bold mb-4">Mon Profil</h3>
-            <% if(message) { %><div class="alert alert-success"><%= message %></div><% } %>
+            <h3 class="fw-bold mb-4">Profil</h3>
             
+            <div class="text-center mb-4">
+                <a class="d-inline-flex flex-column align-items-center text-decoration-none" href="/">
+                    <img src="/images/logo-forfeo.png" alt="Forfeo" height="40">
+                    <span style="font-size: 10px; font-weight: 900; letter-spacing: 4px; color: #0061ff; margin-top: 2px;">LAB</span>
+                </a>
+            </div>
+
             <form action="/profil/update" method="POST">
                 <div class="mb-3">
-                    <label class="fw-bold small text-muted">Nom Complet</label>
+                    <label class="fw-bold small">Nom</label>
                     <input type="text" name="nom" value="<%= user.nom %>" class="form-control" required>
                 </div>
                 <div class="mb-3">
-                    <label class="fw-bold small text-muted">Email</label>
+                    <label class="fw-bold small">Email</label>
                     <input type="email" name="email" value="<%= user.email %>" class="form-control" required>
                 </div>
                 <div class="mb-3">
-                    <label class="fw-bold small text-muted">Nouveau Mot de passe (laisser vide si inchangé)</label>
+                    <label class="fw-bold small">Nouveau Mot de Passe (Optionnel)</label>
                     <input type="password" name="new_password" class="form-control">
                 </div>
-                <button class="btn btn-primary w-100 rounded-pill mb-4">Mettre à jour</button>
+                <button class="btn btn-primary w-100 rounded-pill">Mettre à jour</button>
             </form>
-
             <hr>
             <div class="text-center">
-                <form action="/profil/delete" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.');">
-                    <button class="btn btn-outline-danger btn-sm rounded-pill">Supprimer mon compte</button>
+                <form action="/profil/delete" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer votre compte ?');">
+                    <button class="btn btn-outline-danger btn-sm rounded-pill w-100">Supprimer mon compte</button>
                 </form>
                 <a href="/" class="d-block mt-3 text-muted small">Retour à l'accueil</a>
             </div>
