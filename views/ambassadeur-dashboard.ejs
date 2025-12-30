@@ -33,12 +33,7 @@
                     <div class="glass-card h-100 d-flex flex-column">
                         <div class="d-flex justify-content-between mb-3"><span class="badge bg-primary-subtle text-primary"><%= m.type_audit %></span><span class="fw-bold text-success"><%= m.recompense %>$</span></div>
                         <h5 class="fw-bold"><%= m.titre %></h5>
-                        <% if(m.adresse) { %>
-                            <p class="small text-muted mb-2"><i class="bi bi-geo-alt"></i> <%= m.adresse %></p>
-                            <a href="<%= m.google_map_link %>" target="_blank" class="btn btn-light btn-sm w-100 mb-3 text-primary"><i class="bi bi-map"></i> Voir sur la carte</a>
-                        <% } else if (m.client_nom) { %>
-                            <p class="small text-muted mb-3"><i class="bi bi-person"></i> Client : <%= m.client_nom %></p>
-                        <% } %>
+                        <% if(m.adresse) { %><p class="small text-muted mb-2"><i class="bi bi-geo-alt"></i> <%= m.adresse %></p><a href="<%= m.google_map_link %>" target="_blank" class="btn btn-light btn-sm w-100 mb-3 text-primary"><i class="bi bi-map"></i> Voir sur la carte</a><% } %>
                         <form action="/ambassadeur/postuler" method="POST" class="mt-auto">
                             <input type="hidden" name="id_mission" value="<%= m.id %>">
                             <button class="btn btn-primary w-100 rounded-pill">Réserver</button>
@@ -71,23 +66,13 @@
                                                 <div class="modal-body bg-light">
                                                     <form action="/ambassadeur/soumettre-rapport" method="POST">
                                                         <input type="hidden" name="mission_id" value="<%= h.id %>">
-                                                        <% if(h.type_audit.includes('Sondage')) { %>
-                                                            <div class="card p-3 border-0 shadow-sm mb-3">
-                                                                <h6 class="text-primary fw-bold">Ressenti Client</h6>
-                                                                <div class="mb-3"><label class="small fw-bold">Satisfaction</label><select name="niveau_satisfaction" class="form-select"><option>Très Satisfait</option><option>Satisfait</option><option>Neutre</option><option>Insatisfait</option></select></div>
-                                                                <div class="mb-3"><label class="small fw-bold">Recommandation</label><select name="recommandation" class="form-select"><option>Oui</option><option>Non</option></select></div>
-                                                                <div class="mb-3"><label class="small fw-bold">Note / 10</label><input type="number" name="note_finale" class="form-control" max="10"></div>
-                                                                <div><label class="small fw-bold">Avis Client</label><textarea name="commentaire_libre" class="form-control" rows="3"></textarea></div>
-                                                            </div>
-                                                        <% } else { %>
-                                                            <div class="card p-3 border-0 shadow-sm mb-3">
-                                                                <h6 class="text-primary fw-bold">Évaluation</h6>
-                                                                <div class="mb-2"><label class="small fw-bold">Description</label><textarea name="description" class="form-control" rows="2" required></textarea></div>
-                                                                <div class="mb-2"><label class="small fw-bold text-success">Points Forts</label><textarea name="points_forts" class="form-control" rows="1"></textarea></div>
-                                                                <div class="mb-2"><label class="small fw-bold text-danger">À Améliorer</label><textarea name="points_ameliorer" class="form-control" rows="1"></textarea></div>
-                                                                <div class="mt-2"><label class="fw-bold">Note / 10</label><input type="number" name="note_globale" class="form-control" max="10" required></div>
-                                                            </div>
-                                                        <% } %>
+                                                        <input type="hidden" name="nom_ambassadeur" value="<%= userName %>">
+                                                        <input type="hidden" name="nom_entreprise" value="<%= h.titre %>">
+                                                        <div class="card p-3 border-0 shadow-sm mb-3">
+                                                            <h6 class="text-primary fw-bold">Évaluation</h6>
+                                                            <div class="mb-2"><label class="small fw-bold">Note / 10</label><input type="number" name="note_globale" class="form-control" max="10" required></div>
+                                                            <div><label class="small fw-bold">Commentaire</label><textarea name="commentaire" class="form-control" rows="3" required></textarea></div>
+                                                        </div>
                                                         <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Envoyer</button>
                                                     </form>
                                                 </div>
