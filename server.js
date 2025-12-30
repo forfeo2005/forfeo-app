@@ -20,7 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v5_final_ultimate',
+    secret: 'forfeo_v6_survey_update',
     resave: false, 
     saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
@@ -28,10 +28,9 @@ app.use(session({
 
 app.set('view engine', 'ejs');
 
-// --- SETUP BDD & SEEDING CONTENU ---
+// --- SETUP BDD & MIGRATION ---
 async function setupDatabase() {
     try {
-        // 1. Structure des tables
         await pool.query(`
             CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, nom VARCHAR(255), email VARCHAR(255) UNIQUE, password VARCHAR(255), role VARCHAR(50), entreprise_id INTEGER, forfait VARCHAR(50) DEFAULT 'Freemium');
             CREATE TABLE IF NOT EXISTS missions (id SERIAL PRIMARY KEY, entreprise_id INTEGER, ambassadeur_id INTEGER, titre VARCHAR(255), type_audit VARCHAR(100), description TEXT, recompense VARCHAR(50), statut VARCHAR(50) DEFAULT 'en_attente', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
@@ -41,13 +40,17 @@ async function setupDatabase() {
             CREATE TABLE IF NOT EXISTS audit_reports (id SERIAL PRIMARY KEY, mission_id INTEGER UNIQUE, ambassadeur_id INTEGER, details JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
         `);
 
-        // 2. Colonnes manquantes (Sécurité migration)
+        // MIGRATION : Ajout colonnes pour les sondages
+        await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS client_email VARCHAR(255);`);
+        await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS client_nom VARCHAR(255);`);
+        
+        // MIGRATION : Colonnes existantes
         await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS type_audit VARCHAR(100) DEFAULT 'Audit Standard';`);
         await pool.query(`ALTER TABLE missions ALTER COLUMN recompense TYPE VARCHAR(50);`);
         await pool.query(`ALTER TABLE formations_modules ADD COLUMN IF NOT EXISTS image_icon VARCHAR(50);`);
         await pool.query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'unique_user_module') THEN ALTER TABLE formations_scores ADD CONSTRAINT unique_user_module UNIQUE (user_id, module_id); END IF; END $$;`);
 
-        // 3. SEED MODULES (Images pertinentes)
+        // SEED MODULES
         const modules = [
             { id: 1, titre: "Excellence du Service Client", desc: "Créer un effet WOW et fidéliser.", icon: "bi-emoji-smile", duree: "30 min" },
             { id: 2, titre: "Communication & Écoute Active", desc: "Le ton, l'empathie et la reformulation.", icon: "bi-ear", duree: "40 min" },
@@ -55,54 +58,28 @@ async function setupDatabase() {
             { id: 4, titre: "Culture Qualité & Feedback", desc: "Utiliser le feedback pour s'améliorer.", icon: "bi-graph-up-arrow", duree: "25 min" },
             { id: 5, titre: "Professionnalisme & Collaboration", desc: "Fiabilité et image de marque au travail.", icon: "bi-people", duree: "35 min" }
         ];
-
         for (const m of modules) {
             await pool.query(`INSERT INTO formations_modules (id, titre, description, image_icon, duree) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET titre = $2, description = $3, image_icon = $4, duree = $5`, [m.id, m.titre, m.desc, m.icon, m.duree]);
         }
 
-        // 4. SEED VRAIES QUESTIONS (75 Questions)
+        // SEED QUESTIONS
         const count = await pool.query("SELECT COUNT(*) FROM formations_questions");
         if (parseInt(count.rows[0].count) < 75) {
-            console.log("Génération des questions réalistes...");
+            console.log("Génération des questions...");
             await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
-            
-            // Fonction helper pour insérer
-            const addQ = async (mId, q, a, b, c, rep) => {
-                await pool.query(`INSERT INTO formations_questions (module_id, question, option_a, option_b, option_c, reponse_correcte) VALUES ($1, $2, $3, $4, $5, $6)`, [mId, q, a, b, c, rep]);
-            };
-
-            // Module 1 : Service Client (15 Q)
-            for(let i=1; i<=15; i++) {
-                await addQ(1, `Situation ${i}: Un client entre dans le magasin. Que faites-vous ?`, 
-                "Je continue à regarder mon téléphone.", "Je le salue immédiatement avec un sourire.", "J'attends qu'il vienne vers moi.", "B");
-            }
-            // Module 2 : Communication (15 Q)
-            for(let i=1; i<=15; i++) {
-                await addQ(2, `Question ${i}: L'écoute active implique de :`, 
-                "Interrompre pour donner son avis.", "Reformuler ce que le client a dit.", "Penser à sa réponse pendant qu'il parle.", "B");
-            }
-            // Module 3 : Gestion Conflits (15 Q)
-            for(let i=1; i<=15; i++) {
-                await addQ(3, `Scénario ${i}: Le client est furieux d'une erreur.`, 
-                "Je lui dis de se calmer.", "Je m'excuse et cherche une solution.", "Ce n'est pas ma faute.", "B");
-            }
-            // Module 4 : Feedback (15 Q)
-            for(let i=1; i<=15; i++) {
-                await addQ(4, `Question ${i}: Un feedback constructif sert à :`, 
-                "Punir l'employé.", "Améliorer les processus.", "Flatter l'ego.", "B");
-            }
-            // Module 5 : Pro (15 Q)
-            for(let i=1; i<=15; i++) {
-                await addQ(5, `Question ${i}: La ponctualité démontre :`, 
-                "Que je n'ai rien d'autre à faire.", "Mon respect pour l'équipe et le client.", "Que je suis stressé.", "B");
-            }
+            const addQ = async (mId, q, a, b, c, rep) => { await pool.query(`INSERT INTO formations_questions (module_id, question, option_a, option_b, option_c, reponse_correcte) VALUES ($1, $2, $3, $4, $5, $6)`, [mId, q, a, b, c, rep]); };
+            for(let i=1; i<=15; i++) await addQ(1, `Situation ${i} Service Client : Que faire ?`, "Ignorer", "Agir Pro", "Attendre", "B");
+            for(let i=1; i<=15; i++) await addQ(2, `Question ${i} Comm : L'écoute c'est ?`, "Parler", "Comprendre", "Juger", "B");
+            for(let i=1; i<=15; i++) await addQ(3, `Conflit ${i} : Le client crie.`, "Crier aussi", "Calmer", "Partir", "B");
+            for(let i=1; i<=15; i++) await addQ(4, `Qualité ${i} : Le but est ?`, "Argent", "Satisfaction", "Vitesse", "B");
+            for(let i=1; i<=15; i++) await addQ(5, `Pro ${i} : La tenue doit être ?`, "Sale", "Propre", "Négligée", "B");
         }
-        console.log("✅ FORFEO LAB : Base de données prête et chargée.");
+        console.log("✅ FORFEO LAB : Base de données prête (Mode Sondage Actif).");
     } catch (err) { console.error("Erreur DB:", err); }
 }
 setupDatabase();
 
-// --- ROUTES DE BASE ---
+// --- ROUTES BASE ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
 app.get('/politique-confidentialite', (req, res) => res.render('politique-confidentialite', { userName: req.session.userName || null }));
@@ -155,45 +132,28 @@ app.post('/profil/delete', async (req, res) => {
     res.redirect('/?msg=Compte_supprime');
 });
 
-// --- ADMIN (VISUALISATION RAPPORT AVANT APPROBATION) ---
+// --- ADMIN ---
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const missions = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id ORDER BY m.id DESC");
     const users = await pool.query("SELECT * FROM users ORDER BY id DESC");
     res.render('admin-dashboard', { missions: missions.rows, users: users.rows, userName: req.session.userName });
 });
-
-// Route pour voir le détail
 app.get('/admin/rapport/:missionId', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
-    const data = await pool.query(`
-        SELECT r.*, m.titre, m.type_audit, m.id as mission_id, u.nom as ambassadeur_nom 
-        FROM audit_reports r 
-        JOIN missions m ON r.mission_id = m.id 
-        LEFT JOIN users u ON r.ambassadeur_id = u.id 
-        WHERE m.id = $1`, [req.params.missionId]);
-
-    if(data.rows.length === 0) return res.send("Aucun rapport trouvé pour cette mission.");
-    
-    res.render('admin-rapport-detail', { 
-        rapport: data.rows[0], 
-        details: data.rows[0].details,
-        userName: req.session.userName 
-    });
+    const data = await pool.query(`SELECT r.*, m.titre, m.type_audit, m.client_email, m.id as mission_id, u.nom as ambassadeur_nom FROM audit_reports r JOIN missions m ON r.mission_id = m.id LEFT JOIN users u ON r.ambassadeur_id = u.id WHERE m.id = $1`, [req.params.missionId]);
+    if(data.rows.length === 0) return res.send("Aucun rapport.");
+    res.render('admin-rapport-detail', { rapport: data.rows[0], details: data.rows[0].details, userName: req.session.userName });
 });
-
 app.post('/admin/approuver-mission', async (req, res) => {
     const mission = await pool.query("SELECT statut FROM missions WHERE id = $1", [req.body.id_mission]);
     let newStatut = 'actif';
     if(mission.rows[0].statut === 'soumis') newStatut = 'approuve';
-    
     await pool.query("UPDATE missions SET statut = $1 WHERE id = $2", [newStatut, req.body.id_mission]);
     res.redirect('/admin/dashboard?msg=Approuve');
 });
-
 app.post('/admin/rejeter-rapport', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
-    // On supprime le rapport et on remet la mission en 'actif' pour un autre ambassadeur
     await pool.query("DELETE FROM audit_reports WHERE mission_id = $1", [req.body.id_mission]);
     await pool.query("UPDATE missions SET statut = 'actif', ambassadeur_id = NULL WHERE id = $1", [req.body.id_mission]);
     res.redirect('/admin/dashboard?msg=Rapport_Rejete');
@@ -208,11 +168,20 @@ app.get('/entreprise/dashboard', async (req, res) => {
     res.render('entreprise-dashboard', { user: user.rows[0], employeesScores: scores.rows, missions: missions.rows, userName: req.session.userName });
 });
 
+// Route Audit Classique
 app.post('/entreprise/creer-audit', async (req, res) => {
     const cleanRecompense = req.body.recompense.replace('$', '').trim();
     await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut) VALUES ($1, $2, $3, $4, $5, 'en_attente')", 
     [req.session.userId, req.body.titre, req.body.type_audit, req.body.description || '', cleanRecompense]);
-    res.redirect('/entreprise/dashboard?msg=Cree');
+    res.redirect('/entreprise/dashboard?msg=Audit_Publie');
+});
+
+// Route NOUVEAU SONDAGE
+app.post('/entreprise/commander-sondage', async (req, res) => {
+    const cleanRecompense = req.body.recompense.replace('$', '').trim();
+    await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, client_nom, client_email) VALUES ($1, $2, $3, $4, $5, 'en_attente', $6, $7)", 
+    [req.session.userId, "Sondage : " + req.body.client_nom, req.body.type_sondage, "Enquête de satisfaction client à réaliser par courriel.", cleanRecompense, req.body.client_nom, req.body.client_email]);
+    res.redirect('/entreprise/dashboard?msg=Sondage_Commande');
 });
 
 app.post('/entreprise/ajouter-employe', async (req, res) => {
@@ -222,42 +191,28 @@ app.post('/entreprise/ajouter-employe', async (req, res) => {
     res.redirect('/entreprise/dashboard?msg=Employe_ajoute');
 });
 
-// FIX TÉLÉCHARGEMENT PDF ENTREPRISE
 app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
-    
-    // LEFT JOIN pour éviter le crash si l'ambassadeur a supprimé son compte
-    const query = `
-        SELECT r.details, m.titre, m.type_audit, m.created_at, COALESCE(u.nom, 'Utilisateur supprimé') as ambassadeur_nom 
-        FROM audit_reports r 
-        JOIN missions m ON r.mission_id = m.id 
-        LEFT JOIN users u ON r.ambassadeur_id = u.id 
-        WHERE m.id = $1 AND m.entreprise_id = $2
-    `;
-    
+    const query = `SELECT r.details, m.titre, m.type_audit, m.created_at, COALESCE(u.nom, 'Ambassadeur') as ambassadeur_nom FROM audit_reports r JOIN missions m ON r.mission_id = m.id LEFT JOIN users u ON r.ambassadeur_id = u.id WHERE m.id = $1 AND m.entreprise_id = $2`;
     const report = await pool.query(query, [req.params.id, req.session.userId]);
-    
-    if(report.rows.length === 0) return res.send("Rapport non trouvé ou non autorisé.");
+    if(report.rows.length === 0) return res.send("Rapport non disponible.");
 
     const doc = new PDFDocument();
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=rapport-${req.params.id}.pdf`);
     doc.pipe(res);
-
-    doc.fontSize(20).fillColor('#0061ff').text('RAPPORT D\'AUDIT', { align: 'center' });
+    doc.fontSize(20).fillColor('#0061ff').text('RAPPORT FORFEO LAB', { align: 'center' });
     doc.moveDown();
     doc.fontSize(12).fillColor('black');
-    doc.text(`Mission : ${report.rows[0].titre}`);
+    doc.text(`Sujet : ${report.rows[0].titre}`);
     doc.text(`Type : ${report.rows[0].type_audit}`);
-    doc.text(`Auditeur : ${report.rows[0].ambassadeur_nom}`);
+    doc.text(`Réalisé le : ${new Date(report.rows[0].created_at).toLocaleDateString()}`);
     doc.moveDown();
     doc.fontSize(14).text('RÉSULTATS', { underline: true });
     doc.moveDown();
-
     const details = report.rows[0].details;
     if (details) {
         for (const [key, value] of Object.entries(details)) {
-            // Affichage propre
             doc.font('Helvetica-Bold').text(`${key.toUpperCase()} : `);
             doc.font('Helvetica').text(`${value}`);
             doc.moveDown(0.5);
@@ -269,6 +224,7 @@ app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
 // --- AMBASSADEUR ---
 app.get('/ambassadeur/dashboard', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
+    // On sélectionne TOUTES les colonnes pour avoir accès à client_email
     const missions = await pool.query("SELECT * FROM missions WHERE statut = 'actif'");
     const historique = await pool.query("SELECT * FROM missions WHERE ambassadeur_id = $1 ORDER BY id DESC", [req.session.userId]);
     const gains = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'", [req.session.userId]);
@@ -286,7 +242,7 @@ app.post('/ambassadeur/soumettre-rapport', async (req, res) => {
     res.redirect('/ambassadeur/dashboard?msg=Soumis');
 });
 
-// --- EMPLOYE ACADEMIE ---
+// --- ACADEMIE ---
 app.get('/employe/dashboard', async (req, res) => {
     if (req.session.userRole !== 'employe') return res.redirect('/login');
     const modules = await pool.query("SELECT * FROM formations_modules ORDER BY id ASC");
@@ -302,8 +258,6 @@ app.post('/formations/soumettre-quizz', async (req, res) => {
     const questions = await pool.query("SELECT id, reponse_correcte FROM formations_questions WHERE module_id = $1", [req.body.module_id]);
     let score = 0;
     questions.rows.forEach(q => { if (req.body['q' + q.id] === q.reponse_correcte) score++; });
-    
-    // 12/15 requis
     const statut = score >= 12 ? 'reussi' : 'echec';
     const code = Math.random().toString(36).substring(2, 12).toUpperCase();
     await pool.query(`INSERT INTO formations_scores (user_id, module_id, meilleur_score, tentatives, statut, code_verif) VALUES ($1, $2, $3, 1, $4, $5) ON CONFLICT (user_id, module_id) DO UPDATE SET meilleur_score = GREATEST(formations_scores.meilleur_score, EXCLUDED.meilleur_score), tentatives = formations_scores.tentatives + 1, statut = EXCLUDED.statut`, [req.session.userId, req.body.module_id, score, statut, code]);
@@ -321,7 +275,6 @@ app.get('/certificat/:code', async (req, res) => {
     doc.fontSize(20).fillColor('black').text(`Décerné à ${data.rows[0].nom}`, {align:'center'});
     doc.moveDown();
     doc.fontSize(15).text(`Module : ${data.rows[0].titre}`, {align:'center'});
-    doc.text(`Score : ${data.rows[0].meilleur_score}/15`, {align:'center'});
     doc.end();
 });
 
