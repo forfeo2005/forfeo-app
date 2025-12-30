@@ -37,7 +37,7 @@
                     <% } else { %>
                         <li class="nav-item"><a class="nav-link hover-underline me-2" href="/login">Connexion</a></li>
                         <li class="nav-item d-flex gap-2">
-                             <a class="btn btn-outline-premium rounded-pill px-4 py-2 fw-bold" href="/register?role=ambassadeur">Espace Ambassadeur</a>
+                             <a class="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold border-2" href="/register?role=ambassadeur">Espace Ambassadeur</a>
                              <a class="btn btn-primary-glow rounded-pill px-4 py-2 fw-bold text-white shadow-lg" href="/register?role=entreprise">Espace Entreprise <i class="bi bi-arrow-right-short"></i></a>
                         </li>
                     <% } %>
@@ -55,12 +55,21 @@
                         <span class="fw-bold text-primary small text-uppercase">La référence qualité au Québec</span>
                     </div>
                     <h1 class="display-3 fw-bolder mb-4 lh-sm">Transformez chaque visite en <span class="text-primary">donnée exploitable.</span></h1>
-                    <p class="lead text-muted mb-5 pe-lg-5">FORFEO LAB n'est pas juste un outil d'audit. C'est votre partenaire d'intelligence terrain qui connecte votre marque à la réalité de vos clients.</p>
+                    <p class="lead text-muted mb-5 pe-lg-5">
+                        FORFEO LAB connecte les entreprises québécoises soucieuses de leur image avec des auditeurs qualifiés. 
+                        Mesurez l'expérience client réelle, identifiez les failles et formez vos équipes.
+                    </p>
                     
                     <div class="d-flex flex-wrap gap-4 align-items-center">
-                        <a href="/register?role=entreprise" class="btn btn-primary-glow btn-lg rounded-pill px-5 py-3 shadow-lg fw-bold">
+                        <a href="/register?role=entreprise" class="btn btn-primary btn-lg rounded-pill px-5 py-3 shadow-lg fw-bold">
                             Commencer maintenant
                         </a>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="small fw-bold">
+                                <div class="text-primary">Conformité Loi 25</div>
+                                <div class="text-muted"><i class="bi bi-shield-check text-success"></i> Données sécurisées</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -71,6 +80,22 @@
                                 <h5 class="fw-bold m-0"><i class="bi bi-grid-fill text-primary me-2"></i> Tableau de bord</h5>
                                 <span class="badge bg-success">Score: 94%</span>
                             </div>
+                            
+                            <div class="row g-3 mb-4">
+                                <div class="col-6">
+                                    <div class="p-3 rounded-4 bg-light text-center border">
+                                        <div class="h2 fw-bold mb-0 text-primary">8.7</div>
+                                        <div class="small text-muted">Note Globale</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 rounded-4 bg-light text-center border">
+                                        <div class="h2 fw-bold mb-0 text-success">A+</div>
+                                        <div class="small text-muted">Qualité Service</div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="bg-primary text-white p-4 rounded-4 shadow-sm d-flex align-items-center gap-3">
                                 <i class="bi bi-stars fs-1"></i>
                                 <div>
@@ -86,17 +111,86 @@
         </div>
     </section>
 
-    <footer class="py-5 bg-white border-top">
-        <div class="container text-center">
-            <div class="mb-4 d-inline-flex flex-column align-items-center">
-                <img src="/images/logo-forfeo.png" height="30" style="filter: grayscale(1); opacity: 0.5;">
-                <span style="font-size: 10px; font-weight: 900; letter-spacing: 3px; color: #aaa;">LAB</span>
+    <section class="stats-row py-5">
+        <div class="container">
+            <div class="text-center mb-5 reveal-up">
+                <h6 class="text-uppercase text-primary fw-bold letter-spacing-2">Pourquoi l'expérience client ?</h6>
+                <h2 class="fw-bold">L'impact direct sur votre chiffre d'affaires</h2>
             </div>
-            <p class="mb-0 text-muted fw-bold">© 2025 Forfeo Lab Inc.</p>
+            <div class="row g-4 justify-content-center reveal-up">
+                <div class="col-md-4">
+                    <div class="stat-item h-100">
+                        <i class="bi bi-graph-up-arrow fs-1 text-primary mb-3 d-block"></i>
+                        <span class="stat-number">86%</span>
+                        <p class="lead fw-bold text-dark mb-2">Prêts à payer plus</p>
+                        <small class="text-muted">Des consommateurs sont prêts à payer davantage pour une meilleure expérience client.</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-item h-100">
+                        <i class="bi bi-emoji-frown fs-1 text-primary mb-3 d-block"></i>
+                        <span class="stat-number">1/3</span>
+                        <p class="lead fw-bold text-dark mb-2">Clients perdus</p>
+                        <small class="text-muted">Un client sur trois abandonne une marque qu'il aime après une seule mauvaise expérience.</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-item h-100">
+                        <i class="bi bi-people-fill fs-1 text-primary mb-3 d-block"></i>
+                        <span class="stat-number">72%</span>
+                        <p class="lead fw-bold text-dark mb-2">Bouche à oreille</p>
+                        <small class="text-muted">Des clients partageront une expérience positive avec 6 personnes ou plus.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-5 bg-white border-top">
+        <div class="container">
+            <div class="row gy-4 align-items-center">
+                <div class="col-md-4 text-center text-md-start">
+                    <div class="mb-3 d-inline-flex align-items-center">
+                        <img src="/images/logo-forfeo.png" height="30" style="filter: grayscale(1); opacity: 0.6;">
+                        <span style="font-size: 10px; font-weight: 900; letter-spacing: 3px; color: #888; margin-left:5px;">LAB</span>
+                    </div>
+                    <p class="small text-muted mb-0">
+                        Forfeo Lab Inc. est une entreprise enregistrée au Québec.
+                        <br>Tous droits réservés © 2025.
+                    </p>
+                </div>
+                
+                <div class="col-md-4 text-center">
+                    <h6 class="fw-bold text-uppercase small text-muted mb-3">Légal & Conformité</h6>
+                    <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                        <li><a href="/politique-confidentialite" class="text-decoration-none text-muted small hover-primary"><i class="bi bi-file-lock"></i> Politique de Confidentialité (Loi 25)</a></li>
+                        <li><a href="/conditions-utilisation" class="text-decoration-none text-muted small hover-primary"><i class="bi bi-file-text"></i> Conditions Générales d'Utilisation</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-md-4 text-center text-md-end">
+                    <div class="p-3 bg-light rounded-3 border">
+                        <p class="mb-1 fw-bold small text-dark"><i class="bi bi-info-circle-fill text-primary"></i> Statut des Ambassadeurs</p>
+                        <p class="mb-0 x-small text-muted" style="font-size: 0.75rem; line-height: 1.4;">
+                            Les ambassadeurs inscrits sur la plateforme agissent en tant que <strong>travailleurs autonomes indépendants</strong>. Ils ne sont pas employés par Forfeo Lab et sont responsables de leurs déclarations fiscales.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-4 opacity-10">
+            
+            <div class="text-center x-small text-muted" style="font-size: 0.7rem;">
+                <p class="mb-0">
+                    Conformément aux dispositions de la Loi 25 (Loi modernisant des dispositions législatives en matière de protection des renseignements personnels), 
+                    Forfeo Lab a désigné un Responsable de la protection des renseignements personnels. Pour toute question : confidentialite@forfeo.com.
+                </p>
+            </div>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/home-animations.js"></script>
     <%- include('partials/forfy') %>
 </body>
 </html>
