@@ -4,11 +4,29 @@
     <meta charset="UTF-8">
     <title>Admin | FORFEO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/premium-dashboard.css">
+    
+    <script>
+        function filterHistory() {
+            let input = document.getElementById("searchHistory").value.toUpperCase();
+            let table = document.getElementById("historyTable");
+            let tr = table.getElementsByTagName("tr");
+            for (let i = 0; i < tr.length; i++) {
+                // Recherche dans le nom de l'ambassadeur (colonne 0)
+                let td = tr[i].getElementsByTagName("td")[0];
+                if (td) {
+                    let txtValue = td.textContent || td.innerText;
+                    tr[i].style.display = txtValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+                }
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="premium-bg"></div>
     <div class="container py-5">
+        
         <div class="d-flex justify-content-between align-items-center mb-5">
             <h3 class="fw-bold">Tableau de Bord Admin</h3>
             <div class="d-flex gap-2">
@@ -17,92 +35,144 @@
             </div>
         </div>
 
-        <div class="row mb-5">
-            <div class="col-md-12">
-                <div class="glass-card bg-success text-white">
-                    <h5 class="fw-bold text-white mb-2">💰 Caisse de Sortie (À Payer)</h5>
-                    <div class="display-4 fw-bold"><%= totalAPayer %> $ CAD</div>
-                    <p class="small opacity-75">Montant total des missions approuvées mais non encore marquées comme payées.</p>
+        <ul class="nav nav-pills mb-4 gap-3 p-2 glass-card d-inline-flex" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active rounded-pill fw-bold" id="validation-tab" data-bs-toggle="tab" data-bs-target="#validation" type="button" role="tab">
+                    <i class="bi bi-check-circle"></i> Validation Audits
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill fw-bold" id="paiements-tab" data-bs-toggle="tab" data-bs-target="#paiements" type="button" role="tab">
+                    <i class="bi bi-wallet2"></i> Centre de Paiements
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill fw-bold" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+                    <i class="bi bi-people"></i> Utilisateurs
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="adminTabsContent">
+            
+            <div class="tab-pane fade show active" id="validation" role="tabpanel">
+                <div class="glass-card">
+                    <h5 class="fw-bold mb-3 text-primary">Gestion des Missions (Approbation)</h5>
+                    <table class="premium-table">
+                        <thead><tr><th>ENTREPRISE</th><th>TITRE</th><th>STATUT</th><th>ACTION</th></tr></thead>
+                        <tbody>
+                            <% missions.filter(m => m.statut !== 'approuve').forEach(m => { %>
+                                <tr>
+                                    <td class="fw-bold"><%= m.entreprise_nom %></td>
+                                    <td><%= m.titre %></td>
+                                    <td>
+                                        <% if(m.statut === 'en_attente') { %><span class="badge bg-warning text-dark">EN ATTENTE</span><% } %>
+                                        <% if(m.statut === 'soumis') { %><span class="badge bg-primary">RAPPORT SOUMIS</span><% } %>
+                                        <% if(m.statut === 'actif') { %><span class="badge bg-success">EN LIGNE</span><% } %>
+                                        <% if(m.statut === 'reserve') { %><span class="badge bg-secondary">EN COURS</span><% } %>
+                                    </td>
+                                    <td>
+                                        <% if (m.statut === 'en_attente') { %>
+                                            <form action="/admin/approuver-mission" method="POST">
+                                                <input type="hidden" name="id_mission" value="<%= m.id %>">
+                                                <button class="btn btn-sm btn-success rounded-pill px-3">Publier</button>
+                                            </form>
+                                        <% } else if (m.statut === 'soumis') { %>
+                                            <a href="/admin/rapport/<%= m.id %>" class="btn btn-sm btn-primary rounded-pill px-3">Examiner</a>
+                                        <% } else { %>
+                                            <span class="text-muted small">--</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        </div>
 
-        <div class="glass-card mb-5 border-success">
-            <h5 class="fw-bold mb-3 text-success">Centre de Paiement</h5>
-            <table class="premium-table">
-                <thead><tr><th>Ambassadeur</th><th>Mission</th><th>Montant</th><th>Action</th></tr></thead>
-                <tbody>
-                    <% missions.filter(m => m.statut === 'approuve' && m.statut_paiement !== 'paye').forEach(m => { %>
-                        <tr>
-                            <td class="fw-bold"><%= m.ambassadeur_id %> <span class="small text-muted">(ID)</span></td>
-                            <td><%= m.titre %></td>
-                            <td class="fw-bold text-success"><%= m.recompense %>$</td>
-                            <td>
-                                <form action="/admin/payer-ambassadeur" method="POST" onsubmit="return confirm('Avez-vous effectué le virement ?');">
-                                    <input type="hidden" name="id_mission" value="<%= m.id %>">
-                                    <button class="btn btn-success btn-sm rounded-pill px-3">
-                                        <i class="bi bi-cash-coin"></i> Confirmer Paiement
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    <% }) %>
-                    <% if(missions.filter(m => m.statut === 'approuve' && m.statut_paiement !== 'paye').length === 0) { %>
-                        <tr><td colspan="4" class="text-center text-muted">Tout est à jour. ✅</td></tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
+            <div class="tab-pane fade" id="paiements" role="tabpanel">
+                <div class="glass-card bg-success text-white mb-4 p-4">
+                    <h5 class="fw-bold text-white mb-2">💰 Caisse de Sortie (À Payer)</h5>
+                    <div class="display-4 fw-bold"><%= totalAPayer %> $ CAD</div>
+                    <p class="small opacity-75">Montant total des missions approuvées mais non payées.</p>
+                </div>
 
-        <div class="glass-card mb-5">
-            <h5 class="fw-bold mb-3">Validation des Audits</h5>
-            <table class="premium-table">
-                <thead><tr><th>ENTREPRISE</th><th>TITRE</th><th>STATUT</th><th>ACTION</th></tr></thead>
-                <tbody>
-                    <% missions.filter(m => m.statut !== 'approuve').forEach(m => { %>
-                        <tr>
-                            <td class="fw-bold"><%= m.entreprise_nom %></td>
-                            <td><%= m.titre %></td>
-                            <td>
-                                <% if(m.statut === 'en_attente') { %><span class="badge bg-warning text-dark">EN ATTENTE</span><% } %>
-                                <% if(m.statut === 'soumis') { %><span class="badge bg-primary">RAPPORT SOUMIS</span><% } %>
-                                <% if(m.statut === 'actif') { %><span class="badge bg-success">EN LIGNE</span><% } %>
-                                <% if(m.statut === 'reserve') { %><span class="badge bg-secondary">EN COURS</span><% } %>
-                            </td>
-                            <td>
-                                <% if (m.statut === 'en_attente') { %>
-                                    <form action="/admin/approuver-mission" method="POST">
-                                        <input type="hidden" name="id_mission" value="<%= m.id %>">
-                                        <button class="btn btn-sm btn-success rounded-pill px-3">Publier</button>
-                                    </form>
-                                <% } else if (m.statut === 'soumis') { %>
-                                    <a href="/admin/rapport/<%= m.id %>" class="btn btn-sm btn-primary rounded-pill px-3">Examiner</a>
-                                <% } else { %>
-                                    <span class="text-muted small">--</span>
-                                <% } %>
-                            </td>
-                        </tr>
-                    <% }) %>
-                </tbody>
-            </table>
-        </div>
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="glass-card border-success h-100">
+                            <h5 class="fw-bold mb-3 text-success">Action : Confirmer Virement</h5>
+                            <table class="premium-table">
+                                <thead><tr><th>Ambassadeur</th><th>Montant</th><th>Action</th></tr></thead>
+                                <tbody>
+                                    <% missions.filter(m => m.statut === 'approuve' && m.statut_paiement !== 'paye').forEach(m => { %>
+                                        <tr>
+                                            <td class="fw-bold"><%= m.ambassadeur_id %> <span class="small text-muted">(ID)</span></td>
+                                            <td class="fw-bold text-success"><%= m.recompense %>$</td>
+                                            <td>
+                                                <form action="/admin/payer-ambassadeur" method="POST" onsubmit="return confirm('Avez-vous effectué le virement ?');">
+                                                    <input type="hidden" name="id_mission" value="<%= m.id %>">
+                                                    <button class="btn btn-success btn-sm rounded-pill">Payer</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                    <% if(missions.filter(m => m.statut === 'approuve' && m.statut_paiement !== 'paye').length === 0) { %>
+                                        <tr><td colspan="3" class="text-center text-muted">Aucun paiement en attente.</td></tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
-        <div class="glass-card">
-            <h5 class="fw-bold mb-3">Base Utilisateurs</h5>
-            <table class="premium-table">
-                <thead><tr><th>NOM</th><th>EMAIL</th><th>RÔLE</th></tr></thead>
-                <tbody>
-                    <% users.forEach(u => { %>
-                        <tr>
-                            <td><%= u.nom %></td>
-                            <td><%= u.email %></td>
-                            <td><span class="badge bg-light text-dark border"><%= u.role %></span></td>
-                        </tr>
-                    <% }) %>
-                </tbody>
-            </table>
+                    <div class="col-lg-6">
+                        <div class="glass-card h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0">Historique des Paiements</h5>
+                                <input type="text" id="searchHistory" onkeyup="filterHistory()" placeholder="Rechercher nom..." class="form-control form-control-sm w-auto">
+                            </div>
+                            
+                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                <table class="premium-table" id="historyTable">
+                                    <thead><tr><th>Ambassadeur</th><th>Montant</th><th>Date</th></tr></thead>
+                                    <tbody>
+                                        <% paiements.forEach(p => { %>
+                                            <tr>
+                                                <td class="fw-bold"><%= p.ambassadeur_nom || 'Inconnu' %></td>
+                                                <td class="text-success fw-bold"><%= p.recompense %>$</td>
+                                                <td class="small text-muted">
+                                                    <%= p.date_paiement ? new Date(p.date_paiement).toLocaleDateString() : 'N/A' %>
+                                                </td>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="users" role="tabpanel">
+                <div class="glass-card">
+                    <h5 class="fw-bold mb-3">Base Utilisateurs</h5>
+                    <table class="premium-table">
+                        <thead><tr><th>NOM</th><th>EMAIL</th><th>RÔLE</th></tr></thead>
+                        <tbody>
+                            <% users.forEach(u => { %>
+                                <tr>
+                                    <td><%= u.nom %></td>
+                                    <td><%= u.email %></td>
+                                    <td><span class="badge bg-light text-dark border"><%= u.role %></span></td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <%- include('partials/forfy') %>
 </body>
 </html>
