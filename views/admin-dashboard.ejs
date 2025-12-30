@@ -17,21 +17,59 @@
             </div>
         </div>
 
-        <div class="glass-card mb-5">
-            <h5 class="fw-bold mb-3">Gestion des Audits & Sondages</h5>
+        <div class="row mb-5">
+            <div class="col-md-12">
+                <div class="glass-card bg-success text-white">
+                    <h5 class="fw-bold text-white mb-2">💰 Caisse de Sortie (À Payer aux Ambassadeurs)</h5>
+                    <div class="display-4 fw-bold"><%= totalAPayer %> $ CAD</div>
+                    <p class="small opacity-75">Montant total des missions approuvées mais non encore versées.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card mb-5 border-success">
+            <h5 class="fw-bold mb-3 text-success">Centre de Paiement</h5>
+            <div class="alert alert-light small border">
+                <i class="bi bi-info-circle"></i> Une fois que vous avez effectué le virement (Stripe/Interac) à l'ambassadeur, cliquez sur "Confirmer Paiement" pour mettre à jour son solde.
+            </div>
             <table class="premium-table">
-                <thead><tr><th>ENTREPRISE</th><th>TITRE</th><th>TYPE</th><th>STATUT</th><th>ACTION</th></tr></thead>
+                <thead><tr><th>Ambassadeur</th><th>Mission</th><th>Montant</th><th>Action</th></tr></thead>
                 <tbody>
-                    <% missions.forEach(m => { %>
+                    <% missions.filter(m => m.statut === 'approuve' && m.statut_paiement !== 'paye').forEach(m => { %>
+                        <tr>
+                            <td class="fw-bold"><%= m.ambassadeur_id %> <span class="small text-muted">(ID)</span></td>
+                            <td><%= m.titre %></td>
+                            <td class="fw-bold text-success"><%= m.recompense %>$</td>
+                            <td>
+                                <form action="/admin/payer-ambassadeur" method="POST" onsubmit="return confirm('Confirmez-vous avoir envoyé l\'argent ?');">
+                                    <input type="hidden" name="id_mission" value="<%= m.id %>">
+                                    <button class="btn btn-success btn-sm rounded-pill px-3">
+                                        <i class="bi bi-cash-coin"></i> Confirmer Paiement
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                    <% if(missions.filter(m => m.statut === 'approuve' && m.statut_paiement !== 'paye').length === 0) { %>
+                        <tr><td colspan="4" class="text-center text-muted">Tout est payé ! ✅</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="glass-card mb-5">
+            <h5 class="fw-bold mb-3">Validation des Audits</h5>
+            <table class="premium-table">
+                <thead><tr><th>ENTREPRISE</th><th>TITRE</th><th>STATUT</th><th>ACTION</th></tr></thead>
+                <tbody>
+                    <% missions.filter(m => m.statut !== 'approuve').forEach(m => { %>
                         <tr>
                             <td class="fw-bold"><%= m.entreprise_nom %></td>
                             <td><%= m.titre %></td>
-                            <td><span class="badge bg-secondary"><%= m.type_audit %></span></td>
                             <td>
-                                <% if(m.statut === 'actif') { %><span class="badge bg-success">PUBLIÉ</span><% } %>
                                 <% if(m.statut === 'en_attente') { %><span class="badge bg-warning text-dark">EN ATTENTE</span><% } %>
                                 <% if(m.statut === 'soumis') { %><span class="badge bg-primary">RAPPORT SOUMIS</span><% } %>
-                                <% if(m.statut === 'approuve') { %><span class="badge bg-info text-dark">TERMINÉ</span><% } %>
+                                <% if(m.statut === 'actif') { %><span class="badge bg-success">EN LIGNE</span><% } %>
                                 <% if(m.statut === 'reserve') { %><span class="badge bg-secondary">EN COURS</span><% } %>
                             </td>
                             <td>
@@ -42,8 +80,6 @@
                                     </form>
                                 <% } else if (m.statut === 'soumis') { %>
                                     <a href="/admin/rapport/<%= m.id %>" class="btn btn-sm btn-primary rounded-pill px-3">Examiner</a>
-                                <% } else if (m.statut === 'approuve') { %>
-                                    <i class="bi bi-check-all text-success fs-5"></i>
                                 <% } else { %>
                                     <span class="text-muted small">--</span>
                                 <% } %>
