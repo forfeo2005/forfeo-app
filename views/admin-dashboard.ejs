@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Admin | FORFEO</title>
+    <title>Tableau de Bord Admin | FORFEO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/premium-dashboard.css">
 </head>
@@ -11,11 +11,14 @@
     <div class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-5">
             <h3 class="fw-bold">Tableau de Bord Admin</h3>
-            <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
+            <div class="d-flex gap-2">
+                <a href="/profil" class="btn btn-outline-primary btn-sm rounded-pill">Profil</a>
+                <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
+            </div>
         </div>
 
         <div class="glass-card mb-5">
-            <h5 class="fw-bold mb-3">Validation des Audits</h5>
+            <h5 class="fw-bold mb-3">Gestion des Audits</h5>
             <table class="premium-table">
                 <thead><tr><th>ENTREPRISE</th><th>TITRE</th><th>STATUT</th><th>ACTION</th></tr></thead>
                 <tbody>
@@ -23,20 +26,30 @@
                         <tr>
                             <td class="fw-bold"><%= m.entreprise_nom %></td>
                             <td><%= m.titre %></td>
-                            <td><span class="badge-status <%= m.statut %>"><%= m.statut %></span></td>
+                            <td>
+                                <% if(m.statut === 'actif') { %><span class="badge bg-success">PUBLIÉ</span><% } %>
+                                <% if(m.statut === 'en_attente') { %><span class="badge bg-warning text-dark">EN ATTENTE</span><% } %>
+                                <% if(m.statut === 'soumis') { %><span class="badge bg-primary">RAPPORT SOUMIS</span><% } %>
+                                <% if(m.statut === 'approuve') { %><span class="badge bg-info text-dark">TERMINÉ</span><% } %>
+                                <% if(m.statut === 'reserve') { %><span class="badge bg-secondary">EN COURS</span><% } %>
+                            </td>
                             <td>
                                 <% if (m.statut === 'en_attente') { %>
                                     <form action="/admin/approuver-mission" method="POST">
                                         <input type="hidden" name="id_mission" value="<%= m.id %>">
-                                        <button class="btn btn-sm btn-success rounded-pill">Publier</button>
+                                        <button class="btn btn-sm btn-success rounded-pill px-3">Publier l'annonce</button>
                                     </form>
+                                
                                 <% } else if (m.statut === 'soumis') { %>
-                                    <form action="/admin/approuver-mission" method="POST">
-                                        <input type="hidden" name="id_mission" value="<%= m.id %>">
-                                        <button class="btn btn-sm btn-primary rounded-pill">Valider Rapport</button>
-                                    </form>
+                                    <a href="/admin/rapport/<%= m.id %>" class="btn btn-sm btn-primary rounded-pill px-3">
+                                        Examiner Rapport
+                                    </a>
+                                
+                                <% } else if (m.statut === 'approuve') { %>
+                                    <i class="bi bi-check-all text-success fs-5"></i>
+                                
                                 <% } else { %>
-                                    <i class="bi bi-check-circle text-success"></i>
+                                    <span class="text-muted small">--</span>
                                 <% } %>
                             </td>
                         </tr>
