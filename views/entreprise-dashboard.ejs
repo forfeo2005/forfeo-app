@@ -22,7 +22,7 @@
             <div class="col-lg-8">
                 <div class="glass-card h-100">
                     <h2 class="fw-bold mb-1">Tableau de Bord</h2>
-                    <p class="text-muted">Performance et Conformité.</p>
+                    <p class="text-muted">Gérez vos audits mystères et sondages clients.</p>
                 </div>
             </div>
             <div class="col-lg-4">
@@ -37,30 +37,77 @@
 
         <div class="row g-4">
             <div class="col-lg-4">
-                <div class="glass-card">
-                    <h5 class="fw-bold mb-3">Nouvel Audit</h5>
+                
+                <div class="glass-card mb-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-incognito text-primary"></i> Nouvel Audit Mystère</h5>
                     <form action="/entreprise/creer-audit" method="POST">
-                        <input type="text" name="titre" placeholder="Titre / Lieu" class="form-control mb-2" required>
+                        <input type="text" name="titre" placeholder="Lieu (ex: Magasin Laval)" class="form-control mb-2" required>
                         <select name="type_audit" class="form-select mb-2">
                             <option>Audit Standard (Accueil)</option>
                             <option>Audit Propreté</option>
                             <option>Audit Téléphonique</option>
                         </select>
                         <input type="text" name="recompense" placeholder="Récompense (ex: 50)" class="form-control mb-3" required>
-                        <button class="btn btn-primary w-100 rounded-pill">Publier</button>
+                        <button class="btn btn-primary w-100 rounded-pill">Publier l'Audit</button>
                     </form>
-                    <hr>
-                    <h6 class="fw-bold mt-4">Ajouter un employé</h6>
-                    <form action="/entreprise/ajouter-employe" method="POST">
-                        <input type="email" name="email" placeholder="Email" class="form-control mb-2" required>
-                        <input type="password" name="password" placeholder="Mot de passe" class="form-control mb-2" required>
-                        <button class="btn btn-dark w-100 rounded-pill">Inscrire</button>
+                </div>
+
+                <div class="glass-card border border-info">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-chat-left-text text-info"></i> Commander un Sondage</h5>
+                    <p class="small text-muted">Un ambassadeur contactera votre client en votre nom.</p>
+                    <form action="/entreprise/commander-sondage" method="POST">
+                        <input type="text" name="client_nom" placeholder="Nom du Client" class="form-control mb-2" required>
+                        <input type="email" name="client_email" placeholder="Email du Client" class="form-control mb-2" required>
+                        <select name="type_sondage" class="form-select mb-2">
+                            <option value="Sondage Satisfaction">Sondage Satisfaction</option>
+                            <option value="Sondage Qualité Service">Qualité Service</option>
+                            <option value="Sondage Après-Vente">Suivi Après-Vente</option>
+                        </select>
+                        <input type="text" name="recompense" placeholder="Récompense Ambassadeur (ex: 20)" class="form-control mb-3" required>
+                        <button class="btn btn-info text-white w-100 rounded-pill">Commander</button>
+                    </form>
+                </div>
+
+                <div class="glass-card mt-4">
+                    <h6 class="fw-bold"><i class="bi bi-person-plus"></i> Inscrire Employé</h6>
+                    <form action="/entreprise/ajouter-employe" method="POST" class="mt-2">
+                        <input type="email" name="email" placeholder="Email" class="form-control mb-2 form-control-sm" required>
+                        <input type="password" name="password" placeholder="Mot de passe" class="form-control mb-2 form-control-sm" required>
+                        <button class="btn btn-dark w-100 rounded-pill btn-sm">Ajouter</button>
                     </form>
                 </div>
             </div>
 
             <div class="col-lg-8">
                 <div class="glass-card mb-4">
+                    <h5 class="fw-bold mb-3">Historique (Audits & Sondages)</h5>
+                    <table class="premium-table">
+                        <thead><tr><th>Mission</th><th>Type</th><th>Statut</th><th>Rapport</th></tr></thead>
+                        <tbody>
+                            <% missions.forEach(m => { %>
+                                <tr>
+                                    <td class="fw-bold">
+                                        <%= m.titre %> 
+                                        <% if(m.client_email) { %><br><span class="text-muted small"><i class="bi bi-envelope"></i> <%= m.client_email %></span><% } %>
+                                    </td>
+                                    <td><%= m.type_audit %></td>
+                                    <td><span class="badge-status <%= m.statut %>"><%= m.statut %></span></td>
+                                    <td>
+                                        <% if(m.statut === 'approuve') { %>
+                                            <a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-primary rounded-pill">
+                                                <i class="bi bi-download"></i> PDF
+                                            </a>
+                                        <% } else { %>
+                                            <span class="text-muted small">--</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="glass-card">
                     <h5 class="fw-bold mb-3">Résultats Académie (Employés)</h5>
                     <table class="premium-table">
                         <thead><tr><th>Employé</th><th>Module</th><th>Note</th><th>État</th></tr></thead>
@@ -71,30 +118,6 @@
                                     <td><%= s.titre %></td>
                                     <td><span class="text-primary fw-bold"><%= Math.round((s.meilleur_score/15)*100) %>%</span></td>
                                     <td><% if(s.statut === 'reussi') { %><span class="badge bg-success">Certifié</span><% } else { %>En cours<% } %></td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="glass-card">
-                    <h5 class="fw-bold mb-3">Historique des Audits</h5>
-                    <table class="premium-table">
-                        <thead><tr><th>Mission</th><th>Statut</th><th>Rapport</th></tr></thead>
-                        <tbody>
-                            <% missions.forEach(m => { %>
-                                <tr>
-                                    <td class="fw-bold"><%= m.titre %></td>
-                                    <td><span class="badge bg-secondary"><%= m.statut %></span></td>
-                                    <td>
-                                        <% if(m.statut === 'approuve') { %>
-                                            <a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-primary rounded-pill">
-                                                <i class="bi bi-download"></i> PDF
-                                            </a>
-                                        <% } else { %>
-                                            <span class="text-muted small">--</span>
-                                        <% } %>
-                                    </td>
                                 </tr>
                             <% }) %>
                         </tbody>
