@@ -10,12 +10,14 @@
     <div class="container py-5" style="max-width: 800px;">
         <a href="/employe/dashboard" class="btn btn-outline-secondary btn-sm mb-4 rounded-pill">← Retour</a>
         
-        <div class="glass-card">
-            <div class="text-center mb-5">
-                <h2 class="fw-bold text-primary"><%= module.titre %></h2>
-                <p>Répondez aux 15 questions. 80% requis pour réussir.</p>
+        <div class="module-header-art mb-4">
+            <div class="module-content-art">
+                <h2 class="fw-bold"><%= module.titre %></h2>
+                <p>Répondez aux 15 questions. 80% requis.</p>
             </div>
+        </div>
 
+        <div class="glass-card">
             <form action="/formations/soumettre-quizz" method="POST">
                 <input type="hidden" name="module_id" value="<%= module.id %>">
                 
