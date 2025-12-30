@@ -2,127 +2,110 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Portail Entreprise | FORFEO</title>
+    <title>Entreprise | FORFEO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/premium-dashboard.css">
 </head>
 <body>
-    <div class="premium-bg"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
-    <div id="toast-container"></div>
-
-    <div class="container py-5 position-relative">
-        <div class="d-flex justify-content-between align-items-center mb-5 reveal-up">
-            <h3 class="fw-bold m-0"><span class="text-primary">FORFEO</span> ESPACE PRO</h3>
+    <div class="premium-bg"></div>
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <h3 class="fw-bold">Bonjour, <%= userName %> 👋</h3>
             <div class="d-flex gap-2">
-                <a href="/profil" class="btn btn-outline-premium btn-sm"><i class="bi bi-gear"></i> Profil</a>
-                <a href="/logout" class="btn btn-danger btn-sm rounded-3">Déconnexion</a>
+                <a href="/profil" class="btn btn-outline-primary btn-sm rounded-pill">Profil</a>
+                <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
             </div>
         </div>
 
         <div class="row g-4 mb-5">
             <div class="col-lg-8">
-                <div class="glass-card h-100 reveal-up">
-                    <h2 class="fw-bold mb-1">Bonjour, <%= userName %> 👋</h2>
-                    <p class="text-muted">Voici la performance de vos employés et audits.</p>
-                    <div class="d-flex gap-4 mt-4">
-                        <div class="kpi-box">
-                            <div class="h2 fw-bold text-primary count-up"><%= employeesScores.length %></div>
-                            <div class="small text-muted text-uppercase fw-bold">Formations</div>
-                        </div>
-                        <div class="vr opacity-25"></div>
-                        <div class="kpi-box">
-                            <div class="h2 fw-bold text-primary count-up"><%= missions.length %></div>
-                            <div class="small text-muted text-uppercase fw-bold">Audits</div>
-                        </div>
-                    </div>
+                <div class="glass-card h-100">
+                    <h2 class="fw-bold text-primary mb-3">Tableau de Bord</h2>
+                    <p>Suivez vos audits et la formation de vos équipes.</p>
                 </div>
             </div>
             <div class="col-lg-4">
-                <div class="glass-card h-100 bg-primary text-white d-flex flex-col justify-content-between reveal-up delay-100" style="background: linear-gradient(135deg, #0061ff, #004ecc);">
-                    <div>
-                        <div class="badge bg-white text-primary mb-2"><%= user.forfait %></div>
-                        <h5 class="fw-bold">Passez au niveau supérieur</h5>
-                        <p class="small opacity-75">Accédez aux audits illimités et rapports détaillés.</p>
-                    </div>
-                    <a href="https://buy.stripe.com/7sY4gAbPs9graUw65Ed7q0a" class="btn btn-light w-100 fw-bold shadow-sm">Passer Pro (149$)</a>
+                <div class="glass-card h-100 text-center bg-white border border-primary">
+                    <h5 class="fw-bold">Passez au niveau supérieur</h5>
+                    <a href="https://buy.stripe.com/7sY4gAbPs9graUw65Ed7q0a" class="btn btn-flash-pro w-100 py-3 rounded-pill mt-3 shadow-lg">
+                        ⚡ PASSER PRO (149$) ⚡
+                    </a>
                 </div>
             </div>
         </div>
 
         <div class="row g-4">
             <div class="col-lg-4">
-                <div class="glass-card reveal-up delay-200">
-                    <h5 class="fw-bold mb-4"><i class="bi bi-plus-circle-fill text-primary"></i> Nouvel Audit</h5>
+                <div class="glass-card">
+                    <h5 class="fw-bold mb-3">Nouvel Audit</h5>
                     <form action="/entreprise/creer-audit" method="POST">
-                        <div class="mb-3">
-                            <label class="small text-muted fw-bold mb-1">TITRE / LIEU</label>
-                            <input type="text" name="titre" placeholder="Ex: Restaurant Centre-Ville" class="form-control-premium w-100" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="small text-muted fw-bold mb-1">TYPE D'AUDIT</label>
-                            <select name="type_audit" class="form-control-premium w-100">
-                                <option>Audit Standard (Accueil)</option>
-                                <option>Audit Hygiène & Propreté</option>
-                                <option>Expérience Client 360°</option>
-                                <option>Client Mystère Téléphonique</option>
-                            </select>
-                        </div>
-                        <div class="mb-4">
-                            <label class="small text-muted fw-bold mb-1">RÉCOMPENSE</label>
-                            <input type="text" name="recompense" placeholder="Ex: 50" class="form-control-premium w-100" required>
-                        </div>
-                        <button type="submit" class="btn btn-premium w-100">Publier l'audit</button>
+                        <input type="text" name="titre" placeholder="Titre / Lieu" class="form-control mb-2" required>
+                        <select name="type_audit" class="form-select mb-2">
+                            <option>Audit Standard (Accueil)</option>
+                            <option>Audit Propreté</option>
+                            <option>Audit Téléphonique</option>
+                        </select>
+                        <input type="text" name="recompense" placeholder="Récompense (ex: 50)" class="form-control mb-3" required>
+                        <button class="btn btn-primary w-100 rounded-pill">Publier</button>
                     </form>
-                    
-                    <hr class="my-4 opacity-10">
-                    
-                    <h6 class="fw-bold mb-3"><i class="bi bi-person-plus-fill text-primary"></i> Inscrire Employé</h6>
-                    <form action="/entreprise/ajouter-employe" method="POST" class="d-flex gap-2">
-                        <input type="email" name="email" placeholder="Email pro" class="form-control-premium w-100" required>
-                        <input type="password" name="password" placeholder="Pass" class="form-control-premium w-100" required>
-                        <button type="submit" class="btn btn-dark"><i class="bi bi-arrow-right"></i></button>
+                    <hr>
+                    <h6 class="fw-bold mt-4">Ajouter un employé</h6>
+                    <form action="/entreprise/ajouter-employe" method="POST">
+                        <input type="email" name="email" placeholder="Email" class="form-control mb-2" required>
+                        <input type="password" name="password" placeholder="Mot de passe" class="form-control mb-2" required>
+                        <button class="btn btn-dark w-100 rounded-pill">Inscrire</button>
                     </form>
                 </div>
             </div>
 
             <div class="col-lg-8">
-                <div class="glass-card reveal-up delay-300">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="fw-bold m-0">Historique des Missions</h5>
-                        <input type="text" id="tableSearch" placeholder="Rechercher..." class="form-control-premium form-control-sm" style="width: 200px;">
-                    </div>
-                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                        <table class="premium-table">
-                            <thead><tr><th>Audit</th><th>Type</th><th>Statut</th><th>Action</th></tr></thead>
-                            <tbody>
-                                <% missions.forEach(m => { %>
-                                    <tr>
-                                        <td class="fw-bold"><%= m.titre %></td>
-                                        <td class="small text-muted"><%= m.type_audit %></td>
-                                        <td><span class="badge-status <%= m.statut %>"><%= m.statut.replace('_', ' ') %></span></td>
-                                        <td>
-                                            <% if (m.statut === 'actif' || m.statut === 'approuve') { %>
-                                                <a href="#" class="btn btn-sm btn-outline-primary rounded-pill px-3">Rapport</a>
-                                            <% } else { %>
-                                                <span class="text-muted small"><i class="bi bi-clock"></i> En cours</span>
-                                            <% } %>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            </tbody>
-                        </table>
-                        <% if(missions.length === 0) { %>
-                            <div class="text-center py-5">
-                                <i class="bi bi-clipboard-x text-muted fs-1"></i>
-                                <p class="text-muted mt-2">Aucun audit créé pour le moment.</p>
-                            </div>
-                        <% } %>
-                    </div>
+                <div class="glass-card mb-4">
+                    <h5 class="fw-bold mb-3">Résultats de l'Académie (Employés)</h5>
+                    <table class="premium-table">
+                        <thead><tr><th>Employé</th><th>Module</th><th>Note</th><th>Certificat</th></tr></thead>
+                        <tbody>
+                            <% employeesScores.forEach(s => { %>
+                                <tr>
+                                    <td class="fw-bold"><%= s.nom %></td>
+                                    <td><%= s.titre %></td>
+                                    <td><span class="text-primary fw-bold"><%= Math.round((s.meilleur_score/15)*100) %>%</span></td>
+                                    <td>
+                                        <% if(s.statut === 'reussi') { %>
+                                            <span class="badge bg-success">Certifié</span>
+                                        <% } else { %>
+                                            <span class="badge bg-warning text-dark">En cours</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="glass-card">
+                    <h5 class="fw-bold mb-3">Historique des Missions</h5>
+                    <table class="premium-table">
+                        <thead><tr><th>Mission</th><th>Statut</th><th>Rapport</th></tr></thead>
+                        <tbody>
+                            <% missions.forEach(m => { %>
+                                <tr>
+                                    <td class="fw-bold"><%= m.titre %></td>
+                                    <td><span class="badge-status <%= m.statut %>"><%= m.statut %></span></td>
+                                    <td>
+                                        <% if(m.statut === 'approuve') { %>
+                                            <a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-primary rounded-pill">Télécharger PDF</a>
+                                        <% } else { %>
+                                            <span class="text-muted small">--</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
-    <script src="/js/premium-ui.js"></script>
 </body>
 </html>
