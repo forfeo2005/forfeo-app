@@ -34,7 +34,9 @@
 
         <h4 class="fw-bold mb-4">📍 Missions Disponibles</h4>
         <div class="row g-4 mb-5">
-            <% if(missions.length === 0) { %><div class="col-12 text-muted text-center py-5 glass-card">Aucune nouvelle mission.</div><% } %>
+            <% if(missions.length === 0) { %>
+                <div class="col-12 text-muted text-center py-5 glass-card">Aucune nouvelle mission pour le moment.</div>
+            <% } %>
             <% missions.forEach(m => { %>
                 <div class="col-md-4">
                     <div class="glass-card h-100 d-flex flex-column">
@@ -53,7 +55,7 @@
 
                         <form action="/ambassadeur/postuler" method="POST" class="mt-auto">
                             <input type="hidden" name="id_mission" value="<%= m.id %>">
-                            <button class="btn btn-primary w-100 rounded-pill">Réserver</button>
+                            <button class="btn btn-primary w-100 rounded-pill">Réserver la mission</button>
                         </form>
                     </div>
                 </div>
@@ -68,7 +70,13 @@
                     <% historique.forEach(h => { %>
                         <tr>
                             <td class="fw-bold"><%= h.titre %></td>
-                            <td><span class="badge-status <%= h.statut %>"><%= h.statut %></span></td>
+                            <td>
+                                <% if(h.statut_paiement === 'paye') { %>
+                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> PAYÉ</span>
+                                <% } else { %>
+                                    <span class="badge-status <%= h.statut %>"><%= h.statut %></span>
+                                <% } %>
+                            </td>
                             <td>
                                 <% if(h.statut === 'reserve') { %>
                                     
@@ -83,7 +91,7 @@
                                     <% } %>
 
                                     <button class="btn btn-sm btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modal<%= h.id %>">
-                                        Remplir Rapport
+                                        <% if(h.type_audit.includes('Sondage')) { %> Noter Réponses <% } else { %> Remplir Rapport <% } %>
                                     </button>
 
                                     <div class="modal fade" id="modal<%= h.id %>" tabindex="-1">
@@ -97,7 +105,9 @@
                                                     <form action="/ambassadeur/soumettre-rapport" method="POST">
                                                         <input type="hidden" name="mission_id" value="<%= h.id %>">
                                                         <input type="hidden" name="nom_ambassadeur" value="<%= userName %>">
-                                                        <input type="hidden" name="nom_entreprise" value="<%= h.titre %>"> <% if(h.type_audit === 'Rapport Expérience' || h.type_audit.includes('Standard')) { %>
+                                                        <input type="hidden" name="nom_entreprise" value="<%= h.titre %>">
+
+                                                        <% if(h.type_audit === 'Rapport Expérience' || h.type_audit.includes('Standard')) { %>
                                                             <div class="card p-3 border-0 shadow-sm mb-3">
                                                                 <h6 class="text-primary fw-bold mb-3">Infos Visite</h6>
                                                                 <div class="row">
@@ -115,14 +125,8 @@
                                                                     <textarea name="description" class="form-control" rows="3" required></textarea>
                                                                 </div>
                                                                 <div class="row">
-                                                                    <div class="col-6">
-                                                                        <label class="small fw-bold text-success">Points Forts</label>
-                                                                        <textarea name="points_forts" class="form-control" rows="2"></textarea>
-                                                                    </div>
-                                                                    <div class="col-6">
-                                                                        <label class="small fw-bold text-danger">À Améliorer</label>
-                                                                        <textarea name="points_ameliorer" class="form-control" rows="2"></textarea>
-                                                                    </div>
+                                                                    <div class="col-6"><label class="small fw-bold text-success">Points Forts</label><textarea name="points_forts" class="form-control" rows="2"></textarea></div>
+                                                                    <div class="col-6"><label class="small fw-bold text-danger">À Améliorer</label><textarea name="points_ameliorer" class="form-control" rows="2"></textarea></div>
                                                                 </div>
                                                                 <div class="mt-3">
                                                                     <label class="fw-bold">Note Globale / 10</label>
@@ -133,53 +137,24 @@
                                                         <% } else if (h.type_audit.includes('Qualité') || h.type_audit.includes('Propreté')) { %>
                                                             <div class="card p-3 border-0 shadow-sm mb-3">
                                                                 <h6 class="text-primary fw-bold">Critères Qualité</h6>
-                                                                <div class="mb-3">
-                                                                    <label class="small fw-bold">Accueil</label>
-                                                                    <select name="accueil" class="form-select"><option>Excellent</option><option>Bon</option><option>Moyen</option><option>Mauvais</option></select>
-                                                                </div>
-                                                                <div class="mb-3">
-                                                                    <label class="small fw-bold">Propreté</label>
-                                                                    <select name="proprete" class="form-select"><option>Impeccable</option><option>Acceptable</option><option>Sale</option></select>
-                                                                </div>
-                                                                <div class="mb-3">
-                                                                    <label class="small fw-bold">Vitesse</label>
-                                                                    <select name="vitesse" class="form-select"><option>Rapide</option><option>Correct</option><option>Lent</option></select>
-                                                                </div>
-                                                                <div>
-                                                                    <label class="small fw-bold">Commentaire Détaillé</label>
-                                                                    <textarea name="commentaire_detaille" class="form-control" rows="3"></textarea>
-                                                                </div>
+                                                                <div class="mb-3"><label class="small fw-bold">Accueil</label><select name="accueil" class="form-select"><option>Excellent</option><option>Bon</option><option>Moyen</option><option>Mauvais</option></select></div>
+                                                                <div class="mb-3"><label class="small fw-bold">Propreté</label><select name="proprete" class="form-select"><option>Impeccable</option><option>Acceptable</option><option>Sale</option></select></div>
+                                                                <div class="mb-3"><label class="small fw-bold">Vitesse</label><select name="vitesse" class="form-select"><option>Rapide</option><option>Correct</option><option>Lent</option></select></div>
+                                                                <div><label class="small fw-bold">Commentaire Détaillé</label><textarea name="commentaire_detaille" class="form-control" rows="3"></textarea></div>
                                                             </div>
 
                                                         <% } else { %>
-                                                            <div class="alert alert-info small">Saisissez ici les réponses obtenues du client <strong><%= h.client_nom %></strong>.</div>
+                                                            <div class="alert alert-info small">Transcrivez les réponses de <strong><%= h.client_nom %></strong>.</div>
                                                             <div class="card p-3 border-0 shadow-sm mb-3">
                                                                 <h6 class="text-primary fw-bold">Ressenti Client</h6>
-                                                                <div class="mb-3">
-                                                                    <label class="small fw-bold">Niveau Satisfaction</label>
-                                                                    <select name="niveau_satisfaction" class="form-select">
-                                                                        <option>Très Satisfait</option><option>Satisfait</option><option>Neutre</option><option>Insatisfait</option>
-                                                                    </select>
-                                                                </div>
-                                                                <div class="mb-3">
-                                                                    <label class="small fw-bold">Fluidité Réservation</label>
-                                                                    <select name="fluidite" class="form-select"><option>Fluide</option><option>Moyenne</option><option>Difficile</option></select>
-                                                                </div>
-                                                                <div class="mb-3">
-                                                                    <label class="small fw-bold">Note Finale / 10</label>
-                                                                    <input type="number" name="note_finale" class="form-control" max="10">
-                                                                </div>
-                                                                <div>
-                                                                    <label class="small fw-bold">Commentaire Libre</label>
-                                                                    <textarea name="commentaire_libre" class="form-control" rows="3"></textarea>
-                                                                </div>
+                                                                <div class="mb-3"><label class="small fw-bold">Satisfaction</label><select name="niveau_satisfaction" class="form-select"><option>Très Satisfait</option><option>Satisfait</option><option>Neutre</option><option>Insatisfait</option></select></div>
+                                                                <div class="mb-3"><label class="small fw-bold">Recommandation</label><select name="recommandation" class="form-select"><option>Oui</option><option>Peut-être</option><option>Non</option></select></div>
+                                                                <div class="mb-3"><label class="small fw-bold">Note Finale / 10</label><input type="number" name="note_finale" class="form-control" max="10"></div>
+                                                                <div><label class="small fw-bold">Avis Client (Verbatim)</label><textarea name="commentaire_libre" class="form-control" rows="3"></textarea></div>
                                                             </div>
                                                         <% } %>
 
-                                                        <div class="form-check mb-3">
-                                                            <input type="checkbox" required class="form-check-input">
-                                                            <label class="small text-muted">Je certifie l'exactitude de ces données.</label>
-                                                        </div>
+                                                        <div class="form-check mb-3"><input type="checkbox" required class="form-check-input"><label class="small text-muted">Données certifiées exactes.</label></div>
                                                         <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Envoyer le Rapport</button>
                                                     </form>
                                                 </div>
@@ -200,5 +175,6 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <%- include('partials/forfy') %>
 </body>
 </html>
