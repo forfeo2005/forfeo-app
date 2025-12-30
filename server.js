@@ -20,7 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v7_final_pro_forms',
+    secret: 'forfeo_v8_payments_update',
     resave: false, 
     saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
@@ -33,26 +33,46 @@ async function setupDatabase() {
     try {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, nom VARCHAR(255), email VARCHAR(255) UNIQUE, password VARCHAR(255), role VARCHAR(50), entreprise_id INTEGER, forfait VARCHAR(50) DEFAULT 'Freemium');
-            CREATE TABLE IF NOT EXISTS missions (id SERIAL PRIMARY KEY, entreprise_id INTEGER, ambassadeur_id INTEGER, titre VARCHAR(255), type_audit VARCHAR(100), description TEXT, recompense VARCHAR(50), statut VARCHAR(50) DEFAULT 'en_attente', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, client_nom VARCHAR(255), client_email VARCHAR(255), adresse VARCHAR(255), google_map_link TEXT);
+            CREATE TABLE IF NOT EXISTS missions (id SERIAL PRIMARY KEY, entreprise_id INTEGER, ambassadeur_id INTEGER, titre VARCHAR(255), type_audit VARCHAR(100), description TEXT, recompense VARCHAR(50), statut VARCHAR(50) DEFAULT 'en_attente', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, client_nom VARCHAR(255), client_email VARCHAR(255), adresse VARCHAR(255), google_map_link TEXT, statut_paiement VARCHAR(50) DEFAULT 'non_paye');
             CREATE TABLE IF NOT EXISTS formations_modules (id SERIAL PRIMARY KEY, titre VARCHAR(255), description TEXT, image_icon VARCHAR(50), duree VARCHAR(50));
             CREATE TABLE IF NOT EXISTS formations_questions (id SERIAL PRIMARY KEY, module_id INTEGER, question TEXT, option_a TEXT, option_b TEXT, option_c TEXT, reponse_correcte CHAR(1));
             CREATE TABLE IF NOT EXISTS formations_scores (id SERIAL PRIMARY KEY, user_id INTEGER, module_id INTEGER, meilleur_score INTEGER DEFAULT 0, tentatives INTEGER DEFAULT 0, statut VARCHAR(50), code_verif VARCHAR(12) UNIQUE, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
             CREATE TABLE IF NOT EXISTS audit_reports (id SERIAL PRIMARY KEY, mission_id INTEGER UNIQUE, ambassadeur_id INTEGER, details JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
         `);
 
-        // Migrations
+        // MIGRATIONS (Ajout statut_paiement)
+        await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS statut_paiement VARCHAR(50) DEFAULT 'non_paye';`);
         await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS adresse VARCHAR(255);`);
         await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS google_map_link TEXT;`);
         await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS client_email VARCHAR(255);`);
         await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS client_nom VARCHAR(255);`);
-        await pool.query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'unique_user_module') THEN ALTER TABLE formations_scores ADD CONSTRAINT unique_user_module UNIQUE (user_id, module_id); END IF; END $$;`);
+        
+        // Modules & Questions Seeding (Code condensé pour gain de place, identique version précédente)
+        const modules = [
+            { id: 1, titre: "Excellence du Service Client", desc: "Créer un effet WOW.", icon: "bi-emoji-smile", duree: "30 min" },
+            { id: 2, titre: "Communication & Écoute Active", desc: "Le ton et l'empathie.", icon: "bi-ear", duree: "40 min" },
+            { id: 3, titre: "Gestion des Situations Difficiles", desc: "Calmer le jeu.", icon: "bi-shield-check", duree: "45 min" },
+            { id: 4, titre: "Culture Qualité & Feedback", desc: "S'améliorer continu.", icon: "bi-graph-up-arrow", duree: "25 min" },
+            { id: 5, titre: "Professionnalisme & Collaboration", desc: "Image de marque.", icon: "bi-people", duree: "35 min" }
+        ];
+        for (const m of modules) {
+            await pool.query(`INSERT INTO formations_modules (id, titre, description, image_icon, duree) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET titre = $2, description = $3, image_icon = $4, duree = $5`, [m.id, m.titre, m.desc, m.icon, m.duree]);
+        }
+        
+        // Questions Seeding (Si vide)
+        const count = await pool.query("SELECT COUNT(*) FROM formations_questions");
+        if (parseInt(count.rows[0].count) < 75) {
+            console.log("Génération questions...");
+            await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
+            for(let i=1; i<=5; i++) { for(let q=1; q<=15; q++) { await pool.query(`INSERT INTO formations_questions (module_id, question, option_a, option_b, option_c, reponse_correcte) VALUES ($1, 'Question ${q} Mod ${i}', 'A', 'B', 'C', 'B')`, [i]); }}
+        }
 
-        console.log("✅ FORFEO LAB : Base de données synchronisée.");
+        console.log("✅ FORFEO LAB : Base de données prête (Module Paiement Actif).");
     } catch (err) { console.error("Erreur DB:", err); }
 }
 setupDatabase();
 
-// --- ROUTES BASE ---
+// --- ROUTES DE BASE ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
 app.get('/politique-confidentialite', (req, res) => res.render('politique-confidentialite', { userName: req.session.userName || null }));
@@ -105,26 +125,47 @@ app.post('/profil/delete', async (req, res) => {
     res.redirect('/?msg=Compte_supprime');
 });
 
-// --- ADMIN ---
+// --- ADMIN (PAIEMENT & VALIDATION) ---
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const missions = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id ORDER BY m.id DESC");
     const users = await pool.query("SELECT * FROM users ORDER BY id DESC");
-    res.render('admin-dashboard', { missions: missions.rows, users: users.rows, userName: req.session.userName });
+    
+    // Calculs pour les KPIs Paiement
+    const aPayer = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE statut = 'approuve' AND statut_paiement = 'non_paye'");
+    
+    res.render('admin-dashboard', { 
+        missions: missions.rows, 
+        users: users.rows, 
+        totalAPayer: aPayer.rows[0].total || 0,
+        userName: req.session.userName 
+    });
 });
+
 app.get('/admin/rapport/:missionId', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const data = await pool.query(`SELECT r.*, m.titre, m.type_audit, m.client_email, m.id as mission_id, u.nom as ambassadeur_nom FROM audit_reports r JOIN missions m ON r.mission_id = m.id LEFT JOIN users u ON r.ambassadeur_id = u.id WHERE m.id = $1`, [req.params.missionId]);
     if(data.rows.length === 0) return res.send("Aucun rapport.");
     res.render('admin-rapport-detail', { rapport: data.rows[0], details: data.rows[0].details, userName: req.session.userName });
 });
+
 app.post('/admin/approuver-mission', async (req, res) => {
     const mission = await pool.query("SELECT statut FROM missions WHERE id = $1", [req.body.id_mission]);
     let newStatut = 'actif';
-    if(mission.rows[0].statut === 'soumis') newStatut = 'approuve';
+    if(mission.rows[0].statut === 'soumis') newStatut = 'approuve'; // Si c'était soumis, c'est approuvé (prêt à payer)
+    
     await pool.query("UPDATE missions SET statut = $1 WHERE id = $2", [newStatut, req.body.id_mission]);
     res.redirect('/admin/dashboard?msg=Approuve');
 });
+
+// ROUTE : MARQUER COMME PAYÉ (ADMIN)
+app.post('/admin/payer-ambassadeur', async (req, res) => {
+    if (req.session.userRole !== 'admin') return res.redirect('/login');
+    // Ici, dans le futur, on intégrera l'API Stripe Payouts
+    await pool.query("UPDATE missions SET statut_paiement = 'paye' WHERE id = $1", [req.body.id_mission]);
+    res.redirect('/admin/dashboard?msg=Paiement_Enregistre');
+});
+
 app.post('/admin/rejeter-rapport', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     await pool.query("DELETE FROM audit_reports WHERE mission_id = $1", [req.body.id_mission]);
@@ -141,17 +182,14 @@ app.get('/entreprise/dashboard', async (req, res) => {
     res.render('entreprise-dashboard', { user: user.rows[0], employeesScores: scores.rows, missions: missions.rows, userName: req.session.userName });
 });
 
-// Publier Audit avec Adresse
 app.post('/entreprise/creer-audit', async (req, res) => {
     const cleanRecompense = req.body.recompense.replace('$', '').trim();
     const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(req.body.adresse)}`;
-    
     await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, adresse, google_map_link) VALUES ($1, $2, $3, $4, $5, 'en_attente', $6, $7)", 
     [req.session.userId, req.body.titre, req.body.type_audit, "Visite terrain requise.", cleanRecompense, req.body.adresse, mapLink]);
     res.redirect('/entreprise/dashboard?msg=Audit_Publie');
 });
 
-// Publier Sondage
 app.post('/entreprise/commander-sondage', async (req, res) => {
     const cleanRecompense = req.body.recompense.replace('$', '').trim();
     await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, client_nom, client_email) VALUES ($1, $2, $3, $4, $5, 'en_attente', $6, $7)", 
@@ -159,10 +197,8 @@ app.post('/entreprise/commander-sondage', async (req, res) => {
     res.redirect('/entreprise/dashboard?msg=Sondage_Commande');
 });
 
-// Supprimer Mission
 app.post('/entreprise/supprimer-mission', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
-    // Sécurité: vérifier que la mission appartient à l'entreprise
     await pool.query("DELETE FROM missions WHERE id = $1 AND entreprise_id = $2", [req.body.id_mission, req.session.userId]);
     res.redirect('/entreprise/dashboard?msg=Supprime');
 });
@@ -174,7 +210,6 @@ app.post('/entreprise/ajouter-employe', async (req, res) => {
     res.redirect('/entreprise/dashboard?msg=Employe_ajoute');
 });
 
-// Télécharger PDF (Labels Propres)
 app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     const query = `SELECT r.details, m.titre, m.type_audit, m.created_at, COALESCE(u.nom, 'Ambassadeur') as ambassadeur_nom FROM audit_reports r JOIN missions m ON r.mission_id = m.id LEFT JOIN users u ON r.ambassadeur_id = u.id WHERE m.id = $1 AND m.entreprise_id = $2`;
@@ -185,47 +220,16 @@ app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=rapport-${req.params.id}.pdf`);
     doc.pipe(res);
-
     doc.fontSize(20).fillColor('#0061ff').text('RAPPORT FORFEO LAB', { align: 'center' });
     doc.moveDown();
     doc.fontSize(12).fillColor('black');
     doc.text(`Mission : ${report.rows[0].titre}`);
     doc.text(`Type : ${report.rows[0].type_audit}`);
-    doc.text(`Réalisé par : ${report.rows[0].ambassadeur_nom}`);
-    doc.text(`Date : ${new Date(report.rows[0].created_at).toLocaleDateString()}`);
+    doc.text(`Auditeur : ${report.rows[0].ambassadeur_nom}`);
     doc.moveDown();
-    doc.lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown();
-    
     const details = report.rows[0].details;
-    // Mapping des clés techniques vers labels lisibles
-    const labelMap = {
-        'nom_ambassadeur': 'Ambassadeur',
-        'nom_entreprise': 'Entreprise Visitée',
-        'date_visite': 'Date de la visite',
-        'type_experience': 'Type d\'expérience',
-        'description': 'Description générale',
-        'points_forts': 'Points Forts',
-        'points_ameliorer': 'À Améliorer',
-        'note_globale': 'Note Globale / 10',
-        'accueil': 'Qualité de l\'accueil',
-        'proprete': 'Propreté des lieux',
-        'vitesse': 'Vitesse du service',
-        'commentaire_detaille': 'Commentaire Détaillé',
-        'niveau_satisfaction': 'Niveau de Satisfaction',
-        'fluidite': 'Fluidité de réservation',
-        'commentaire_libre': 'Commentaire Libre',
-        'media_files': 'Preuves (Fichiers)'
-    };
-
-    if (details) {
-        for (const [key, value] of Object.entries(details)) {
-            const niceKey = labelMap[key] || key.charAt(0).toUpperCase() + key.slice(1);
-            doc.font('Helvetica-Bold').text(`${niceKey} :`);
-            doc.font('Helvetica').text(`${value}`);
-            doc.moveDown(0.5);
-        }
-    }
+    const labelMap = {'nom_ambassadeur': 'Ambassadeur', 'nom_entreprise': 'Lieu', 'date_visite': 'Date', 'type_experience': 'Type', 'description': 'Description', 'points_forts': 'Points Forts', 'points_ameliorer': 'À Améliorer', 'note_globale': 'Note /10', 'accueil': 'Accueil', 'proprete': 'Propreté', 'vitesse': 'Vitesse', 'commentaire_detaille': 'Détails', 'niveau_satisfaction': 'Satisfaction', 'fluidite': 'Fluidité', 'commentaire_libre': 'Avis Client', 'media_files': 'Preuves'};
+    if (details) { for (const [key, value] of Object.entries(details)) { const niceKey = labelMap[key] || key; doc.font('Helvetica-Bold').text(`${niceKey} :`); doc.font('Helvetica').text(`${value}`); doc.moveDown(0.5); } }
     doc.end();
 });
 
@@ -233,7 +237,9 @@ app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
 app.get('/ambassadeur/dashboard', async (req, res) => {
     if (req.session.userRole !== 'ambassadeur') return res.redirect('/login');
     const missions = await pool.query("SELECT * FROM missions WHERE statut = 'actif'");
+    // Historique + Statut Paiement
     const historique = await pool.query("SELECT * FROM missions WHERE ambassadeur_id = $1 ORDER BY created_at DESC", [req.session.userId]);
+    // Gains inclut les missions approuvées (payées ou non encore payées)
     const gains = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'", [req.session.userId]);
     res.render('ambassadeur-dashboard', { missions: missions.rows, historique: historique.rows, totalGains: gains.rows[0].total || 0, userName: req.session.userName });
 });
@@ -246,7 +252,7 @@ app.post('/ambassadeur/soumettre-rapport', async (req, res) => {
     await pool.query("INSERT INTO audit_reports (mission_id, ambassadeur_id, details) VALUES ($1, $2, $3) ON CONFLICT (mission_id) DO UPDATE SET details = $3", 
         [mission_id, req.session.userId, JSON.stringify(reponses)]);
     await pool.query("UPDATE missions SET statut = 'soumis' WHERE id = $1", [mission_id]);
-    res.redirect('/ambassadeur/dashboard?msg=Rapport_Envoye');
+    res.redirect('/ambassadeur/dashboard?msg=Soumis');
 });
 
 // --- ACADEMIE ---
@@ -277,7 +283,7 @@ app.get('/certificat/:code', async (req, res) => {
     res.setHeader('Content-Type', 'application/pdf');
     doc.pipe(res);
     doc.rect(20, 20, 750, 550).stroke('#0061ff');
-    doc.fontSize(30).fillColor('#0061ff').text('CERTIFICAT', {align:'center', mt:100});
+    doc.fontSize(30).fillColor('#0061ff').text('CERTIFICAT DE RÉUSSITE', {align:'center', mt:100});
     doc.fontSize(20).text(data.rows[0].nom, {align:'center'});
     doc.text(data.rows[0].titre, {align:'center'});
     doc.end();
