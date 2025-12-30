@@ -14,7 +14,7 @@ const port = process.env.PORT || 10000;
 // Config OpenAI
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// --- BANQUE DE DONNÉES (INTEGRÉE POUR ÉVITER LES ERREURS DE FICHIER) ---
+// --- BANQUE DE QUESTIONS (INTÉGRÉE POUR FIABILITÉ 100%) ---
 const QUESTION_BANK = [
   {
     id: 1, titre: "Excellence du Service Client", description: "Les bases pour créer un effet WOW.", icon: "bi-emoji-smile", duree: "30 min",
@@ -56,11 +56,10 @@ const QUESTION_BANK = [
       { id: "M2-Q15", sit: "Merci client.", q: "Réponse ?", a: "Rien", b: "Plaisir", c: "Vente", rep: "B", expl: "Politesse." }
     ]
   },
-  // Je limite l'affichage ici pour la clarté, mais le code insérera les 5 modules via la boucle ci-dessous
-  // La logique du seed va générer les modules 3, 4 et 5 automatiquement si absents pour éviter le vide.
+  // La logique de seeding ci-dessous générera les modules manquants (3, 4, 5) pour que l'employé puisse travailler.
 ];
 
-const knowledgeBase = `Tu es Forfy, l'IA de Forfeo Lab. Tu aides les Ambassadeurs (gains, missions), Entreprises (audits, employés) et Admins.`;
+const knowledgeBase = `Tu es Forfy, l'IA de Forfeo Lab (Division de FORFEO INC). Tu aides les Ambassadeurs (gains, missions), Entreprises (audits, employés) et Admins.`;
 
 const pool = new Pool({ 
     connectionString: process.env.DATABASE_URL, 
@@ -154,7 +153,7 @@ app.post('/api/chat', async (req, res) => {
         let context = "Visiteur.";
         if(userId) {
             const user = await pool.query("SELECT nom, role FROM users WHERE id = $1", [userId]);
-            context = `User: ${user.rows[0].nom} (${user.rows[0].role}). `;
+            context = `User: ${user.rows[0].nom}, Role: ${user.rows[0].role}. `;
             if(user.rows[0].role === 'ambassadeur') {
                 const gains = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'", [userId]);
                 context += `Gains: ${gains.rows[0].total || 0}$.`;
