@@ -1,5 +1,7 @@
+/* --- PREMIUM UI KIT : FORFEO LAB --- */
 :root {
     --primary: #0061ff;
+    --primary-dark: #004ecc;
     --bg-body: #f8fafc;
     --text-main: #1e293b;
     --white: #ffffff;
@@ -12,7 +14,7 @@ body { background-color: var(--bg-body); font-family: 'Inter', sans-serif; color
 .premium-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; background: #f8fafc; }
 .glass-card { background: rgba(255, 255, 255, 0.9); border: 1px solid white; border-radius: 20px; box-shadow: var(--shadow-sm); padding: 24px; }
 
-/* Bouton PRO FLASH */
+/* Bouton PRO FLASHE */
 .btn-flash-pro {
     background: linear-gradient(45deg, #0061ff, #00c6ff);
     color: white !important; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
@@ -32,8 +34,18 @@ body { background-color: var(--bg-body); font-family: 'Inter', sans-serif; color
     background: linear-gradient(135deg, #0061ff, #0033aa);
 }
 .module-content-art { position: relative; z-index: 2; text-align: center; }
+.module-icon { font-size: 3rem; margin-bottom: 10px; }
 
-/* Tableaux */
+/* Badges Status */
+.badge-status { padding: 5px 12px; border-radius: 50px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; }
+.badge-status.actif, .badge-status.approuve, .badge-status.reussi { background: #dcfce7; color: #166534; }
+.badge-status.en_attente, .badge-status.reserve { background: #fff7ed; color: #9a3412; }
+.badge-status.soumis { background: #dbeafe; color: #1e40af; }
+
+/* Table */
 .premium-table { width: 100%; }
 .premium-table th { color: #64748b; text-transform: uppercase; font-size: 0.75rem; padding: 10px; }
 .premium-table td { padding: 15px 10px; border-bottom: 1px solid #f1f5f9; }
+
+/* Modal Form Audit */
+.audit-form-section { background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
