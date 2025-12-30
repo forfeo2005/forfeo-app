@@ -5,25 +5,48 @@ const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const PDFDocument = require('pdfkit');
 const OpenAI = require('openai');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 10000;
 
+// Config OpenAI
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// BASE DE CONNAISSANCES IA (Intégrée ici pour éviter les erreurs de fichier)
+const knowledgeBase = `
+TU ES FORFY : L'assistant IA officiel de FORFEO LAB.
+TON RÔLE : Aider Ambassadeurs, Entreprises et Employés. Tu es pro, expert et sympa.
+
+STRUCTURE :
+- Ambassadeur : Réalise des Audits Mystères (visite terrain) ou des Sondages (par courriel). Il est payé par mission.
+- Entreprise : Publie des audits, commande des sondages, gère ses employés.
+- Admin : Valide les rapports et effectue les paiements.
+
+TYPES DE MISSIONS :
+1. Rapport d'Expérience (Standard) : Visite incognito, note /10.
+2. Audit Qualité : Critères précis (Propreté, Accueil).
+3. Sondage Satisfaction : L'ambassadeur envoie un mail au client final pour avoir son avis.
+
+RÈGLE : Utilise le CONTEXTE fourni (nom, gains, missions) pour personnaliser ta réponse.
+`;
 
 const pool = new Pool({ 
     connectionString: process.env.DATABASE_URL, 
     ssl: { rejectUnauthorized: false } 
 });
 
+// Middleware Statique (Inclut le dossier 'images' à la racine pour votre logo)
 app.use(express.static('public'));
+app.use('/images', express.static(path.join(__dirname, 'images')));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v9_payments_history',
+    secret: 'forfeo_v11_ultimate_fix',
     resave: false, 
     saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
@@ -43,19 +66,18 @@ async function setupDatabase() {
             CREATE TABLE IF NOT EXISTS audit_reports (id SERIAL PRIMARY KEY, mission_id INTEGER UNIQUE, ambassadeur_id INTEGER, details JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
         `);
 
-        // MIGRATIONS
-        await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS date_paiement TIMESTAMP;`); // NOUVEAU
+        // Migrations de sécurité (Ajout colonnes si manquantes)
+        await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS date_paiement TIMESTAMP;`);
         await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS statut_paiement VARCHAR(50) DEFAULT 'non_paye';`);
-        await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS adresse VARCHAR(255);`);
         await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS google_map_link TEXT;`);
         await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS client_email VARCHAR(255);`);
         await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS client_nom VARCHAR(255);`);
+        await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS adresse VARCHAR(255);`);
         await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS type_audit VARCHAR(100) DEFAULT 'Audit Standard';`);
-        await pool.query(`ALTER TABLE missions ALTER COLUMN recompense TYPE VARCHAR(50);`);
         await pool.query(`ALTER TABLE formations_modules ADD COLUMN IF NOT EXISTS image_icon VARCHAR(50);`);
         await pool.query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'unique_user_module') THEN ALTER TABLE formations_scores ADD CONSTRAINT unique_user_module UNIQUE (user_id, module_id); END IF; END $$;`);
 
-        // SEEDING (Identique)
+        // Seed Modules
         const modules = [
             { id: 1, titre: "Excellence du Service Client", desc: "Créer un effet WOW.", icon: "bi-emoji-smile", duree: "30 min" },
             { id: 2, titre: "Communication & Écoute Active", desc: "Le ton et l'empathie.", icon: "bi-ear", duree: "40 min" },
@@ -67,13 +89,13 @@ async function setupDatabase() {
             await pool.query(`INSERT INTO formations_modules (id, titre, description, image_icon, duree) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET titre = $2, description = $3, image_icon = $4, duree = $5`, [m.id, m.titre, m.desc, m.icon, m.duree]);
         }
         
+        // Seed Questions
         const count = await pool.query("SELECT COUNT(*) FROM formations_questions");
         if (parseInt(count.rows[0].count) < 75) {
             await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
             for(let i=1; i<=5; i++) { for(let q=1; q<=15; q++) { await pool.query(`INSERT INTO formations_questions (module_id, question, option_a, option_b, option_c, reponse_correcte) VALUES ($1, 'Question ${q} Mod ${i}', 'A', 'B', 'C', 'B')`, [i]); }}
         }
-
-        console.log("✅ FORFEO LAB : Base de données prête (Module Historique Paiement).");
+        console.log("✅ FORFEO LAB : Prêt.");
     } catch (err) { console.error("Erreur DB:", err); }
 }
 setupDatabase();
@@ -83,6 +105,38 @@ app.get('/', (req, res) => res.render('index', { userName: req.session.userName 
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
 app.get('/politique-confidentialite', (req, res) => res.render('politique-confidentialite', { userName: req.session.userName || null }));
 app.get('/conditions-utilisation', (req, res) => res.render('conditions-utilisation', { userName: req.session.userName || null }));
+
+// --- API IA FORFY ---
+app.post('/api/chat', async (req, res) => {
+    try {
+        const userMsg = req.body.message;
+        const userId = req.session.userId;
+        let context = "Utilisateur visiteur.";
+
+        if(userId) {
+            const user = await pool.query("SELECT nom, role FROM users WHERE id = $1", [userId]);
+            context = `Utilisateur: ${user.rows[0].nom} (${user.rows[0].role}). `;
+            
+            if(user.rows[0].role === 'ambassadeur') {
+                const gains = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'", [userId]);
+                const missions = await pool.query("SELECT titre, statut FROM missions WHERE ambassadeur_id = $1", [userId]);
+                context += `Gains totaux: ${gains.rows[0].total || 0}$. Ses missions: ${JSON.stringify(missions.rows)}.`;
+            } else if (user.rows[0].role === 'entreprise') {
+                const audits = await pool.query("SELECT titre, statut FROM missions WHERE entreprise_id = $1", [userId]);
+                context += `Audits publiés: ${JSON.stringify(audits.rows)}.`;
+            }
+        }
+
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                { role: "system", content: `${knowledgeBase}\n\nCONTEXTE ACTUEL:\n${context}` },
+                { role: "user", content: userMsg }
+            ],
+        });
+        res.json({ reply: completion.choices[0].message.content });
+    } catch (err) { res.json({ reply: "Je suis temporairement indisponible." }); }
+});
 
 // --- AUTH ---
 app.get('/login', (req, res) => res.render('login', { error: null, msg: req.query.msg || null, userName: null }));
@@ -108,67 +162,21 @@ app.post('/register', async (req, res) => {
 });
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
-// --- PROFIL ---
-app.get('/profil', async (req, res) => {
-    if (!req.session.userId) return res.redirect('/login');
-    const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
-    res.render('profil', { user: user.rows[0], userName: req.session.userName, message: req.query.msg || null });
-});
-app.post('/profil/update', async (req, res) => {
-    if (!req.session.userId) return res.redirect('/login');
-    await pool.query("UPDATE users SET nom = $1, email = $2 WHERE id = $3", [req.body.nom, req.body.email, req.session.userId]);
-    if(req.body.new_password) {
-        const hash = await bcrypt.hash(req.body.new_password, 10);
-        await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hash, req.session.userId]);
-    }
-    req.session.userName = req.body.nom;
-    res.redirect('/profil?msg=Profil_mis_a_jour');
-});
-app.post('/profil/delete', async (req, res) => {
-    if (!req.session.userId) return res.redirect('/login');
-    await pool.query("DELETE FROM users WHERE id = $1", [req.session.userId]);
-    req.session.destroy();
-    res.redirect('/?msg=Compte_supprime');
-});
-
-// --- ADMIN (DASHBOARD AMÉLIORÉ) ---
+// --- ADMIN ---
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
-    
-    // 1. Missions générales
     const missions = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id ORDER BY m.id DESC");
-    
-    // 2. Base utilisateurs
     const users = await pool.query("SELECT * FROM users ORDER BY id DESC");
-    
-    // 3. Montant à payer (KPI)
     const aPayer = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE statut = 'approuve' AND statut_paiement = 'non_paye'");
-    
-    // 4. Historique des Paiements (Avec le nom de l'ambassadeur)
-    const paiements = await pool.query(`
-        SELECT m.*, u.nom as ambassadeur_nom 
-        FROM missions m 
-        LEFT JOIN users u ON m.ambassadeur_id = u.id 
-        WHERE m.statut_paiement = 'paye' 
-        ORDER BY m.date_paiement DESC
-    `);
-
-    res.render('admin-dashboard', { 
-        missions: missions.rows, 
-        users: users.rows, 
-        paiements: paiements.rows, // Données pour l'historique
-        totalAPayer: aPayer.rows[0].total || 0, 
-        userName: req.session.userName 
-    });
+    const paiements = await pool.query(`SELECT m.*, u.nom as ambassadeur_nom FROM missions m LEFT JOIN users u ON m.ambassadeur_id = u.id WHERE m.statut_paiement = 'paye' ORDER BY m.date_paiement DESC`);
+    res.render('admin-dashboard', { missions: missions.rows, users: users.rows, paiements: paiements.rows, totalAPayer: aPayer.rows[0].total || 0, userName: req.session.userName });
 });
-
 app.get('/admin/rapport/:missionId', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const data = await pool.query(`SELECT r.*, m.titre, m.type_audit, m.client_email, m.id as mission_id, u.nom as ambassadeur_nom FROM audit_reports r JOIN missions m ON r.mission_id = m.id LEFT JOIN users u ON r.ambassadeur_id = u.id WHERE m.id = $1`, [req.params.missionId]);
     if(data.rows.length === 0) return res.send("Aucun rapport.");
     res.render('admin-rapport-detail', { rapport: data.rows[0], details: data.rows[0].details, userName: req.session.userName });
 });
-
 app.post('/admin/approuver-mission', async (req, res) => {
     const mission = await pool.query("SELECT statut FROM missions WHERE id = $1", [req.body.id_mission]);
     let newStatut = 'actif';
@@ -176,15 +184,11 @@ app.post('/admin/approuver-mission', async (req, res) => {
     await pool.query("UPDATE missions SET statut = $1 WHERE id = $2", [newStatut, req.body.id_mission]);
     res.redirect('/admin/dashboard?msg=Approuve');
 });
-
-// ROUTE CONFIRMATION PAIEMENT
 app.post('/admin/payer-ambassadeur', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
-    // Mise à jour : statut = paye ET date_paiement = NOW()
     await pool.query("UPDATE missions SET statut_paiement = 'paye', date_paiement = NOW() WHERE id = $1", [req.body.id_mission]);
     res.redirect('/admin/dashboard?msg=Paiement_Enregistre');
 });
-
 app.post('/admin/rejeter-rapport', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     await pool.query("DELETE FROM audit_reports WHERE mission_id = $1", [req.body.id_mission]);
@@ -201,28 +205,20 @@ app.get('/entreprise/dashboard', async (req, res) => {
     res.render('entreprise-dashboard', { user: user.rows[0], employeesScores: scores.rows, missions: missions.rows, userName: req.session.userName });
 });
 app.post('/entreprise/creer-audit', async (req, res) => {
-    const cleanRecompense = req.body.recompense.replace('$', '').trim();
     const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(req.body.adresse)}`;
     await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, adresse, google_map_link) VALUES ($1, $2, $3, $4, $5, 'en_attente', $6, $7)", 
-    [req.session.userId, req.body.titre, req.body.type_audit, "Visite terrain.", cleanRecompense, req.body.adresse, mapLink]);
+    [req.session.userId, req.body.titre, req.body.type_audit, "Visite terrain.", req.body.recompense, req.body.adresse, mapLink]);
     res.redirect('/entreprise/dashboard?msg=Publie');
 });
 app.post('/entreprise/commander-sondage', async (req, res) => {
-    const cleanRecompense = req.body.recompense.replace('$', '').trim();
     await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, client_nom, client_email) VALUES ($1, $2, $3, $4, $5, 'en_attente', $6, $7)", 
-    [req.session.userId, "Sondage : " + req.body.client_nom, req.body.type_sondage, "Enquête client.", cleanRecompense, req.body.client_nom, req.body.client_email]);
+    [req.session.userId, "Sondage : " + req.body.client_nom, req.body.type_sondage, "Enquête client.", req.body.recompense, req.body.client_nom, req.body.client_email]);
     res.redirect('/entreprise/dashboard?msg=Sondage_Commande');
 });
 app.post('/entreprise/supprimer-mission', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
     await pool.query("DELETE FROM missions WHERE id = $1 AND entreprise_id = $2", [req.body.id_mission, req.session.userId]);
     res.redirect('/entreprise/dashboard?msg=Supprime');
-});
-app.post('/entreprise/ajouter-employe', async (req, res) => {
-    const hash = await bcrypt.hash(req.body.password, 10);
-    await pool.query("INSERT INTO users (nom, email, password, role, entreprise_id) VALUES ($1, $2, $3, 'employe', $4)", 
-    [req.body.email.split('@')[0], req.body.email, hash, req.session.userId]);
-    res.redirect('/entreprise/dashboard?msg=Employe_ajoute');
 });
 app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     if (req.session.userRole !== 'entreprise') return res.redirect('/login');
@@ -231,14 +227,8 @@ app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     if(report.rows.length === 0) return res.send("Rapport non disponible.");
     const doc = new PDFDocument();
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=rapport-${req.params.id}.pdf`);
     doc.pipe(res);
-    doc.fontSize(20).fillColor('#0061ff').text('RAPPORT FORFEO LAB', { align: 'center' });
-    doc.moveDown();
-    doc.fontSize(12).fillColor('black');
-    doc.text(`Mission : ${report.rows[0].titre}`);
-    doc.text(`Type : ${report.rows[0].type_audit}`);
-    doc.text(`Auditeur : ${report.rows[0].ambassadeur_nom}`);
+    doc.fontSize(20).text('RAPPORT', {align:'center'});
     doc.moveDown();
     const details = report.rows[0].details;
     if (details) { for (const [key, value] of Object.entries(details)) { doc.font('Helvetica-Bold').text(`${key}:`); doc.font('Helvetica').text(`${value}`); doc.moveDown(0.5); } }
@@ -265,56 +255,27 @@ app.post('/ambassadeur/soumettre-rapport', async (req, res) => {
     res.redirect('/ambassadeur/dashboard?msg=Soumis');
 });
 
-// --- ACADEMIE ---
-app.get('/employe/dashboard', async (req, res) => {
-    if (req.session.userRole !== 'employe') return res.redirect('/login');
-    const modules = await pool.query("SELECT * FROM formations_modules ORDER BY id ASC");
-    const scores = await pool.query("SELECT * FROM formations_scores WHERE user_id = $1", [req.session.userId]);
-    res.render('employe-dashboard', { modules: modules.rows, scores: scores.rows, userName: req.session.userName });
+// --- PROFIL ---
+app.get('/profil', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
+    res.render('profil', { user: user.rows[0], userName: req.session.userName, message: req.query.msg || null });
 });
-app.get('/formations/module/:id', async (req, res) => {
-    const module = await pool.query("SELECT * FROM formations_modules WHERE id = $1", [req.params.id]);
-    const questions = await pool.query("SELECT * FROM formations_questions WHERE module_id = $1 ORDER BY id ASC", [req.params.id]);
-    res.render('formation-detail', { module: module.rows[0], questions: questions.rows, userName: req.session.userName });
+app.post('/profil/update', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    await pool.query("UPDATE users SET nom = $1, email = $2 WHERE id = $3", [req.body.nom, req.body.email, req.session.userId]);
+    if(req.body.new_password) {
+        const hash = await bcrypt.hash(req.body.new_password, 10);
+        await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hash, req.session.userId]);
+    }
+    req.session.userName = req.body.nom;
+    res.redirect('/profil?msg=Profil_mis_a_jour');
 });
-app.post('/formations/soumettre-quizz', async (req, res) => {
-    const questions = await pool.query("SELECT id, reponse_correcte FROM formations_questions WHERE module_id = $1", [req.body.module_id]);
-    let score = 0;
-    questions.rows.forEach(q => { if (req.body['q' + q.id] === q.reponse_correcte) score++; });
-    const statut = score >= 12 ? 'reussi' : 'echec';
-    const code = Math.random().toString(36).substring(2, 12).toUpperCase();
-    await pool.query(`INSERT INTO formations_scores (user_id, module_id, meilleur_score, tentatives, statut, code_verif) VALUES ($1, $2, $3, 1, $4, $5) ON CONFLICT (user_id, module_id) DO UPDATE SET meilleur_score = GREATEST(formations_scores.meilleur_score, EXCLUDED.meilleur_score), tentatives = formations_scores.tentatives + 1, statut = EXCLUDED.statut`, [req.session.userId, req.body.module_id, score, statut, code]);
-    res.redirect('/employe/dashboard');
-});
-app.get('/certificat/:code', async (req, res) => {
-    const data = await pool.query("SELECT s.*, u.nom, m.titre FROM formations_scores s JOIN users u ON s.user_id = u.id JOIN formations_modules m ON s.module_id = m.id WHERE s.code_verif = $1", [req.params.code]);
-    if(data.rows.length === 0) return res.send("Non trouvé");
-    const doc = new PDFDocument({ layout: 'landscape' });
-    res.setHeader('Content-Type', 'application/pdf');
-    doc.pipe(res);
-    doc.rect(20, 20, 750, 550).stroke('#0061ff');
-    doc.fontSize(30).fillColor('#0061ff').text('CERTIFICAT DE RÉUSSITE', {align:'center', mt:100});
-    doc.fontSize(20).text(data.rows[0].nom, {align:'center'});
-    doc.text(data.rows[0].titre, {align:'center'});
-    doc.end();
-});
-
-// --- API IA ---
-app.post('/api/chat', async (req, res) => {
-    try {
-        const userMsg = req.body.message;
-        const userId = req.session.userId;
-        let context = "Visiteur.";
-        if(userId) {
-            const user = await pool.query("SELECT nom, role FROM users WHERE id = $1", [userId]);
-            context = `User: ${user.rows[0].nom}, Role: ${user.rows[0].role}. `;
-        }
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [{ role: "system", content: `Tu es Forfy. Contexte: ${context}.` }, { role: "user", content: userMsg }],
-        });
-        res.json({ reply: completion.choices[0].message.content });
-    } catch (err) { res.json({ reply: "Désolé, je suis en maintenance." }); }
+app.post('/profil/delete', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    await pool.query("DELETE FROM users WHERE id = $1", [req.session.userId]);
+    req.session.destroy();
+    res.redirect('/?msg=Compte_supprime');
 });
 
 app.listen(port, () => console.log(`🚀 LIVE`));
