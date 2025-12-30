@@ -28,10 +28,10 @@ app.use(session({
 
 app.set('view engine', 'ejs');
 
-// --- SETUP BDD & SEEDING ---
+// --- SETUP BDD & MIGRATION AUTOMATIQUE ---
 async function setupDatabase() {
     try {
-        // Tables principales
+        // 1. CRÉATION DES TABLES SI ELLES N'EXISTENT PAS
         await pool.query(`
             CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, nom VARCHAR(255), email VARCHAR(255) UNIQUE, password VARCHAR(255), role VARCHAR(50), entreprise_id INTEGER, forfait VARCHAR(50) DEFAULT 'Freemium');
             CREATE TABLE IF NOT EXISTS missions (id SERIAL PRIMARY KEY, entreprise_id INTEGER, ambassadeur_id INTEGER, titre VARCHAR(255), type_audit VARCHAR(100), description TEXT, recompense VARCHAR(50), statut VARCHAR(50) DEFAULT 'en_attente', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
@@ -41,12 +41,17 @@ async function setupDatabase() {
             CREATE TABLE IF NOT EXISTS audit_reports (id SERIAL PRIMARY KEY, mission_id INTEGER UNIQUE, ambassadeur_id INTEGER, details JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
         `);
 
-        // Corrections colonnes
+        // 2. MIGRATION FORCÉE (CORRECTION DE VOS ERREURS LOGS)
+        // Ces lignes ajoutent les colonnes manquantes si la table existe déjà d'une version précédente
+        await pool.query(`ALTER TABLE formations_modules ADD COLUMN IF NOT EXISTS image_icon VARCHAR(50);`);
+        await pool.query(`ALTER TABLE formations_modules ADD COLUMN IF NOT EXISTS duree VARCHAR(50);`);
         await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS type_audit VARCHAR(100) DEFAULT 'Audit Standard';`);
-        await pool.query(`ALTER TABLE missions ALTER COLUMN recompense TYPE VARCHAR(50);`);
+        await pool.query(`ALTER TABLE missions ALTER COLUMN recompense TYPE VARCHAR(50);`); // Évite l'erreur numeric
+        
+        // Contrainte d'unicité pour les scores
         await pool.query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'unique_user_module') THEN ALTER TABLE formations_scores ADD CONSTRAINT unique_user_module UNIQUE (user_id, module_id); END IF; END $$;`);
 
-        // SEED MODULES (Images placeholder, pas de vidéo)
+        // 3. SEED MODULES (Mise à jour des données existantes)
         const modules = [
             { id: 1, titre: "Excellence du Service Client", desc: "Les bases pour créer un effet WOW.", icon: "bi-emoji-smile", duree: "30 min" },
             { id: 2, titre: "Communication & Écoute Active", desc: "Le ton, l'empathie et la reformulation.", icon: "bi-ear", duree: "40 min" },
@@ -64,10 +69,11 @@ async function setupDatabase() {
             );
         }
 
-        // SEED QUESTIONS (15 par module)
+        // 4. SEED QUESTIONS (Génération si vide)
         const count = await pool.query("SELECT COUNT(*) FROM formations_questions");
         if (parseInt(count.rows[0].count) < 75) {
             console.log("Génération des 75 questions...");
+            // Nettoyage préventif pour éviter doublons bizarres
             await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
             for (let mId = 1; mId <= 5; mId++) {
                 for (let q = 1; q <= 15; q++) {
@@ -76,8 +82,8 @@ async function setupDatabase() {
                 }
             }
         }
-        console.log("✅ FORFEO LAB : Système prêt.");
-    } catch (err) { console.error("Erreur DB:", err); }
+        console.log("✅ FORFEO LAB : Base de données migrée et prête.");
+    } catch (err) { console.error("❌ Erreur DB Setup:", err); }
 }
 setupDatabase();
 
@@ -208,7 +214,6 @@ app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     doc.moveDown();
     
     const details = report.rows[0].details;
-    // On parse le JSON pour l'afficher proprement
     for (const [key, value] of Object.entries(details)) {
         doc.fontSize(12).text(`${key.toUpperCase()} : ${value}`);
         doc.moveDown(0.5);
@@ -236,7 +241,6 @@ app.post('/ambassadeur/postuler', async (req, res) => {
     res.redirect('/ambassadeur/dashboard?msg=Mission_Reservee');
 });
 
-// Soumission du formulaire d'audit par l'ambassadeur
 app.post('/ambassadeur/soumettre-rapport', async (req, res) => {
     const { mission_id, ...reponses } = req.body;
     await pool.query("INSERT INTO audit_reports (mission_id, ambassadeur_id, details) VALUES ($1, $2, $3) ON CONFLICT (mission_id) DO NOTHING", 
@@ -256,7 +260,6 @@ app.get('/employe/dashboard', async (req, res) => {
 app.get('/formations/module/:id', async (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
     const module = await pool.query("SELECT * FROM formations_modules WHERE id = $1", [req.params.id]);
-    // Récupérer les 15 questions
     const questions = await pool.query("SELECT * FROM formations_questions WHERE module_id = $1 ORDER BY id ASC", [req.params.id]);
     res.render('formation-detail', { module: module.rows[0], questions: questions.rows, userName: req.session.userName });
 });
@@ -265,7 +268,6 @@ app.post('/formations/soumettre-quizz', async (req, res) => {
     const { module_id } = req.body;
     const questions = await pool.query("SELECT id, reponse_correcte FROM formations_questions WHERE module_id = $1", [module_id]);
     let score = 0;
-    // Vérification des 15 réponses
     questions.rows.forEach(q => { if (req.body['q' + q.id] === q.reponse_correcte) score++; });
     
     // Seuil de réussite (12/15 = 80%)
@@ -281,7 +283,6 @@ app.post('/formations/soumettre-quizz', async (req, res) => {
     res.redirect('/employe/dashboard?msg=Quizz_Termine');
 });
 
-// Télécharger Certificat Employé
 app.get('/certificat/:code', async (req, res) => {
     const data = await pool.query("SELECT s.*, u.nom, m.titre FROM formations_scores s JOIN users u ON s.user_id = u.id JOIN formations_modules m ON s.module_id = m.id WHERE s.code_verif = $1", [req.params.code]);
     
@@ -292,7 +293,6 @@ app.get('/certificat/:code', async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename=certificat-${req.params.code}.pdf`);
     doc.pipe(res);
 
-    // Design Certificat
     doc.rect(20, 20, 750, 550).stroke('#0061ff');
     doc.fontSize(40).fillColor('#0061ff').text('CERTIFICAT DE RÉUSSITE', { align: 'center', mt: 100 });
     doc.moveDown();
