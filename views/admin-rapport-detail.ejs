@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Détail Rapport | Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/premium-dashboard.css">
+</head>
+<body>
+    <div class="premium-bg"></div>
+    <div class="container py-5" style="max-width: 800px;">
+        <a href="/admin/dashboard" class="btn btn-outline-secondary btn-sm rounded-pill mb-4">← Retour</a>
+
+        <div class="glass-card mb-4">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="text-uppercase text-muted small fw-bold">Rapport d'Audit</h6>
+                    <h2 class="fw-bold text-primary"><%= rapport.titre %></h2>
+                    <span class="badge bg-info text-dark"><%= rapport.type_audit %></span>
+                </div>
+                <div class="text-end">
+                    <div class="small text-muted">Auditeur</div>
+                    <div class="fw-bold"><%= rapport.ambassadeur_nom %></div>
+                </div>
+            </div>
+            <hr class="my-4">
+            
+            <h5 class="fw-bold mb-3">Détails de l'évaluation</h5>
+            <div class="bg-white p-4 rounded-3 border">
+                <% if (details) { %>
+                    <% for (const [key, value] of Object.entries(details)) { %>
+                        <div class="mb-3">
+                            <label class="small text-muted fw-bold text-uppercase"><%= key %></label>
+                            <div class="fs-5"><%= value %></div>
+                        </div>
+                    <% } %>
+                <% } else { %>
+                    <p class="text-danger">Erreur : Données du rapport illisibles.</p>
+                <% } %>
+            </div>
+        </div>
+
+        <div class="glass-card d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="fw-bold m-0">Décision Admin</h6>
+                <p class="small text-muted m-0">Approuver rend le PDF disponible à l'entreprise.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <form action="/admin/rejeter-rapport" method="POST" onsubmit="return confirm('Supprimer ce rapport et remettre la mission en jeu ?');">
+                    <input type="hidden" name="id_mission" value="<%= rapport.mission_id %>">
+                    <button class="btn btn-outline-danger rounded-pill px-4">Rejeter</button>
+                </form>
+
+                <form action="/admin/approuver-mission" method="POST">
+                    <input type="hidden" name="id_mission" value="<%= rapport.mission_id %>">
+                    <button class="btn btn-success rounded-pill px-4 fw-bold">Approuver</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
