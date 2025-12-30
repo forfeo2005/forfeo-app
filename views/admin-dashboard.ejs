@@ -2,104 +2,64 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Command Center | FORFEO</title>
+    <title>Admin | FORFEO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/premium-dashboard.css">
 </head>
 <body>
-    <div class="premium-bg" style="background: #f1f5f9;"></div>
-    <div id="toast-container"></div>
-
-    <div class="container-fluid px-4 py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4 reveal-up">
-            <div class="d-flex align-items-center gap-3">
-                <div class="bg-dark text-white p-2 rounded-3"><i class="bi bi-shield-lock-fill fs-4"></i></div>
-                <div>
-                    <h4 class="fw-bold m-0">Command Center</h4>
-                    <small class="text-muted">Super Admin: <%= userName %></small>
-                </div>
-            </div>
-            <a href="/logout" class="btn btn-outline-danger btn-sm">Déconnexion</a>
+    <div class="premium-bg"></div>
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <h3 class="fw-bold">Tableau de Bord Admin</h3>
+            <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
         </div>
 
-        <div class="row g-4 mb-4">
-            <div class="col-md-3">
-                <div class="glass-card kpi-card reveal-up delay-100">
-                    <div class="text-muted small fw-bold uppercase">En Attente</div>
-                    <div class="display-5 fw-bold text-dark count-up"><%= missions.filter(m => m.statut !== 'actif').length %></div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="glass-card kpi-card reveal-up delay-200" style="border-color: #10b981;">
-                    <div class="text-muted small fw-bold uppercase">Audits Actifs</div>
-                    <div class="display-5 fw-bold text-success count-up"><%= missions.filter(m => m.statut === 'actif').length %></div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="glass-card kpi-card reveal-up delay-300" style="border-color: #6366f1;">
-                    <div class="text-muted small fw-bold uppercase">Utilisateurs</div>
-                    <div class="display-5 fw-bold text-primary count-up"><%= users.length %></div>
-                </div>
-            </div>
+        <div class="glass-card mb-5">
+            <h5 class="fw-bold mb-3">Validation des Audits</h5>
+            <table class="premium-table">
+                <thead><tr><th>ENTREPRISE</th><th>TITRE</th><th>STATUT</th><th>ACTION</th></tr></thead>
+                <tbody>
+                    <% missions.forEach(m => { %>
+                        <tr>
+                            <td class="fw-bold"><%= m.entreprise_nom %></td>
+                            <td><%= m.titre %></td>
+                            <td><span class="badge-status <%= m.statut %>"><%= m.statut %></span></td>
+                            <td>
+                                <% if (m.statut === 'en_attente') { %>
+                                    <form action="/admin/approuver-mission" method="POST">
+                                        <input type="hidden" name="id_mission" value="<%= m.id %>">
+                                        <button class="btn btn-sm btn-success rounded-pill">Publier</button>
+                                    </form>
+                                <% } else if (m.statut === 'soumis') { %>
+                                    <form action="/admin/approuver-mission" method="POST">
+                                        <input type="hidden" name="id_mission" value="<%= m.id %>">
+                                        <button class="btn btn-sm btn-primary rounded-pill">Valider Rapport</button>
+                                    </form>
+                                <% } else { %>
+                                    <i class="bi bi-check-circle text-success"></i>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
         </div>
 
-        <div class="row g-4">
-            <div class="col-lg-8">
-                <div class="glass-card reveal-up delay-200">
-                    <div class="d-flex justify-content-between mb-4">
-                        <h5 class="fw-bold">Validation des Audits</h5>
-                        <input type="text" id="tableSearch" placeholder="Filtrer..." class="form-control-premium form-control-sm" style="width: 250px;">
-                    </div>
-                    <div class="table-responsive">
-                        <table class="premium-table">
-                            <thead><tr><th>Entreprise</th><th>Titre</th><th>Type</th><th>Statut</th><th>Action</th></tr></thead>
-                            <tbody>
-                                <% missions.forEach(m => { %>
-                                    <tr>
-                                        <td class="fw-bold"><%= m.entreprise_nom %></td>
-                                        <td><%= m.titre %></td>
-                                        <td class="small text-muted"><%= m.type_audit %></td>
-                                        <td><span class="badge-status <%= m.statut %>"><%= m.statut %></span></td>
-                                        <td>
-                                            <% if (m.statut !== 'actif') { %>
-                                                <form action="/admin/approuver-mission" method="POST">
-                                                    <input type="hidden" name="id_mission" value="<%= m.id %>">
-                                                    <button class="btn btn-success btn-sm rounded-pill px-3 shadow-sm">Approuver</button>
-                                                </form>
-                                            <% } else { %>
-                                                <i class="bi bi-check-all text-success fs-5"></i>
-                                            <% } %>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-4">
-                <div class="glass-card reveal-up delay-300">
-                    <h5 class="fw-bold mb-4">Base Utilisateurs</h5>
-                    <div class="d-flex flex-column gap-3">
-                        <% users.forEach(u => { %>
-                            <div class="d-flex align-items-center justify-content-between p-2 border-bottom">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="bg-light rounded-circle p-2"><i class="bi bi-person text-muted"></i></div>
-                                    <div>
-                                        <div class="fw-bold small"><%= u.nom %></div>
-                                        <div class="text-muted" style="font-size: 0.7rem;"><%= u.role %></div>
-                                    </div>
-                                </div>
-                                <span class="badge bg-light text-dark border"><%= u.forfait %></span>
-                            </div>
-                        <% }) %>
-                    </div>
-                </div>
-            </div>
+        <div class="glass-card">
+            <h5 class="fw-bold mb-3">Base Utilisateurs</h5>
+            <table class="premium-table">
+                <thead><tr><th>NOM</th><th>EMAIL</th><th>RÔLE</th></tr></thead>
+                <tbody>
+                    <% users.forEach(u => { %>
+                        <tr>
+                            <td><%= u.nom %></td>
+                            <td><%= u.email %></td>
+                            <td><span class="badge bg-light text-dark border"><%= u.role %></span></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
         </div>
     </div>
-    <script src="/js/premium-ui.js"></script>
 </body>
 </html>
