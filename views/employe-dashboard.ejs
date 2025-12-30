@@ -26,21 +26,25 @@
             %>
                 <div class="col-md-4">
                     <div class="glass-card h-100">
-                        <div class="module-header-art mb-3" style="height: 120px;">
+                        <div class="module-header-art mb-3">
                             <div class="module-content-art">
-                                <i class="bi <%= m.image_icon %> fs-1"></i>
+                                <i class="bi <%= m.image_icon %> display-3"></i>
                             </div>
                         </div>
                         <h5 class="fw-bold"><%= m.titre %></h5>
                         <p class="small text-muted"><%= m.description %></p>
                         <div class="mt-3">
                             <% if(reussi) { %>
-                                <div class="alert alert-success py-1 small text-center mb-2">Note : <%= Math.round((score.meilleur_score/15)*100) %>%</div>
+                                <div class="alert alert-success py-1 small text-center mb-2">
+                                    Note : <%= Math.round((score.meilleur_score/15)*100) %>%
+                                </div>
                                 <a href="/certificat/<%= score.code_verif %>" target="_blank" class="btn btn-success w-100 btn-sm rounded-pill">
                                     <i class="bi bi-award"></i> Télécharger Certificat
                                 </a>
                             <% } else { %>
-                                <a href="/formations/module/<%= m.id %>" class="btn btn-primary w-100 btn-sm rounded-pill">Commencer (15 Questions)</a>
+                                <a href="/formations/module/<%= m.id %>" class="btn btn-primary w-100 btn-sm rounded-pill">
+                                    Commencer (15 Questions)
+                                </a>
                             <% } %>
                         </div>
                     </div>
