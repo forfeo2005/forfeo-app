@@ -1,80 +1,100 @@
-<div id="forfy-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; font-family: 'Segoe UI', sans-serif;">
+<div id="forfy-container" style="position: fixed; bottom: 30px; right: 30px; z-index: 9999; font-family: 'Inter', sans-serif;">
     
-    <div id="forfy-box" style="display:none; width:320px; height:450px; background:white; border-radius:15px; box-shadow:0 10px 40px rgba(0,0,0,0.2); flex-direction:column; overflow:hidden; margin-bottom:15px; border:1px solid #eee;">
-        <div style="background:#000; color:white; padding:15px; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
-            <span>🤖 Forfy Assistant</span>
-            <span onclick="toggleForfy()" style="cursor:pointer; font-size:24px; line-height:20px;">&times;</span>
-        </div>
+    <button onclick="toggleChat()" id="forfy-trigger" style="
+        width: 70px; height: 70px; border-radius: 50%; border: 3px solid white; 
+        background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.3); 
+        overflow: hidden; cursor: pointer; transition: transform 0.3s ease;">
+        <video src="/videos/GifForfy.MP4" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+    </button>
+
+    <div id="forfy-window" style="
+        display: none; position: absolute; bottom: 90px; right: 0; 
+        width: 320px; height: 450px; background: white; 
+        border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); 
+        flex-direction: column; overflow: hidden; border: 1px solid #f0f0f0;">
         
-        <div id="chat-content" style="flex:1; padding:15px; overflow-y:auto; font-size:14px; background:#fdfdfd; display:flex; flex-direction:column; gap:10px;">
-            <div style="background:#eee; padding:10px; border-radius:10px; align-self:flex-start; max-width:80%;">
-                Bonjour ! Je suis Forfy. Je peux vous aider à analyser vos scores ou à commander de nouvelles missions d'audit.
+        <div style="background: #0061ff; color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 35px; height: 35px; background: white; border-radius: 50%; overflow: hidden;">
+                    <video src="/videos/GifForfy.MP4" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                </div>
+                <div>
+                    <div style="font-weight: 700; font-size: 14px;">Forfy Assistant</div>
+                    <div style="font-size: 10px; opacity: 0.9;">IA Connectée</div>
+                </div>
+            </div>
+            <button onclick="toggleChat()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+        </div>
+
+        <div id="forfy-messages" style="flex: 1; padding: 15px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 10px;">
+            <div style="align-self: flex-start; max-width: 85%;">
+                <div style="background: white; padding: 10px; border-radius: 12px 12px 12px 0; border: 1px solid #e2e8f0; font-size: 13px; color: #333;">
+                    Bonjour ! Je suis Forfy 🐶. Je peux vous aider avec vos audits ou répondre à vos questions sur la plateforme.
+                </div>
             </div>
         </div>
 
-        <div style="padding:10px; border-top:1px solid #eee; display:flex; background:white;">
-            <input type="text" id="chat-input" placeholder="Posez une question..." style="flex:1; border:1px solid #ddd; border-radius:20px; padding:10px 15px; outline:none; font-size:14px;">
-            <button onclick="sendChat()" style="background:#000; color:white; border:none; margin-left:8px; width:35px; height:35px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;">➤</button>
+        <div style="padding: 12px; background: white; border-top: 1px solid #eee; display: flex; gap: 8px;">
+            <input type="text" id="forfy-input" placeholder="Écrivez ici..." style="
+                flex: 1; border: 1px solid #e2e8f0; border-radius: 20px; padding: 8px 12px; 
+                outline: none; font-size: 13px;">
+            <button onclick="sendMessage()" style="
+                width: 35px; height: 35px; border-radius: 50%; background: #0061ff; 
+                color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                ➤
+            </button>
         </div>
     </div>
-
-    <button onclick="toggleForfy()" style="width:60px; height:60px; border-radius:50%; background:#000; color:white; border:none; font-size:30px; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; transition: transform 0.2s;">
-        🤖
-    </button>
 </div>
 
 <script>
-    function toggleForfy() {
-        const box = document.getElementById('forfy-box');
-        box.style.display = box.style.display === 'none' ? 'flex' : 'none';
-        if(box.style.display === 'flex') {
-            document.getElementById('chat-input').focus();
+    function toggleChat() {
+        const win = document.getElementById('forfy-window');
+        const btn = document.getElementById('forfy-trigger');
+        if (win.style.display === 'none' || win.style.display === '') {
+            win.style.display = 'flex';
+            btn.style.transform = 'scale(0.9)';
+            setTimeout(() => document.getElementById('forfy-input').focus(), 100);
+        } else {
+            win.style.display = 'none';
+            btn.style.transform = 'scale(1)';
         }
     }
 
-    async function sendChat() {
-        const input = document.getElementById('chat-input');
-        const content = document.getElementById('chat-content');
-        const msg = input.value.trim();
-        
-        if(!msg) return;
+    const input = document.getElementById('forfy-input');
+    const chat = document.getElementById('forfy-messages');
 
-        // Message utilisateur
-        content.innerHTML += `
-            <div style="background:#00aaff; color:white; padding:10px; border-radius:10px; align-self:flex-end; max-width:80%;">
-                ${msg}
-            </div>
-        `;
-        
+    input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+    async function sendMessage() {
+        const txt = input.value.trim();
+        if (!txt) return;
+
+        // User Msg
+        chat.innerHTML += `<div style="align-self: flex-end; max-width: 85%;"><div style="background: #0061ff; color: white; padding: 10px; border-radius: 12px 12px 0 12px; font-size: 13px;">${txt}</div></div>`;
         input.value = '';
-        content.scrollTop = content.scrollHeight;
+        chat.scrollTop = chat.scrollHeight;
 
-        // Message de chargement
-        const loadingId = "loading-" + Date.now();
-        content.innerHTML += `<div id="${loadingId}" style="font-size:12px; color:#aaa; font-style:italic;">Forfy réfléchit...</div>`;
+        // Loading
+        const loadId = 'load-' + Date.now();
+        chat.innerHTML += `<div id="${loadId}" style="align-self: flex-start; max-width: 85%;"><div style="background: white; padding: 8px; border-radius: 12px; border: 1px solid #eee; font-size: 11px; color: #888;">Forfy réfléchit...</div></div>`;
+        chat.scrollTop = chat.scrollHeight;
 
         try {
             const res = await fetch('/api/chat', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ message: msg })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: txt })
             });
             const data = await res.json();
+            document.getElementById(loadId).remove();
             
-            // Retirer chargement et afficher réponse
-            document.getElementById(loadingId).remove();
-            content.innerHTML += `
-                <div style="background:#eee; color:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:80%;">
-                    ${data.reply}
-                </div>
-            `;
-            content.scrollTop = content.scrollHeight;
-        } catch (err) {
-            document.getElementById(loadingId).innerHTML = "Erreur de connexion avec l'IA Forfeo.";
+            // Bot Msg
+            chat.innerHTML += `<div style="align-self: flex-start; max-width: 85%;"><div style="background: white; padding: 10px; border-radius: 12px 12px 12px 0; border: 1px solid #e2e8f0; font-size: 13px; color: #333;">${data.reply}</div></div>`;
+        } catch (e) {
+            document.getElementById(loadId).remove();
+            chat.innerHTML += `<div style="color: red; font-size: 11px;">Erreur connexion.</div>`;
         }
+        chat.scrollTop = chat.scrollHeight;
     }
-
-    document.getElementById('chat-input').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') sendChat();
-    });
 </script>
