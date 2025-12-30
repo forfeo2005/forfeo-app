@@ -6,6 +6,20 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/premium-dashboard.css">
+    <script>
+        function filterTable() {
+            let input = document.getElementById("searchInput").value.toUpperCase();
+            let table = document.getElementById("missionsTable");
+            let tr = table.getElementsByTagName("tr");
+            for (let i = 0; i < tr.length; i++) {
+                let td = tr[i].getElementsByTagName("td")[0];
+                if (td) {
+                    let txtValue = td.textContent || td.innerText;
+                    tr[i].style.display = txtValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+                }
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="premium-bg"></div>
@@ -22,7 +36,7 @@
             <div class="col-lg-8">
                 <div class="glass-card h-100">
                     <h2 class="fw-bold mb-1">Tableau de Bord</h2>
-                    <p class="text-muted">Gérez vos audits mystères et sondages clients.</p>
+                    <p class="text-muted">Gérez vos audits, sondages et formations.</p>
                 </div>
             </div>
             <div class="col-lg-4">
@@ -39,36 +53,34 @@
             <div class="col-lg-4">
                 
                 <div class="glass-card mb-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-incognito text-primary"></i> Nouvel Audit Mystère</h5>
+                    <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt text-primary"></i> Nouvel Audit Terrain</h5>
                     <form action="/entreprise/creer-audit" method="POST">
-                        <input type="text" name="titre" placeholder="Lieu (ex: Magasin Laval)" class="form-control mb-2" required>
+                        <input type="text" name="titre" placeholder="Nom du lieu (ex: Restaurant X)" class="form-control mb-2" required>
+                        <input type="text" name="adresse" placeholder="Adresse complète" class="form-control mb-2" required>
                         <select name="type_audit" class="form-select mb-2">
-                            <option>Audit Standard (Accueil)</option>
-                            <option>Audit Propreté</option>
-                            <option>Audit Téléphonique</option>
+                            <option value="Rapport Expérience">Rapport d'Expérience (Standard)</option>
+                            <option value="Audit Qualité">Audit Qualité & Propreté</option>
                         </select>
-                        <input type="text" name="recompense" placeholder="Récompense (ex: 50)" class="form-control mb-3" required>
-                        <button class="btn btn-primary w-100 rounded-pill">Publier l'Audit</button>
+                        <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-3" required>
+                        <button class="btn btn-primary w-100 rounded-pill">Publier</button>
                     </form>
                 </div>
 
-                <div class="glass-card border border-info">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-chat-left-text text-info"></i> Commander un Sondage</h5>
-                    <p class="small text-muted">Un ambassadeur contactera votre client en votre nom.</p>
+                <div class="glass-card border border-info mb-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-envelope text-info"></i> Commander un Sondage</h5>
                     <form action="/entreprise/commander-sondage" method="POST">
                         <input type="text" name="client_nom" placeholder="Nom du Client" class="form-control mb-2" required>
                         <input type="email" name="client_email" placeholder="Email du Client" class="form-control mb-2" required>
                         <select name="type_sondage" class="form-select mb-2">
-                            <option value="Sondage Satisfaction">Sondage Satisfaction</option>
-                            <option value="Sondage Qualité Service">Qualité Service</option>
+                            <option value="Sondage Satisfaction">Satisfaction Client</option>
                             <option value="Sondage Après-Vente">Suivi Après-Vente</option>
                         </select>
-                        <input type="text" name="recompense" placeholder="Récompense Ambassadeur (ex: 20)" class="form-control mb-3" required>
+                        <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-3" required>
                         <button class="btn btn-info text-white w-100 rounded-pill">Commander</button>
                     </form>
                 </div>
 
-                <div class="glass-card mt-4">
+                <div class="glass-card">
                     <h6 class="fw-bold"><i class="bi bi-person-plus"></i> Inscrire Employé</h6>
                     <form action="/entreprise/ajouter-employe" method="POST" class="mt-2">
                         <input type="email" name="email" placeholder="Email" class="form-control mb-2 form-control-sm" required>
@@ -79,45 +91,57 @@
             </div>
 
             <div class="col-lg-8">
-                <div class="glass-card mb-4">
-                    <h5 class="fw-bold mb-3">Historique (Audits & Sondages)</h5>
-                    <table class="premium-table">
-                        <thead><tr><th>Mission</th><th>Type</th><th>Statut</th><th>Rapport</th></tr></thead>
-                        <tbody>
-                            <% missions.forEach(m => { %>
-                                <tr>
-                                    <td class="fw-bold">
-                                        <%= m.titre %> 
-                                        <% if(m.client_email) { %><br><span class="text-muted small"><i class="bi bi-envelope"></i> <%= m.client_email %></span><% } %>
-                                    </td>
-                                    <td><%= m.type_audit %></td>
-                                    <td><span class="badge-status <%= m.statut %>"><%= m.statut %></span></td>
-                                    <td>
-                                        <% if(m.statut === 'approuve') { %>
-                                            <a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-primary rounded-pill">
-                                                <i class="bi bi-download"></i> PDF
-                                            </a>
-                                        <% } else { %>
-                                            <span class="text-muted small">--</span>
-                                        <% } %>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
-
                 <div class="glass-card">
-                    <h5 class="fw-bold mb-3">Résultats Académie (Employés)</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">Historique des Missions</h5>
+                        <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Rechercher..." class="form-control form-control-sm w-auto">
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="premium-table" id="missionsTable">
+                            <thead><tr><th>Mission</th><th>Type</th><th>Statut</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                <% missions.forEach(m => { %>
+                                    <tr>
+                                        <td class="fw-bold">
+                                            <%= m.titre %> 
+                                            <% if(m.adresse) { %><br><small class="text-muted"><%= m.adresse %></small><% } %>
+                                            <% if(m.client_nom) { %><br><small class="text-info"><%= m.client_nom %></small><% } %>
+                                        </td>
+                                        <td><%= m.type_audit %></td>
+                                        <td><span class="badge-status <%= m.statut %>"><%= m.statut %></span></td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <% if(m.statut === 'approuve') { %>
+                                                    <a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-success rounded-circle" title="PDF">
+                                                        <i class="bi bi-download"></i>
+                                                    </a>
+                                                <% } %>
+                                                
+                                                <form action="/entreprise/supprimer-mission" method="POST" onsubmit="return confirm('Supprimer définitivement ?');">
+                                                    <input type="hidden" name="id_mission" value="<%= m.id %>">
+                                                    <button class="btn btn-sm btn-outline-danger rounded-circle"><i class="bi bi-trash"></i></button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="glass-card mt-4">
+                    <h5 class="fw-bold mb-3">Résultats Formations</h5>
                     <table class="premium-table">
-                        <thead><tr><th>Employé</th><th>Module</th><th>Note</th><th>État</th></tr></thead>
+                        <thead><tr><th>Employé</th><th>Module</th><th>Note</th><th>Certificat</th></tr></thead>
                         <tbody>
                             <% employeesScores.forEach(s => { %>
                                 <tr>
                                     <td class="fw-bold"><%= s.nom %></td>
                                     <td><%= s.titre %></td>
-                                    <td><span class="text-primary fw-bold"><%= Math.round((s.meilleur_score/15)*100) %>%</span></td>
-                                    <td><% if(s.statut === 'reussi') { %><span class="badge bg-success">Certifié</span><% } else { %>En cours<% } %></td>
+                                    <td><%= Math.round((s.meilleur_score/15)*100) %>%</td>
+                                    <td><% if(s.statut==='reussi') { %><span class="badge bg-success">Oui</span><% } else { %>Non<% } %></td>
                                 </tr>
                             <% }) %>
                         </tbody>
