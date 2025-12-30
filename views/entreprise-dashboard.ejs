@@ -36,7 +36,7 @@
             <div class="col-lg-8">
                 <div class="glass-card h-100">
                     <h2 class="fw-bold mb-1">Tableau de Bord</h2>
-                    <p class="text-muted">Gérez vos audits, sondages et formations.</p>
+                    <p class="text-muted">Gérez vos audits, sondages et la formation de vos équipes.</p>
                 </div>
             </div>
             <div class="col-lg-4">
@@ -106,7 +106,7 @@
                                         <td class="fw-bold">
                                             <%= m.titre %> 
                                             <% if(m.adresse) { %><br><small class="text-muted"><%= m.adresse %></small><% } %>
-                                            <% if(m.client_nom) { %><br><small class="text-info"><%= m.client_nom %></small><% } %>
+                                            <% if(m.client_nom) { %><br><small class="text-info">Client: <%= m.client_nom %></small><% } %>
                                         </td>
                                         <td><%= m.type_audit %></td>
                                         <td><span class="badge-status <%= m.statut %>"><%= m.statut %></span></td>
@@ -150,5 +150,6 @@
             </div>
         </div>
     </div>
+    <%- include('partials/forfy') %>
 </body>
 </html>
