@@ -125,7 +125,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v46_saas_final',
+    secret: 'forfeo_v45_complete_stable',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
@@ -148,7 +148,6 @@ async function setupDatabase() {
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS logo_data TEXT");
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS date_expiration TIMESTAMP");
 
-        // RESTAURATION ACADEMIE
         const countQ = await pool.query("SELECT COUNT(*) FROM formations_questions");
         await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
         await pool.query("TRUNCATE formations_modules RESTART IDENTITY CASCADE");
@@ -242,53 +241,26 @@ app.get('/ambassadeur/dashboard', async (req, res) => {
     res.render('ambassadeur-dashboard', { missions: m.rows, historique: h.rows, totalGains: 0, userName: req.session.userName }); 
 });
 app.post('/ambassadeur/postuler', async (req, res) => { await pool.query("UPDATE missions SET ambassadeur_id=$1, statut='reserve' WHERE id=$2", [req.session.userId, req.body.id_mission]); res.redirect('/ambassadeur/dashboard'); });
-app.post('/ambassadeur/soumettre-rapport', async (req, res) => { await pool.query("INSERT INTO audit_reports (mission_id, ambassadeur_id, details) VALUES ($1,$2,$3)", [req.body.mission_id, req.session.userId, JSON.stringify(req.body)]); await pool.query("UPDATE missions SET statut='soumis' WHERE id=$1", [req.body.mission_id]); res.redirect('/ambassadeur/dashboard'); });
+
+// CORRECTION CRITIQUE DB ERREUR (23505)
+app.post('/ambassadeur/soumettre-rapport', async (req, res) => { 
+    // On vérifie si un rapport existe déjà pour cette mission
+    const existing = await pool.query("SELECT id FROM audit_reports WHERE mission_id=$1", [req.body.mission_id]);
+    
+    // Si AUCUN rapport n'existe, on l'insère. Sinon, on ignore (évite le crash).
+    if (existing.rows.length === 0) {
+        await pool.query("INSERT INTO audit_reports (mission_id, ambassadeur_id, details) VALUES ($1,$2,$3)", [req.body.mission_id, req.session.userId, JSON.stringify(req.body)]); 
+        await pool.query("UPDATE missions SET statut='soumis' WHERE id=$1", [req.body.mission_id]); 
+    }
+    res.redirect('/ambassadeur/dashboard'); 
+});
+
 app.get('/employe/dashboard', async (req, res) => { const mod = await pool.query("SELECT * FROM formations_modules ORDER BY id ASC"); const s = await pool.query("SELECT * FROM formations_scores WHERE user_id=$1", [req.session.userId]); res.render('employe-dashboard', { modules: mod.rows, scores: s.rows, userName: req.session.userName }); });
 app.get('/formations/module/:id', async (req, res) => { const mod = await pool.query("SELECT * FROM formations_modules WHERE id=$1", [req.params.id]); const q = await pool.query("SELECT * FROM formations_questions WHERE module_id=$1 ORDER BY id ASC", [req.params.id]); res.render('formation-detail', { module: mod.rows[0], questions: q.rows, userName: req.session.userName }); });
 app.post('/formations/soumettre-quizz', async (req, res) => { const qs = await pool.query("SELECT id, reponse_correcte FROM formations_questions WHERE module_id=$1", [req.body.module_id]); let score = 0; qs.rows.forEach(q => { if(req.body['q_'+q.id]===q.reponse_correcte) score++; }); const stat = (score/qs.rows.length)*100 >= 80 ? 'reussi' : 'echec'; const code = stat==='reussi' ? Math.random().toString(36).substring(7).toUpperCase() : null; await pool.query("INSERT INTO formations_scores (user_id, module_id, meilleur_score, tentatives, statut, code_verif) VALUES ($1,$2,$3,1,$4,$5) ON CONFLICT (user_id, module_id) DO UPDATE SET meilleur_score=GREATEST(EXCLUDED.meilleur_score, formations_scores.meilleur_score), statut=EXCLUDED.statut, code_verif=EXCLUDED.code_verif", [req.session.userId, req.body.module_id, (score/qs.rows.length)*100, stat, code]); res.redirect('/employe/dashboard'); });
 
-// --- NOUVEAU CERTIFICAT PRO ---
-app.get('/certificat/:code', async (req, res) => { 
-    const d = await pool.query(`SELECT s.*, u.nom as user_nom, m.titre as module_titre FROM formations_scores s JOIN users u ON s.user_id = u.id JOIN formations_modules m ON s.module_id = m.id WHERE s.code_verif = $1`, [req.params.code]);
-    if(d.rows.length === 0) return res.send('Invalide');
-    const cert = d.rows[0];
-    const doc = new PDFDocument({ layout: 'landscape', size: 'A4' });
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=Certificat-${cert.code_verif}.pdf`);
-    doc.pipe(res);
-
-    // Bordure
-    doc.rect(20, 20, 802, 555).strokeColor('#0061ff').lineWidth(5).stroke();
-    
-    // Logo
-    const logoPath = path.join(__dirname, 'images', 'logo-forfeo.png');
-    if(fs.existsSync(logoPath)) {
-        doc.image(logoPath, 360, 50, { width: 120 });
-    }
-    
-    // Contenu
-    doc.moveDown(5);
-    doc.font('Helvetica-Bold').fontSize(40).fillColor('#0061ff').text('CERTIFICAT DE RÉUSSITE', { align: 'center' });
-    doc.moveDown(1);
-    doc.font('Helvetica').fontSize(20).fillColor('#333').text('Ce certificat est fièrement décerné à', { align: 'center' });
-    doc.moveDown(1);
-    doc.font('Helvetica-Bold').fontSize(30).text(cert.user_nom, { align: 'center' });
-    doc.moveDown(1);
-    doc.font('Helvetica').fontSize(18).text('Pour avoir complété avec succès le module de formation :', { align: 'center' });
-    doc.moveDown(0.5);
-    doc.font('Helvetica-Bold').fontSize(22).text(cert.module_titre, { align: 'center' });
-    doc.moveDown(4);
-    
-    // Pied de page
-    doc.fontSize(12).fillColor('#666');
-    doc.text(`Délivré le : ${new Date(cert.updated_at).toLocaleDateString('fr-FR')}`, 100, 450);
-    doc.text(`Score : ${Math.round(cert.meilleur_score)}%`, 100, 470);
-    doc.text(`Numéro de série : ${cert.code_verif}`, 550, 450, { align: 'right' });
-    doc.text('Forfeo Lab - Certification Officielle', 550, 470, { align: 'right' });
-
-    doc.end();
-});
-
+// CERTIFICAT
+app.get('/certificat/:code', async (req, res) => { const d = await pool.query("SELECT * FROM formations_scores WHERE code_verif=$1", [req.params.code]); if(d.rows.length===0) return res.send('Invalide'); const doc = new PDFDocument({layout:'landscape'}); doc.pipe(res); doc.fontSize(30).text('CERTIFICAT', {align:'center'}); doc.end(); });
 app.post('/api/chat', async (req, res) => { try { const c = await openai.chat.completions.create({model:"gpt-4o-mini", messages:[{role:"system",content:knowledgeBase},{role:"user",content:req.body.message}]}); res.json({reply:c.choices[0].message.content}); } catch(e) { res.json({reply:"Erreur."}); } });
 
 app.listen(port, () => console.log('🚀 LIVE'));
