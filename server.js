@@ -152,6 +152,12 @@ app.post('/profil/update', async (req, res) => {
     }
     res.redirect('/profil?msg=updated');
 });
+app.post('/profil/delete', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    await pool.query("DELETE FROM users WHERE id = $1", [req.session.userId]);
+    req.session.destroy();
+    res.redirect('/?msg=deleted');
+});
 
 // --- ADMIN (AVEC SUIVI FORMATIONS) ---
 app.get('/admin/dashboard', async (req, res) => {
@@ -217,7 +223,18 @@ app.post('/entreprise/ajouter-employe', async (req, res) => {
     await pool.query("INSERT INTO users (nom, email, password, role, entreprise_id) VALUES ($1, $2, $3, 'employe', $4)", [req.body.nom, req.body.email, hash, req.session.userId]);
     res.redirect('/entreprise/dashboard');
 });
-app.get('/entreprise/telecharger-rapport/:id', async (req, res) => { /* Code PDF inchangé */ const doc = new PDFDocument(); doc.pipe(res); doc.text('Rapport'); doc.end(); });
+app.get('/entreprise/telecharger-rapport/:id', async (req, res) => { 
+    const report = await pool.query(`SELECT r.details, m.titre, m.type_audit, m.created_at FROM audit_reports r JOIN missions m ON r.mission_id = m.id WHERE m.id = $1`, [req.params.id]);
+    const doc = new PDFDocument(); 
+    res.setHeader('Content-Type', 'application/pdf'); 
+    doc.pipe(res); 
+    doc.fontSize(20).text('Rapport Forfeo Lab', {align:'center'});
+    if(report.rows.length > 0) {
+        const details = report.rows[0].details;
+        doc.moveDown().fontSize(12).text(JSON.stringify(details, null, 2));
+    }
+    doc.end(); 
+});
 
 // AMBASSADEUR (Inchangé)
 app.get('/ambassadeur/dashboard', async (req, res) => { const missions = await pool.query("SELECT * FROM missions WHERE statut='actif'"); const hist = await pool.query("SELECT * FROM missions WHERE ambassadeur_id=$1", [req.session.userId]); res.render('ambassadeur-dashboard', { missions: missions.rows, historique: hist.rows, totalGains: 0, userName: req.session.userName }); });
