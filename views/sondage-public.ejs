@@ -8,24 +8,24 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         body { background-color: #f8fafc; font-family: 'Inter', sans-serif; min-height: 100vh; }
-        .survey-wrapper { padding-bottom: 50px; }
         .survey-card { max-width: 600px; margin: 40px auto; background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #f0f0f0; }
         .survey-header { background: linear-gradient(135deg, #0061ff, #00c6ff); padding: 40px 20px; text-align: center; color: white; }
         
-        /* Logo Circulaire avec Initiales */
+        /* Logo Circulaire */
         .logo-circle { 
-            width: 80px; height: 80px; background: white; border-radius: 50%; 
+            width: 100px; height: 100px; background: white; border-radius: 50%; 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 28px; font-weight: 800; color: #0061ff; 
+            font-size: 32px; font-weight: 800; color: #0061ff; 
             margin: 0 auto 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); 
-            text-transform: uppercase;
+            overflow: hidden; 
         }
+        .logo-img { width: 100%; height: 100%; object-fit: cover; }
 
         /* Étoiles de notation */
         .rating-stars { display: flex; flex-direction: row-reverse; justify-content: center; gap: 8px; }
         .rating-stars input { display: none; }
         .rating-stars label { font-size: 40px; color: #e2e8f0; cursor: pointer; transition: 0.2s; }
-        .rating-stars input:checked ~ label, .rating-stars label:hover, .rating-stars label:hover ~ label { color: #fbbf24; } /* Or/Jaune au survol/sélection */
+        .rating-stars input:checked ~ label, .rating-stars label:hover, .rating-stars label:hover ~ label { color: #fbbf24; }
 
         /* Boutons Oui/Non */
         .btn-check:checked + .btn-outline-success { background-color: #198754; color: white; }
@@ -33,12 +33,16 @@
     </style>
 </head>
 <body>
-    <div class="survey-wrapper container px-3">
+    <div class="container px-3">
         <div class="survey-card">
             
             <div class="survey-header">
                 <div class="logo-circle">
-                    <%= entreprise.nom.substring(0, 2) %>
+                    <% if(entreprise.logo_url) { %>
+                        <img src="<%= entreprise.logo_url %>" class="logo-img" alt="Logo">
+                    <% } else { %>
+                        <%= entreprise.nom.substring(0, 2).toUpperCase() %>
+                    <% } %>
                 </div>
                 <h3 class="fw-bold mb-1"><%= entreprise.nom %></h3>
                 <p class="mb-0 opacity-75 small text-uppercase fw-bold"><%= type %></p>
@@ -50,46 +54,38 @@
                     <input type="hidden" name="entreprise_nom" value="<%= entreprise.nom %>">
                     <input type="hidden" name="type_activite" value="<%= type %>">
 
-                    <% questions.forEach((q, i) => { %>
+                    <% questions.forEach((q) => { %>
                         <div class="mb-5 text-center">
                             <label class="form-label fw-bold mb-3 d-block text-dark h5"><%= q.text %></label>
                             
                             <% if(q.type === 'stars') { %>
                                 <div class="rating-stars">
-                                    <input type="radio" name="<%= q.id %>" id="<%= q.id %>_5" value="5" required><label for="<%= q.id %>_5"><i class="bi bi-star-fill"></i></label>
-                                    <input type="radio" name="<%= q.id %>" id="<%= q.id %>_4" value="4"><label for="<%= q.id %>_4"><i class="bi bi-star-fill"></i></label>
-                                    <input type="radio" name="<%= q.id %>" id="<%= q.id %>_3" value="3"><label for="<%= q.id %>_3"><i class="bi bi-star-fill"></i></label>
-                                    <input type="radio" name="<%= q.id %>" id="<%= q.id %>_2" value="2"><label for="<%= q.id %>_2"><i class="bi bi-star-fill"></i></label>
-                                    <input type="radio" name="<%= q.id %>" id="<%= q.id %>_1" value="1"><label for="<%= q.id %>_1"><i class="bi bi-star-fill"></i></label>
+                                    <input type="radio" name="<%= q.id %>" id="<%= q.id %>_5" value="5" required><label for="<%= q.id %>_5">★</label>
+                                    <input type="radio" name="<%= q.id %>" id="<%= q.id %>_4" value="4"><label for="<%= q.id %>_4">★</label>
+                                    <input type="radio" name="<%= q.id %>" id="<%= q.id %>_3" value="3"><label for="<%= q.id %>_3">★</label>
+                                    <input type="radio" name="<%= q.id %>" id="<%= q.id %>_2" value="2"><label for="<%= q.id %>_2">★</label>
+                                    <input type="radio" name="<%= q.id %>" id="<%= q.id %>_1" value="1"><label for="<%= q.id %>_1">★</label>
                                 </div>
-
                             <% } else if(q.type === 'yesno') { %>
                                 <div class="d-flex justify-content-center gap-3">
                                     <input type="radio" class="btn-check" name="<%= q.id %>" id="<%= q.id %>_oui" value="Oui" required>
-                                    <label class="btn btn-lg btn-outline-success px-4 rounded-pill" for="<%= q.id %>_oui"><i class="bi bi-hand-thumbs-up-fill me-2"></i>Oui</label>
-
+                                    <label class="btn btn-lg btn-outline-success px-4 rounded-pill" for="<%= q.id %>_oui">Oui</label>
                                     <input type="radio" class="btn-check" name="<%= q.id %>" id="<%= q.id %>_non" value="Non">
-                                    <label class="btn btn-lg btn-outline-danger px-4 rounded-pill" for="<%= q.id %>_non"><i class="bi bi-hand-thumbs-down-fill me-2"></i>Non</label>
+                                    <label class="btn btn-lg btn-outline-danger px-4 rounded-pill" for="<%= q.id %>_non">Non</label>
                                 </div>
-
                             <% } else { %>
-                                <textarea class="form-control bg-light border-0 p-3 rounded-3" name="<%= q.id %>" rows="3" placeholder="Écrivez votre réponse ici..."></textarea>
+                                <textarea class="form-control bg-light border-0 p-3 rounded-3" name="<%= q.id %>" rows="3" placeholder="Écrivez ici..."></textarea>
                             <% } %>
                         </div>
                     <% }) %>
 
                     <div class="d-grid">
-                        <button class="btn btn-primary btn-lg rounded-pill py-3 fw-bold shadow-lg text-uppercase" style="letter-spacing: 1px;">
-                            Envoyer mon avis <i class="bi bi-send-fill ms-2"></i>
-                        </button>
+                        <button class="btn btn-primary btn-lg rounded-pill py-3 fw-bold shadow-lg">Envoyer mon avis</button>
                     </div>
                 </form>
             </div>
         </div>
-        
-        <div class="text-center">
-            <small class="text-muted">Propulsé par <strong style="color: #0061ff;">Forfeo Lab</strong></small>
-        </div>
+        <div class="text-center pb-5"><small class="text-muted">Propulsé par <strong>Forfeo Lab</strong></small></div>
     </div>
 </body>
 </html>
