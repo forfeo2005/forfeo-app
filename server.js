@@ -14,10 +14,10 @@ const port = process.env.PORT || 10000;
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// BANQUE DE QUESTIONS INTÉGRÉE (Résout l'affichage vide des modules)
+// BANQUE DE QUESTIONS (GARANTI L'AFFICHAGE)
 const QUESTIONS_DATA = [
     {
-        id: 1, titre: "Excellence du Service Client", description: "Les bases pour créer un effet WOW.", icon: "bi-emoji-smile", duree: "30 min",
+        titre: "Excellence du Service Client", description: "Les bases pour créer un effet WOW.", icon: "bi-emoji-smile", duree: "30 min",
         questions: [
             { q: "Un client entre pendant que vous êtes au téléphone.", sit: "Situation : Vous êtes occupé au téléphone.", a: "L'ignorer", b: "Signe de main et sourire", c: "Raccrocher", rep: "B", expl: "Le contact visuel valide la présence." },
             { q: "Un client régulier arrive.", sit: "Situation : Vous connaissez son nom.", a: "Bonjour", b: "Bonjour M. Tremblay !", c: "Suivant", rep: "B", expl: "La personnalisation fidélise." },
@@ -25,10 +25,10 @@ const QUESTIONS_DATA = [
         ]
     },
     {
-        id: 2, titre: "Gestion des Situations Difficiles", description: "Calmer le jeu avec professionnalisme.", icon: "bi-shield-check", duree: "45 min",
+        titre: "Gestion des Situations Difficiles", description: "Calmer le jeu avec professionnalisme.", icon: "bi-shield-check", duree: "45 min",
         questions: [
             { q: "Client en colère crie.", sit: "Situation : Conflit au comptoir.", a: "Crier aussi", b: "Rester calme et écouter", c: "Partir", rep: "B", expl: "Le calme est contagieux." },
-            { q: "Refus de remboursement.", sit: "Situation : Politique stricte de l'entreprise.", a: "Non.", b: "Expliquer + Alternative", c: "Impossible", rep: "B", expl: "Le 'Non, mais...'." }
+            { q: "Refus de remboursement.", sit: "Situation : Politique stricte.", a: "Non.", b: "Expliquer + Alternative", c: "Impossible", rep: "B", expl: "Le 'Non, mais...'." }
         ]
     }
 ];
@@ -44,14 +44,14 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v23_full_production',
+    secret: 'forfeo_v26_mega_update',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
 
 app.set('view engine', 'ejs');
 
-// INITIALISATION BDD & RE-SEEDING DES QUESTIONS
+// --- SETUP BDD ---
 async function setupDatabase() {
     try {
         await pool.query(`
@@ -63,24 +63,33 @@ async function setupDatabase() {
             CREATE TABLE IF NOT EXISTS audit_reports (id SERIAL PRIMARY KEY, mission_id INTEGER UNIQUE, ambassadeur_id INTEGER, details JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
         `);
 
-        // Force Reload des Questions
-        await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
-        await pool.query("TRUNCATE formations_modules RESTART IDENTITY CASCADE");
-        for (const mod of QUESTIONS_DATA) {
-            await pool.query(`INSERT INTO formations_modules (id, titre, description, image_icon, duree) VALUES ($1, $2, $3, $4, $5)`, [mod.id, mod.titre, mod.description, mod.icon, mod.duree]);
-            for (const q of mod.questions) {
-                await pool.query(`INSERT INTO formations_questions (module_id, question, option_a, option_b, option_c, reponse_correcte, mise_en_situation, explication) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`, [mod.id, q.q, q.a, q.b, q.c, q.rep, q.sit, q.expl]);
+        // RECHARGEMENT DES QUESTIONS
+        const countQ = await pool.query("SELECT COUNT(*) FROM formations_questions");
+        if(parseInt(countQ.rows[0].count) < 5) {
+            await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
+            await pool.query("TRUNCATE formations_modules RESTART IDENTITY CASCADE");
+            let modId = 1;
+            for (const mod of QUESTIONS_DATA) {
+                await pool.query(`INSERT INTO formations_modules (id, titre, description, image_icon, duree) VALUES ($1, $2, $3, $4, $5)`, [modId, mod.titre, mod.description, mod.icon, mod.duree]);
+                for (const q of mod.questions) {
+                    await pool.query(`INSERT INTO formations_questions (module_id, question, option_a, option_b, option_c, reponse_correcte, mise_en_situation, explication) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`, [modId, q.q, q.a, q.b, q.c, q.rep, q.sit, q.expl]);
+                }
+                modId++;
             }
         }
-        console.log("✅ Système prêt.");
-    } catch (err) { console.error(err); }
+        console.log("✅ DB prête.");
+    } catch (err) { console.error("Erreur DB:", err); }
 }
 setupDatabase();
 
 // --- ROUTES ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
-app.get('/a-propos', (req, res) => res.render('a-propos', { userName: req.session.userName || null }));
+app.get('/a-propos', (req, res) => res.render('a-propos', { userName: req.session.userName || null })); // Nouvelle vue À Propos
+app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
+app.get('/politique-confidentialite', (req, res) => res.render('politique-confidentialite', { userName: req.session.userName || null }));
+app.get('/conditions-utilisation', (req, res) => res.render('conditions-utilisation', { userName: req.session.userName || null }));
 
+// AUTH
 app.get('/login', (req, res) => res.render('login', { error: null, msg: req.query.msg || null, userName: null }));
 app.post('/login', async (req, res) => {
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [req.body.email]);
@@ -92,9 +101,15 @@ app.post('/login', async (req, res) => {
     }
     res.redirect('/login?error=1');
 });
+app.get('/register', (req, res) => res.render('register', { role: req.query.role || 'ambassadeur', error: null, userName: null }));
+app.post('/register', async (req, res) => {
+    const hash = await bcrypt.hash(req.body.password, 10);
+    await pool.query("INSERT INTO users (nom, email, password, role, forfait) VALUES ($1, $2, $3, $4, 'Freemium')", [req.body.nom, req.body.email, hash, req.body.role]);
+    res.redirect('/login?msg=created');
+});
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
-// PROFIL COMPLET
+// PROFIL
 app.get('/profil', async (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
     const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
@@ -114,36 +129,60 @@ app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const missions = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id ORDER BY m.id DESC");
     const users = await pool.query("SELECT * FROM users ORDER BY id DESC");
-    const paiements = await pool.query(`SELECT m.*, u.nom as ambassadeur_nom FROM missions m LEFT JOIN users u ON m.ambassadeur_id = u.id WHERE m.statut_paiement = 'paye' ORDER m.date_paiement DESC`);
+    const paiements = await pool.query(`SELECT m.*, u.nom as ambassadeur_nom FROM missions m LEFT JOIN users u ON m.ambassadeur_id = u.id WHERE m.statut_paiement = 'paye' ORDER BY m.date_paiement DESC`);
     let brut = 0; paiements.rows.forEach(p => brut += (parseFloat(p.recompense) || 0));
     const tps = brut * 0.05; const tvq = brut * 0.09975;
-    res.render('admin-dashboard', { missions: missions.rows, users: users.rows, paiements: paiements.rows, finance: { brut: brut.toFixed(2), tps: tps.toFixed(2), tvq: tvq.toFixed(2), total: (brut + tps + tvq).toFixed(2) }, totalAPayer: 0, userName: req.session.userName });
+    const aPayer = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE statut = 'approuve' AND statut_paiement = 'non_paye'");
+    
+    res.render('admin-dashboard', { 
+        missions: missions.rows, users: users.rows, paiements: paiements.rows, 
+        finance: { brut: brut.toFixed(2), tps: tps.toFixed(2), tvq: tvq.toFixed(2), total: (brut + tps + tvq).toFixed(2) },
+        totalAPayer: aPayer.rows[0].total || 0, userName: req.session.userName 
+    });
 });
-
-// PDF COMPTABLE ADMIN
 app.get('/admin/rapport-comptable', async (req, res) => {
     const doc = new PDFDocument();
     res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=Comptabilite.pdf`);
     doc.pipe(res);
     const logoPath = path.join(__dirname, 'images', 'logo-forfeo.png');
     if(fs.existsSync(logoPath)) doc.image(logoPath, 50, 45, { width: 100 });
-    doc.moveDown(5).fontSize(18).text('RAPPORT COMPTABLE DES PAIEMENTS', { align: 'center' });
+    doc.moveDown(5).fontSize(18).text('RAPPORT DES PAIEMENTS (TPS/TVQ)', { align: 'center' });
+    const paiements = await pool.query(`SELECT m.*, u.nom as ambassadeur_nom FROM missions m LEFT JOIN users u ON m.ambassadeur_id = u.id WHERE m.statut_paiement = 'paye'`);
+    let total = 0;
+    paiements.rows.forEach(p => {
+        doc.fontSize(10).text(`${new Date(p.date_paiement).toLocaleDateString()} - ${p.ambassadeur_nom} : ${p.recompense}$`);
+        total += parseFloat(p.recompense) || 0;
+    });
+    doc.moveDown().text(`Total Brut: ${total.toFixed(2)}$`).text(`TPS (5%): ${(total*0.05).toFixed(2)}$`).text(`TVQ (9.975%): ${(total*0.09975).toFixed(2)}$`).font('Helvetica-Bold').text(`TOTAL: ${(total*1.14975).toFixed(2)}$`);
     doc.end();
 });
-
-// AMBASSADEUR
-app.get('/ambassadeur/dashboard', async (req, res) => {
-    const missions = await pool.query("SELECT * FROM missions WHERE statut = 'actif'");
-    const historique = await pool.query("SELECT * FROM missions WHERE ambassadeur_id = $1 ORDER BY created_at DESC", [req.session.userId]);
-    res.render('ambassadeur-dashboard', { missions: missions.rows, historique: historique.rows, totalGains: 0, userName: req.session.userName });
+app.post('/admin/payer-ambassadeur', async (req, res) => {
+    await pool.query("UPDATE missions SET statut_paiement = 'paye', date_paiement = NOW() WHERE id = $1", [req.body.id_mission]);
+    res.redirect('/admin/dashboard');
 });
-app.post('/ambassadeur/soumettre-rapport', async (req, res) => {
-    await pool.query("INSERT INTO audit_reports (mission_id, ambassadeur_id, details) VALUES ($1, $2, $3)", [req.body.mission_id, req.session.userId, JSON.stringify(req.body)]);
-    await pool.query("UPDATE missions SET statut = 'soumis' WHERE id = $1", [req.body.mission_id]);
-    res.redirect('/ambassadeur/dashboard');
+app.post('/admin/approuver-mission', async (req, res) => {
+    const mission = await pool.query("SELECT statut FROM missions WHERE id = $1", [req.body.id_mission]);
+    let newStatut = mission.rows[0].statut === 'soumis' ? 'approuve' : 'actif';
+    await pool.query("UPDATE missions SET statut = $1 WHERE id = $2", [newStatut, req.body.id_mission]);
+    res.redirect('/admin/dashboard');
+});
+app.post('/admin/create-user', async (req, res) => {
+    const hash = await bcrypt.hash(req.body.password, 10);
+    await pool.query("INSERT INTO users (nom, email, password, role) VALUES ($1, $2, $3, $4)", [req.body.nom, req.body.email, hash, req.body.role]);
+    res.redirect('/admin/dashboard');
+});
+app.post('/admin/delete-user', async (req, res) => {
+    await pool.query("DELETE FROM users WHERE id = $1", [req.body.user_id]);
+    res.redirect('/admin/dashboard');
+});
+app.get('/admin/rapport/:missionId', async (req, res) => {
+    const data = await pool.query(`SELECT r.*, m.titre, m.type_audit, m.client_email, m.id as mission_id, u.nom as ambassadeur_nom FROM audit_reports r JOIN missions m ON r.mission_id = m.id LEFT JOIN users u ON r.ambassadeur_id = u.id WHERE m.id = $1`, [req.params.missionId]);
+    if(data.rows.length === 0) return res.send("Aucun rapport.");
+    res.render('admin-rapport-detail', { rapport: data.rows[0], details: data.rows[0].details, userName: req.session.userName });
 });
 
-// ENTREPRISE (FREEMIUM)
+// --- ENTREPRISE ---
 const checkLimit = async (req, res, next) => {
     const user = await pool.query("SELECT forfait FROM users WHERE id = $1", [req.session.userId]);
     if (user.rows[0].forfait === 'Freemium') {
@@ -157,25 +196,66 @@ app.get('/entreprise/dashboard', async (req, res) => {
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY created_at DESC", [req.session.userId]);
     res.render('entreprise-dashboard', { user: user.rows[0], missions: missions.rows, userName: req.session.userName, error: req.query.error });
 });
-app.get('/entreprise/upgrade-success', async (req, res) => {
-    await pool.query("UPDATE users SET forfait = 'Pro' WHERE id = $1", [req.session.userId]);
+app.post('/entreprise/creer-audit', checkLimit, async (req, res) => {
+    const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(req.body.adresse)}`;
+    await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, adresse, google_map_link) VALUES ($1, $2, $3, $4, $5, 'en_attente', $6, $7)", [req.session.userId, req.body.titre, req.body.type_audit, "Visite terrain.", req.body.recompense, req.body.adresse, mapLink]);
     res.redirect('/entreprise/dashboard');
 });
-
-// PDF ENTREPRISE
+app.post('/entreprise/commander-sondage', checkLimit, async (req, res) => {
+    await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, client_nom, client_email) VALUES ($1, $2, $3, $4, $5, 'en_attente', $6, $7)", [req.session.userId, "Sondage : " + req.body.client_nom, req.body.type_sondage, "Enquête client.", req.body.recompense, req.body.client_nom, req.body.client_email]);
+    res.redirect('/entreprise/dashboard');
+});
 app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
-    const report = await pool.query(`SELECT r.details, m.titre FROM audit_reports r JOIN missions m ON r.mission_id = m.id WHERE m.id = $1`, [req.params.id]);
+    const report = await pool.query(`SELECT r.details, m.titre, m.type_audit, m.created_at, COALESCE(u.nom, 'Ambassadeur certifié') as ambassadeur_nom FROM audit_reports r JOIN missions m ON r.mission_id = m.id LEFT JOIN users u ON r.ambassadeur_id = u.id WHERE m.id = $1 AND m.entreprise_id = $2`, [req.params.id, req.session.userId]);
+    if(report.rows.length === 0) return res.send("Non dispo");
+    
     const doc = new PDFDocument();
     res.setHeader('Content-Type', 'application/pdf');
     doc.pipe(res);
     const logoPath = path.join(__dirname, 'images', 'logo-forfeo.png');
     if(fs.existsSync(logoPath)) doc.image(logoPath, 50, 45, { width: 100 });
-    doc.moveDown(5).fontSize(20).text('RAPPORT FORFEO LAB', { align: 'center' });
-    doc.fontSize(10).text("Merci d'avoir choisi Forfeo Lab, une division de FORFEO INC. Ce rapport a été préparé par un ambassadeur sélectionné avec rigueur.", { align: 'center' });
+    
+    doc.moveDown(5).fontSize(20).fillColor('#0061ff').text('RAPPORT FORFEO LAB', { align: 'center' });
+    doc.moveDown().fontSize(10).fillColor('black').text("Merci d'avoir choisi Forfeo Lab, une division de FORFEO INC.", { align: 'center' });
+    doc.text("Ce rapport a été préparé par un ambassadeur sélectionné avec rigueur pour assurer l'objectivité.", { align: 'center' });
+    doc.moveDown(2);
+    
+    doc.fontSize(12).text(`Mission : ${report.rows[0].titre}`);
+    doc.text(`Type : ${report.rows[0].type_audit}`);
+    doc.text(`Auditeur : ${report.rows[0].ambassadeur_nom}`);
+    doc.moveDown();
+    
+    const details = report.rows[0].details;
+    if(details) { 
+        for(const [k,v] of Object.entries(details)) {
+            // Filtrer les champs système
+            if(k !== 'media_files' && k !== 'proof_stay') {
+                doc.font('Helvetica-Bold').text(`${k} : `).font('Helvetica').text(`${v}`).moveDown(0.5); 
+            }
+        } 
+    }
     doc.end();
 });
 
-// EMPLOYÉ
+// --- AMBASSADEUR ---
+app.get('/ambassadeur/dashboard', async (req, res) => {
+    const missions = await pool.query("SELECT * FROM missions WHERE statut = 'actif'");
+    const historique = await pool.query("SELECT * FROM missions WHERE ambassadeur_id = $1 ORDER BY created_at DESC", [req.session.userId]);
+    const gains = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE ambassadeur_id = $1 AND statut = 'approuve'", [req.session.userId]);
+    res.render('ambassadeur-dashboard', { missions: missions.rows, historique: historique.rows, totalGains: gains.rows[0].total || 0, userName: req.session.userName });
+});
+app.post('/ambassadeur/postuler', async (req, res) => {
+    await pool.query("UPDATE missions SET ambassadeur_id = $1, statut = 'reserve' WHERE id = $2", [req.session.userId, req.body.id_mission]);
+    res.redirect('/ambassadeur/dashboard');
+});
+app.post('/ambassadeur/soumettre-rapport', async (req, res) => {
+    // Stocker tout le body du formulaire comme JSON dans details
+    await pool.query("INSERT INTO audit_reports (mission_id, ambassadeur_id, details) VALUES ($1, $2, $3)", [req.body.mission_id, req.session.userId, JSON.stringify(req.body)]);
+    await pool.query("UPDATE missions SET statut = 'soumis' WHERE id = $1", [req.body.mission_id]);
+    res.redirect('/ambassadeur/dashboard');
+});
+
+// --- ACADEMIE ---
 app.get('/employe/dashboard', async (req, res) => {
     const modules = await pool.query("SELECT * FROM formations_modules ORDER BY id ASC");
     const scores = await pool.query("SELECT * FROM formations_scores WHERE user_id = $1", [req.session.userId]);
@@ -185,6 +265,32 @@ app.get('/formations/module/:id', async (req, res) => {
     const module = await pool.query("SELECT * FROM formations_modules WHERE id = $1", [req.params.id]);
     const questions = await pool.query("SELECT * FROM formations_questions WHERE module_id = $1 ORDER BY id ASC", [req.params.id]);
     res.render('formation-detail', { module: module.rows[0], questions: questions.rows, userName: req.session.userName });
+});
+app.post('/formations/soumettre-quizz', async (req, res) => {
+    const questions = await pool.query("SELECT id, reponse_correcte FROM formations_questions WHERE module_id = $1", [req.body.module_id]);
+    let score = 0;
+    questions.rows.forEach(q => { if (req.body['q_' + q.id] === q.reponse_correcte) score++; });
+    const statut = score >= 2 ? 'reussi' : 'echec';
+    const code = Math.random().toString(36).substring(2, 12).toUpperCase();
+    await pool.query(`INSERT INTO formations_scores (user_id, module_id, meilleur_score, tentatives, statut, code_verif) VALUES ($1, $2, $3, 1, $4, $5) ON CONFLICT (user_id, module_id) DO UPDATE SET meilleur_score = GREATEST(formations_scores.meilleur_score, EXCLUDED.meilleur_score), tentatives = formations_scores.tentatives + 1, statut = EXCLUDED.statut`, [req.session.userId, req.body.module_id, score, statut, code]);
+    res.redirect('/employe/dashboard');
+});
+app.get('/certificat/:code', async (req, res) => {
+    const data = await pool.query("SELECT s.*, u.nom, m.titre FROM formations_scores s JOIN users u ON s.user_id = u.id JOIN formations_modules m ON s.module_id = m.id WHERE s.code_verif = $1", [req.params.code]);
+    if(data.rows.length === 0) return res.send("Non trouvé");
+    const doc = new PDFDocument({ layout: 'landscape' });
+    doc.pipe(res);
+    doc.fontSize(30).text('CERTIFICAT', {align:'center'});
+    doc.text(data.rows[0].nom, {align:'center'});
+    doc.end();
+});
+
+app.post('/api/chat', async (req, res) => {
+    try {
+        const userMsg = req.body.message;
+        const completion = await openai.chat.completions.create({ model: "gpt-4o-mini", messages: [{ role: "system", content: knowledgeBase }, { role: "user", content: userMsg }] });
+        res.json({ reply: completion.choices[0].message.content });
+    } catch (err) { res.json({ reply: "Service momentanément indisponible." }); }
 });
 
 app.listen(port, () => console.log('🚀 LIVE'));
