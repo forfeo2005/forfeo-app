@@ -28,17 +28,39 @@
                     <h5 class="fw-bold text-center">Forfait : <%= user.forfait %></h5>
                     <% if(user.forfait === 'Freemium') { %><a href="/entreprise/upgrade" class="btn btn-flash-pro w-100 py-3 rounded-pill mt-3 shadow">⚡ PASSER PRO (149$) ⚡</a><% } %>
                 </div>
+                
                 <div class="glass-card mb-4">
-                    <h5 class="fw-bold">Publier Audit</h5>
+                    <h5 class="fw-bold">1. Publier Audit Terrain</h5>
                     <form action="/entreprise/creer-audit" method="POST">
                         <input type="text" name="titre" placeholder="Lieu" class="form-control mb-2" required>
                         <input type="text" name="adresse" placeholder="Adresse" class="form-control mb-2" required>
-                        <select name="type_audit" class="form-select mb-2"><option>Audit Standard</option><option>Audit Qualité</option></select>
+                        <select name="type_audit" class="form-select mb-2">
+                            <option>Audit Standard</option>
+                            <option>Audit Qualité & Propreté</option>
+                            <option>Audit Conformité Loi 25</option>
+                            <option>Audit Expérience Vente</option>
+                            <option>Audit Client Mystère VIP</option>
+                        </select>
                         <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-2" required>
                         <button class="btn btn-primary w-100">Publier</button>
                     </form>
                 </div>
+
+                <div class="glass-card border-info">
+                    <h5 class="fw-bold text-info">2. Commander Sondage</h5>
+                    <form action="/entreprise/commander-sondage" method="POST">
+                        <input type="text" name="client_nom" placeholder="Nom Client" class="form-control mb-2" required>
+                        <input type="email" name="client_email" placeholder="Email Client" class="form-control mb-2" required>
+                        <select name="type_sondage" class="form-select mb-2">
+                            <option value="Sondage Satisfaction">Satisfaction Client</option>
+                            <option value="Sondage Après-Vente">Suivi Après-Vente</option>
+                        </select>
+                        <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-2" required>
+                        <button class="btn btn-info text-white w-100">Commander</button>
+                    </form>
+                </div>
             </div>
+            
             <div class="col-lg-8">
                 <div class="glass-card">
                     <h5 class="fw-bold">Historique</h5>
