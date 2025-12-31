@@ -16,7 +16,10 @@
                 <img src="/images/logo-forfeo.png" height="40">
                 <span class="brand-lab-neon">LAB</span>
             </div>
-            <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
+            <div class="d-flex gap-2">
+                <a href="/profil" class="btn btn-outline-primary btn-sm rounded-pill">Mon Profil</a>
+                <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
+            </div>
         </div>
 
         <ul class="nav nav-pills mb-4 gap-3 p-2 glass-card d-inline-flex">
@@ -38,7 +41,31 @@
                         </div>
                     <% }) %>
                 </div>
+
+                <h5 class="fw-bold mt-5 mb-4">📝 Mes missions en cours</h5>
+                <% historique.filter(h => h.statut === 'reserve').forEach(h => { %>
+                    <div class="glass-card mb-3 p-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div><h5 class="fw-bold mb-1"><%= h.titre %></h5><span class="badge bg-info text-dark"><%= h.type_audit %></span></div>
+                            <div class="d-flex gap-2">
+                                <% if(h.type_audit.includes('Sondage')) { %>
+                                    <a href="mailto:<%= h.client_email %>?subject=Sondage Satisfaction&body=Bonjour, je suis ambassadeur Forfeo..." class="btn btn-info text-white rounded-pill">📧 Envoyer Email</a>
+                                <% } %>
+                                <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modal<%= h.id %>">Remplir Rapport</button>
+                            </div>
+                        </div>
+                        <div class="modal fade" id="modal<%= h.id %>" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Rapport</h5></div><div class="modal-body">
+                            <form action="/ambassadeur/soumettre-rapport" method="POST">
+                                <input type="hidden" name="mission_id" value="<%= h.id %>">
+                                <div class="mb-3"><label>Note Globale / 10</label><input type="number" name="note_globale" class="form-control" max="10" required></div>
+                                <div class="mb-3"><label>Commentaire</label><textarea name="commentaire" class="form-control" rows="3" required></textarea></div>
+                                <button class="btn btn-success w-100">Soumettre</button>
+                            </form>
+                        </div></div></div></div>
+                    </div>
+                <% }) %>
             </div>
+
             <div class="tab-pane fade" id="historique">
                 <div class="glass-card">
                     <table class="premium-table">
