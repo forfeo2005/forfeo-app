@@ -9,93 +9,49 @@
 <body>
     <div class="premium-bg"></div>
     <div class="container py-5">
-        
         <% if (typeof error !== 'undefined' && error === 'limit_atteinte') { %>
-            <div class="alert alert-warning text-center fw-bold shadow mb-4">
-                🚀 Limite Freemium atteinte (1 mission). <a href="/entreprise/upgrade" class="text-dark text-decoration-underline">Passez PRO pour publier en illimité !</a>
-            </div>
+            <div class="alert alert-warning text-center fw-bold shadow mb-4">⚠️ Limite Freemium atteinte. <a href="/entreprise/upgrade">Passez PRO !</a></div>
         <% } %>
 
         <div class="d-flex justify-content-between mb-5 align-items-center">
             <h3 class="fw-bold">Bonjour, <%= userName %></h3>
-            
-            <a class="navbar-brand p-0 d-flex flex-column align-items-center me-auto ms-4" href="#">
-                <img src="/images/logo-forfeo.png" alt="Forfeo" height="35">
-                <span style="font-size: 8px; font-weight: 900; letter-spacing: 3px; color: #0061ff; margin-top: 2px;">LAB</span>
-            </a>
-
-            <div class="d-flex gap-2">
-                <a href="/profil" class="btn btn-outline-primary btn-sm rounded-pill">Profil</a>
-                <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
+            <div class="d-flex flex-column align-items-center">
+                <img src="/images/logo-forfeo.png" height="40">
+                <span class="brand-lab-neon">LAB</span>
             </div>
+            <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
         </div>
 
         <div class="row g-4">
             <div class="col-lg-4">
-                <div class="glass-card mb-4 border-primary border bg-white">
-                    <h5 class="fw-bold text-center">Mon Forfait : <%= user.forfait %></h5>
-                    <% if(user.forfait === 'Freemium') { %>
-                        <a href="/entreprise/upgrade" class="btn btn-flash-pro w-100 py-3 rounded-pill mt-3 shadow">⚡ PASSER PRO (149$) ⚡</a>
-                        <p class="text-center small text-muted mt-2 mb-0">1 Mission incluse</p>
-                    <% } else { %>
-                        <div class="alert alert-success mt-3 text-center mb-0 fw-bold">Illimité ✅</div>
-                    <% } %>
+                <div class="glass-card mb-4 bg-white border-primary border">
+                    <h5 class="fw-bold text-center">Forfait : <%= user.forfait %></h5>
+                    <% if(user.forfait === 'Freemium') { %><a href="/entreprise/upgrade" class="btn btn-flash-pro w-100 py-3 rounded-pill mt-3 shadow">⚡ PASSER PRO (149$) ⚡</a><% } %>
                 </div>
-
                 <div class="glass-card mb-4">
-                    <h5 class="fw-bold mb-3">1. Nouvel Audit Terrain</h5>
+                    <h5 class="fw-bold">Publier Audit</h5>
                     <form action="/entreprise/creer-audit" method="POST">
-                        <input type="text" name="titre" placeholder="Nom du lieu (ex: Restaurant Laval)" class="form-control mb-2" required>
-                        <input type="text" name="adresse" placeholder="Adresse complète" class="form-control mb-2" required>
-                        <select name="type_audit" class="form-select mb-2">
-                            <option value="Rapport Expérience">Rapport d'Expérience (Standard)</option>
-                            <option value="Audit Qualité">Audit Qualité & Propreté</option>
-                        </select>
-                        <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-3" required>
-                        <button class="btn btn-primary w-100 rounded-pill">Publier l'Audit</button>
-                    </form>
-                </div>
-
-                <div class="glass-card mb-4 border-info">
-                    <h5 class="fw-bold mb-3 text-info">2. Commander Sondage</h5>
-                    <p class="small text-muted">L'ambassadeur contactera votre client.</p>
-                    <form action="/entreprise/commander-sondage" method="POST">
-                        <input type="text" name="client_nom" placeholder="Nom du Client" class="form-control mb-2" required>
-                        <input type="email" name="client_email" placeholder="Email du Client" class="form-control mb-2" required>
-                        <select name="type_sondage" class="form-select mb-2">
-                            <option value="Sondage Satisfaction">Satisfaction Client</option>
-                            <option value="Sondage Après-Vente">Suivi Après-Vente</option>
-                        </select>
-                        <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-3" required>
-                        <button class="btn btn-info text-white w-100 rounded-pill">Commander</button>
+                        <input type="text" name="titre" placeholder="Lieu" class="form-control mb-2" required>
+                        <input type="text" name="adresse" placeholder="Adresse" class="form-control mb-2" required>
+                        <select name="type_audit" class="form-select mb-2"><option>Audit Standard</option><option>Audit Qualité</option></select>
+                        <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-2" required>
+                        <button class="btn btn-primary w-100">Publier</button>
                     </form>
                 </div>
             </div>
-
             <div class="col-lg-8">
-                <div class="glass-card mb-4">
-                    <h5 class="fw-bold">Historique des Missions</h5>
+                <div class="glass-card">
+                    <h5 class="fw-bold">Historique</h5>
                     <table class="premium-table">
                         <thead><tr><th>Mission</th><th>Statut</th><th>Rapport</th></tr></thead>
                         <tbody>
-                            <% if(typeof missions !== 'undefined') { %>
-                                <% missions.forEach(m => { %>
-                                    <tr>
-                                        <td>
-                                            <div class="fw-bold"><%= m.titre %></div>
-                                            <div class="small text-muted"><%= m.type_audit %></div>
-                                        </td>
-                                        <td><span class="badge bg-secondary"><%= m.statut %></span></td>
-                                        <td>
-                                            <% if(m.statut === 'approuve') { %>
-                                                <a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-success rounded-pill"><i class="bi bi-download"></i> PDF</a>
-                                            <% } else { %>
-                                                <small class="text-muted">En cours</small>
-                                            <% } %>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            <% } %>
+                            <% missions.forEach(m => { %>
+                                <tr>
+                                    <td><%= m.titre %></td>
+                                    <td><span class="badge bg-secondary"><%= m.statut %></span></td>
+                                    <td><% if(m.statut === 'approuve') { %><a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-success">PDF</a><% } %></td>
+                                </tr>
+                            <% }) %>
                         </tbody>
                     </table>
                 </div>
