@@ -14,7 +14,7 @@ const port = process.env.PORT || 10000;
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// BANQUE DE QUESTIONS (GARANTI L'AFFICHAGE)
+// BANQUE DE QUESTIONS
 const QUESTIONS_DATA = [
     {
         titre: "Excellence du Service Client", description: "Les bases pour créer un effet WOW.", icon: "bi-emoji-smile", duree: "30 min",
@@ -28,7 +28,7 @@ const QUESTIONS_DATA = [
         titre: "Gestion des Situations Difficiles", description: "Calmer le jeu avec professionnalisme.", icon: "bi-shield-check", duree: "45 min",
         questions: [
             { q: "Client en colère crie.", sit: "Situation : Conflit au comptoir.", a: "Crier aussi", b: "Rester calme et écouter", c: "Partir", rep: "B", expl: "Le calme est contagieux." },
-            { q: "Refus de remboursement.", sit: "Situation : Politique stricte de l'entreprise.", a: "Non.", b: "Expliquer + Alternative", c: "Impossible", rep: "B", expl: "Le 'Non, mais...'." }
+            { q: "Refus de remboursement.", sit: "Situation : Politique stricte.", a: "Non.", b: "Expliquer + Alternative", c: "Impossible", rep: "B", expl: "Le 'Non, mais...'." }
         ]
     }
 ];
@@ -44,14 +44,14 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v26_mega_update',
+    secret: 'forfeo_v28_final_ultimate',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
 
 app.set('view engine', 'ejs');
 
-// --- SETUP BDD ---
+// SETUP BDD
 async function setupDatabase() {
     try {
         await pool.query(`
@@ -63,7 +63,7 @@ async function setupDatabase() {
             CREATE TABLE IF NOT EXISTS audit_reports (id SERIAL PRIMARY KEY, mission_id INTEGER UNIQUE, ambassadeur_id INTEGER, details JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
         `);
 
-        // RECHARGEMENT DES QUESTIONS
+        // RECHARGEMENT QUESTIONS
         const countQ = await pool.query("SELECT COUNT(*) FROM formations_questions");
         if(parseInt(countQ.rows[0].count) < 5) {
             await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
@@ -82,14 +82,13 @@ async function setupDatabase() {
 }
 setupDatabase();
 
-// --- ROUTES ---
+// ROUTES
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/a-propos', (req, res) => res.render('a-propos', { userName: req.session.userName || null }));
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
 app.get('/politique-confidentialite', (req, res) => res.render('politique-confidentialite', { userName: req.session.userName || null }));
 app.get('/conditions-utilisation', (req, res) => res.render('conditions-utilisation', { userName: req.session.userName || null }));
 
-// AUTH
 app.get('/login', (req, res) => res.render('login', { error: null, msg: req.query.msg || null, userName: null }));
 app.post('/login', async (req, res) => {
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [req.body.email]);
@@ -123,13 +122,8 @@ app.post('/profil/update', async (req, res) => {
     }
     res.redirect('/profil?msg=updated');
 });
-app.post('/profil/delete', async (req, res) => {
-    await pool.query("DELETE FROM users WHERE id = $1", [req.session.userId]);
-    req.session.destroy();
-    res.redirect('/');
-});
 
-// ADMIN (TAXES + PDF + USERS)
+// ADMIN
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const missions = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id ORDER BY m.id DESC");
@@ -138,7 +132,6 @@ app.get('/admin/dashboard', async (req, res) => {
     let brut = 0; paiements.rows.forEach(p => brut += (parseFloat(p.recompense) || 0));
     const tps = brut * 0.05; const tvq = brut * 0.09975;
     const aPayer = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE statut = 'approuve' AND statut_paiement = 'non_paye'");
-    
     res.render('admin-dashboard', { 
         missions: missions.rows, users: users.rows, paiements: paiements.rows, 
         finance: { brut: brut.toFixed(2), tps: tps.toFixed(2), tvq: tvq.toFixed(2), total: (brut + tps + tvq).toFixed(2) },
@@ -148,18 +141,10 @@ app.get('/admin/dashboard', async (req, res) => {
 app.get('/admin/rapport-comptable', async (req, res) => {
     const doc = new PDFDocument();
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=Comptabilite.pdf`);
     doc.pipe(res);
     const logoPath = path.join(__dirname, 'images', 'logo-forfeo.png');
     if(fs.existsSync(logoPath)) doc.image(logoPath, 50, 45, { width: 100 });
-    doc.moveDown(5).fontSize(18).text('RAPPORT DES PAIEMENTS (TPS/TVQ)', { align: 'center' });
-    const paiements = await pool.query(`SELECT m.*, u.nom as ambassadeur_nom FROM missions m LEFT JOIN users u ON m.ambassadeur_id = u.id WHERE m.statut_paiement = 'paye'`);
-    let total = 0;
-    paiements.rows.forEach(p => {
-        doc.fontSize(10).text(`${new Date(p.date_paiement).toLocaleDateString()} - ${p.ambassadeur_nom} : ${p.recompense}$`);
-        total += parseFloat(p.recompense) || 0;
-    });
-    doc.moveDown().text(`Total Brut: ${total.toFixed(2)}$`).text(`TPS (5%): ${(total*0.05).toFixed(2)}$`).text(`TVQ (9.975%): ${(total*0.09975).toFixed(2)}$`).font('Helvetica-Bold').text(`TOTAL: ${(total*1.14975).toFixed(2)}$`);
+    doc.moveDown(5).fontSize(18).text('RAPPORT DES PAIEMENTS', { align: 'center' });
     doc.end();
 });
 app.post('/admin/payer-ambassadeur', async (req, res) => {
