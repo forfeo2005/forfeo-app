@@ -14,6 +14,7 @@ const port = process.env.PORT || 10000;
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// BANQUE DE QUESTIONS (POUR AFFICHAGE GARANTI)
 const QUESTIONS_DATA = [
     {
         titre: "Excellence du Service Client", description: "Les bases pour créer un effet WOW.", icon: "bi-emoji-smile", duree: "30 min",
@@ -27,7 +28,7 @@ const QUESTIONS_DATA = [
         titre: "Gestion des Situations Difficiles", description: "Calmer le jeu avec professionnalisme.", icon: "bi-shield-check", duree: "45 min",
         questions: [
             { q: "Client en colère crie.", sit: "Situation : Conflit au comptoir.", a: "Crier aussi", b: "Rester calme et écouter", c: "Partir", rep: "B", expl: "Le calme est contagieux." },
-            { q: "Refus de remboursement.", sit: "Situation : Politique stricte de l'entreprise.", a: "Non.", b: "Expliquer + Alternative", c: "Impossible", rep: "B", expl: "Le 'Non, mais...'." }
+            { q: "Refus de remboursement.", sit: "Situation : Politique stricte.", a: "Non.", b: "Expliquer + Alternative", c: "Impossible", rep: "B", expl: "Le 'Non, mais...'." }
         ]
     }
 ];
@@ -43,13 +44,14 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v25_ultimate_fixed',
+    secret: 'forfeo_v27_stable_patch',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
 
 app.set('view engine', 'ejs');
 
+// --- DB SETUP ---
 async function setupDatabase() {
     try {
         await pool.query(`
@@ -74,14 +76,15 @@ async function setupDatabase() {
                 modId++;
             }
         }
-        console.log("✅ DB prête.");
-    } catch (err) { console.error("Erreur DB:", err); }
+        console.log("✅ DB OK.");
+    } catch (err) { console.error(err); }
 }
 setupDatabase();
 
-// ROUTES
+// --- ROUTES ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
-app.get('/a-propos', (req, res) => res.render('a-propos', { userName: req.session.userName || null })); // C'est cette route qui manquait ou buggait
+// Route À Propos ajoutée pour éviter l'erreur 500
+app.get('/a-propos', (req, res) => res.render('a-propos', { userName: req.session.userName || null })); 
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
 app.get('/politique-confidentialite', (req, res) => res.render('politique-confidentialite', { userName: req.session.userName || null }));
 app.get('/conditions-utilisation', (req, res) => res.render('conditions-utilisation', { userName: req.session.userName || null }));
@@ -104,6 +107,8 @@ app.post('/register', async (req, res) => {
     res.redirect('/login?msg=created');
 });
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
+
+// PROFIL
 app.get('/profil', async (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
     const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
@@ -127,7 +132,11 @@ app.get('/admin/dashboard', async (req, res) => {
     let brut = 0; paiements.rows.forEach(p => brut += (parseFloat(p.recompense) || 0));
     const tps = brut * 0.05; const tvq = brut * 0.09975;
     const aPayer = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE statut = 'approuve' AND statut_paiement = 'non_paye'");
-    res.render('admin-dashboard', { missions: missions.rows, users: users.rows, paiements: paiements.rows, finance: { brut: brut.toFixed(2), tps: tps.toFixed(2), tvq: tvq.toFixed(2), total: (brut + tps + tvq).toFixed(2) }, totalAPayer: aPayer.rows[0].total || 0, userName: req.session.userName });
+    res.render('admin-dashboard', { 
+        missions: missions.rows, users: users.rows, paiements: paiements.rows, 
+        finance: { brut: brut.toFixed(2), tps: tps.toFixed(2), tvq: tvq.toFixed(2), total: (brut + tps + tvq).toFixed(2) },
+        totalAPayer: aPayer.rows[0].total || 0, userName: req.session.userName 
+    });
 });
 app.get('/admin/rapport-comptable', async (req, res) => {
     const doc = new PDFDocument();
@@ -174,9 +183,7 @@ app.get('/admin/rapport/:missionId', async (req, res) => {
 // ENTREPRISE
 const checkLimit = async (req, res, next) => {
     const user = await pool.query("SELECT forfait FROM users WHERE id = $1", [req.session.userId]);
-    // SI NON FREEMIUM (Pro, Decouverte, etc) ON PASSE
     if (user.rows[0].forfait !== 'Freemium') return next();
-    
     const count = await pool.query("SELECT COUNT(*) FROM missions WHERE entreprise_id = $1", [req.session.userId]);
     if (parseInt(count.rows[0].count) >= 1) return res.redirect('/entreprise/dashboard?error=limit_atteinte');
     next();
@@ -185,11 +192,6 @@ app.get('/entreprise/dashboard', async (req, res) => {
     const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY created_at DESC", [req.session.userId]);
     res.render('entreprise-dashboard', { user: user.rows[0], missions: missions.rows, userName: req.session.userName, error: req.query.error });
-});
-app.get('/entreprise/upgrade', async (req, res) => {
-    // Route de simulation de retour succès (normalement webhook Stripe)
-    await pool.query("UPDATE users SET forfait = 'Pro' WHERE id = $1", [req.session.userId]);
-    res.redirect('/entreprise/dashboard');
 });
 app.post('/entreprise/creer-audit', checkLimit, async (req, res) => {
     const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(req.body.adresse)}`;
