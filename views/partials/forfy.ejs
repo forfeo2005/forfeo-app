@@ -1,37 +1,152 @@
+<style>
+    /* Animation pour attirer l'attention (Rebond + Pulsation) */
+    @keyframes attentionBounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    @keyframes pulseGlow {
+        0% { box-shadow: 0 4px 10px rgba(0, 97, 255, 0.3); }
+        50% { box-shadow: 0 4px 20px rgba(0, 97, 255, 0.6); }
+        100% { box-shadow: 0 4px 10px rgba(0, 97, 255, 0.3); }
+    }
+
+    .forfy-help-bubble-fixed {
+        position: absolute;
+        bottom: 85px; /* Positionné juste au-dessus du bouton */
+        right: 0;
+        background: #0061ff;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px 20px 0 20px;
+        font-size: 13px;
+        font-weight: 800; /* Gras pour bien lire */
+        white-space: nowrap; /* EMPÊCHE LE RETOUR À LA LIGNE DU ? */
+        z-index: 10000;
+        cursor: pointer;
+        animation: attentionBounce 2s infinite ease-in-out, pulseGlow 2s infinite;
+        border: 2px solid white;
+    }
+    
+    /* Petite flèche sous la bulle */
+    .forfy-help-bubble-fixed::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        right: 15px;
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 6px solid #0061ff;
+    }
+</style>
+
 <div id="forfy-container" style="position: fixed; bottom: 30px; right: 30px; z-index: 9999; font-family: 'Inter', sans-serif;">
     
-    <div class="forfy-help-bubble">Besoin d'aide ?</div>
+    <div class="forfy-help-bubble-fixed" onclick="toggleChat()">Besoin d'aide ?</div>
 
     <button onclick="toggleChat()" id="forfy-trigger" style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid white; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.3); overflow: hidden; cursor: pointer; transition: transform 0.3s ease;">
         <video src="/videos/GifForfy.MP4" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
     </button>
 
-    <div id="forfy-window" style="display: none; position: absolute; bottom: 90px; right: 0; width: 320px; height: 450px; background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); flex-direction: column; overflow: hidden; border: 1px solid #f0f0f0;">
-        <div style="background: #0061ff; color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between;">
+    <div id="forfy-window" style="display: none; position: absolute; bottom: 90px; right: 0; width: 340px; height: 500px; background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); flex-direction: column; overflow: hidden; border: 1px solid #f0f0f0;">
+        <div style="background: linear-gradient(135deg, #0061ff, #004ecc); color: white; padding: 15px; display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 35px; height: 35px; background: white; border-radius: 50%; overflow: hidden;"><video src="/videos/GifForfy.MP4" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video></div>
-                <div><div style="font-weight: 700; font-size: 14px;">Forfy Assistant</div><div style="font-size: 10px; opacity: 0.9;">IA Connectée</div></div>
+                <div style="width: 40px; height: 40px; background: white; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,0.3);">
+                    <video src="/videos/GifForfy.MP4" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                </div>
+                <div>
+                    <div style="font-weight: 800; font-size: 15px;">Forfy</div>
+                    <div style="font-size: 11px; opacity: 0.9; display: flex; align-items: center; gap: 4px;">
+                        <span style="width: 6px; height: 6px; background: #4ade80; border-radius: 50%;"></span> En ligne
+                    </div>
+                </div>
             </div>
-            <button onclick="toggleChat()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">×</button>
+            <button onclick="toggleChat()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px;">&times;</button>
         </div>
-        <div id="forfy-messages" style="flex: 1; padding: 15px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 10px;">
-            <div style="align-self: flex-start; max-width: 85%;"><div style="background: white; padding: 10px; border-radius: 12px 12px 12px 0; border: 1px solid #e2e8f0; font-size: 13px; color: #333;">Bonjour ! Je suis Forfy 🐶. Comment puis-je vous aider aujourd'hui ?</div></div>
+
+        <div id="forfy-messages" style="flex: 1; padding: 20px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 12px;">
+            <div style="align-self: flex-start; max-width: 85%;">
+                <div style="background: white; padding: 12px 16px; border-radius: 15px 15px 15px 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 14px; color: #333; line-height: 1.5;">
+                    Bonjour ! Je suis <strong>Forfy</strong> 🐶.<br>Je peux vous aider avec les audits, les sondages ou votre espace membre. Posez-moi votre question !
+                </div>
+            </div>
         </div>
-        <div style="padding: 12px; background: white; border-top: 1px solid #eee; display: flex; gap: 8px;">
-            <input type="text" id="forfy-input" placeholder="Écrivez ici..." style="flex: 1; border: 1px solid #e2e8f0; border-radius: 20px; padding: 8px 12px; outline: none; font-size: 13px;">
-            <button onclick="sendMessage()" style="width: 35px; height: 35px; border-radius: 50%; background: #0061ff; color: white; border: none; cursor: pointer;">➤</button>
+
+        <div style="padding: 15px; background: white; border-top: 1px solid #f1f5f9; display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="forfy-input" placeholder="Écrivez votre message..." style="flex: 1; border: 1px solid #e2e8f0; border-radius: 25px; padding: 10px 15px; outline: none; font-size: 14px; background: #f8fafc;">
+            <button onclick="sendMessage()" style="width: 40px; height: 40px; border-radius: 50%; background: #0061ff; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0, 97, 255, 0.3); transition: transform 0.2s;">
+                <i class="bi bi-send-fill" style="font-size: 16px; margin-left: 2px;"></i>
+            </button>
         </div>
     </div>
 </div>
+
 <script>
-    function toggleChat() { const win = document.getElementById('forfy-window'); win.style.display = (win.style.display === 'none' || win.style.display === '') ? 'flex' : 'none'; }
-    const input = document.getElementById('forfy-input'); const chat = document.getElementById('forfy-messages');
+    function toggleChat() { 
+        const win = document.getElementById('forfy-window'); 
+        const bubble = document.querySelector('.forfy-help-bubble-fixed');
+        
+        if (win.style.display === 'none' || win.style.display === '') {
+            win.style.display = 'flex';
+            if(bubble) bubble.style.display = 'none'; // Cache la bulle quand ouvert
+        } else {
+            win.style.display = 'none';
+            if(bubble) bubble.style.display = 'block'; // Affiche la bulle quand fermé
+        }
+    }
+    
+    const input = document.getElementById('forfy-input'); 
+    const chat = document.getElementById('forfy-messages');
+    
     input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+    
     async function sendMessage() {
         const txt = input.value.trim(); if (!txt) return;
-        chat.innerHTML += `<div style="align-self: flex-end; max-width: 85%;"><div style="background: #0061ff; color: white; padding: 10px; border-radius: 12px 12px 0 12px; font-size: 13px;">${txt}</div></div>`;
-        input.value = ''; chat.scrollTop = chat.scrollHeight;
-        const loadId = 'load-' + Date.now(); chat.innerHTML += `<div id="${loadId}" style="align-self: flex-start; max-width: 85%;"><div style="background: white; padding: 8px; border-radius: 12px; border: 1px solid #eee; font-size: 11px; color: #888;">Forfy réfléchit...</div></div>`; chat.scrollTop = chat.scrollHeight;
-        try { const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: txt }) }); const data = await res.json(); document.getElementById(loadId).remove(); chat.innerHTML += `<div style="align-self: flex-start; max-width: 85%;"><div style="background: white; padding: 10px; border-radius: 12px 12px 12px 0; border: 1px solid #e2e8f0; font-size: 13px; color: #333;">${data.reply}</div></div>`; } catch (e) { document.getElementById(loadId).remove(); } chat.scrollTop = chat.scrollHeight;
+        
+        // Message User
+        chat.innerHTML += `
+            <div style="align-self: flex-end; max-width: 85%;">
+                <div style="background: #0061ff; color: white; padding: 12px 16px; border-radius: 15px 15px 2px 15px; font-size: 14px; box-shadow: 0 2px 8px rgba(0,97,255,0.2);">
+                    ${txt}
+                </div>
+            </div>`;
+        
+        input.value = ''; 
+        chat.scrollTop = chat.scrollHeight;
+        
+        // Loader Forfy
+        const loadId = 'load-' + Date.now(); 
+        chat.innerHTML += `
+            <div id="${loadId}" style="align-self: flex-start; max-width: 85%;">
+                <div style="background: white; padding: 10px 15px; border-radius: 15px; border: 1px solid #eee; font-size: 12px; color: #666; display: flex; align-items: center; gap: 5px;">
+                    <div class="spinner-grow spinner-grow-sm text-primary" role="status" style="width: 0.5rem; height: 0.5rem;"></div> Forfy réfléchit...
+                </div>
+            </div>`; 
+        chat.scrollTop = chat.scrollHeight;
+        
+        try { 
+            const res = await fetch('/api/chat', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ message: txt }) 
+            }); 
+            const data = await res.json(); 
+            
+            document.getElementById(loadId).remove(); 
+            
+            // Réponse Forfy
+            chat.innerHTML += `
+                <div style="align-self: flex-start; max-width: 85%;">
+                    <div style="background: white; padding: 12px 16px; border-radius: 15px 15px 15px 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 14px; color: #333; line-height: 1.5; border: 1px solid #f1f5f9;">
+                        ${data.reply}
+                    </div>
+                </div>`; 
+        } catch (e) { 
+            document.getElementById(loadId).remove(); 
+            chat.innerHTML += `<div style="color: red; font-size: 12px; text-align: center; margin-top: 10px;">Erreur de connexion.</div>`;
+        } 
+        chat.scrollTop = chat.scrollHeight;
     }
 </script>
