@@ -14,16 +14,16 @@ const port = process.env.PORT || 10000;
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// --- BANQUE DE FORMATION (VRAI CONTENU) ---
-const COURSES_DATA = [
+// --- VRAI CONTENU PÉDAGOGIQUE (5 Modules x 5 Questions) ---
+const ACADEMY_DATA = [
     {
-        id: 1, titre: "Excellence du Service Client", description: "Comprendre les bases pour créer un effet WOW et fidéliser.", icon: "bi-emoji-smile", duree: "20 min",
+        id: 1, titre: "Excellence du Service Client", description: "Créer un effet WOW et fidéliser.", icon: "bi-emoji-smile", duree: "20 min",
         questions: [
             { q: "Un client entre alors que vous êtes au téléphone. Quelle est la meilleure réaction ?", a: "L'ignorer jusqu'à la fin de l'appel.", b: "Lui faire un signe de tête et sourire pour valider sa présence.", c: "Raccrocher au nez de votre interlocuteur.", rep: "B", sit: "Situation : Vous êtes occupé au téléphone." },
-            { q: "La règle du 10-4 (10 pieds, 4 pieds) signifie :", a: "À 10 pieds je souris, à 4 pieds je salue verbalement.", b: "Je reste à 10 pieds du client.", c: "Je dois servir le client en 4 minutes.", rep: "A", sit: "Concept : Proactivité et accueil." },
+            { q: "La règle du 10-4 (10 pieds, 4 pieds) signifie :", a: "À 10 pieds je souris, à 4 pieds je salue verbalement.", b: "Je reste à 10 pieds du client.", c: "Je dois servir le client en 4 minutes.", rep: "A", sit: "Concept : Proactivité." },
             { q: "Un client régulier arrive. Vous connaissez son nom.", a: "Bonjour Monsieur !", b: "Bonjour M. Tremblay ! Ravi de vous revoir.", c: "Suivant !", rep: "B", sit: "Concept : Personnalisation." },
             { q: "Le client vous pose une question dont vous ignorez la réponse.", a: "Je ne sais pas.", b: "Ce n'est pas mon département.", c: "Excellente question, je vérifie pour vous immédiatement.", rep: "C", sit: "Situation : Demande technique." },
-            { q: "Quelle est la dernière étape d'une interaction client réussie ?", a: "Donner la facture.", b: "Le remerciement et l'invitation à revenir.", c: "Tourner le dos pour ranger.", rep: "B", sit: "Concept : La conclusion (Last impression)." }
+            { q: "Quelle est la dernière étape d'une interaction client réussie ?", a: "Donner la facture.", b: "Le remerciement sincère et l'invitation à revenir.", c: "Tourner le dos pour ranger.", rep: "B", sit: "Concept : La conclusion (Last impression)." }
         ]
     },
     {
@@ -31,7 +31,7 @@ const COURSES_DATA = [
         questions: [
             { q: "L'écoute active, c'est principalement :", a: "Préparer sa réponse pendant que l'autre parle.", b: "Écouter pour comprendre, sans interrompre, et reformuler.", c: "Hocher la tête sans écouter.", rep: "B", sit: "Concept : Écoute." },
             { q: "Le langage non-verbal (corps, visage) représente quel % du message ?", a: "Environ 7%", b: "Environ 55%", c: "0%", rep: "B", sit: "Concept : Communication non-verbale." },
-            { q: "Si un client parle vite et semble pressé, vous devez :", a: "Parler très lentement pour le calmer.", b: "Adapter votre rythme pour être efficace et concis.", c: "Lui dire de se calmer.", rep: "B", sit: "Technique : Le miroir (Matching)." },
+            { q: "Si un client parle vite et semble pressé, vous devez :", a: "Parler très lentement pour le calmer.", b: "Adapter votre rythme (Matching) pour être efficace.", c: "Lui dire de se calmer.", rep: "B", sit: "Technique : Le miroir." },
             { q: "Laquelle est une phrase d'empathie ?", a: "Calmez-vous.", b: "C'est pas de ma faute.", c: "Je comprends votre frustration, regardons cela ensemble.", rep: "C", sit: "Situation : Client déçu." },
             { q: "Pourquoi reformuler la demande du client ?", a: "Pour gagner du temps.", b: "Pour valider qu'on a bien compris son besoin.", c: "Pour montrer qu'on est intelligent.", rep: "B", sit: "Technique : Reformulation." }
         ]
@@ -43,7 +43,7 @@ const COURSES_DATA = [
             { q: "Face à un client qui crie, vous devez :", a: "Crier plus fort pour dominer.", b: "Rester calme, parler doucement et écouter.", c: "L'ignorer.", rep: "B", sit: "Situation : Agressivité." },
             { q: "Un client demande un remboursement refusé par la politique.", a: "C'est non.", b: "C'est la politique, je n'y peux rien.", c: "Je ne peux pas rembourser, mais voici ce que je peux faire (alternative).", rep: "C", sit: "Technique : Le Non Positif." },
             { q: "Si un client vous insulte personnellement :", a: "Vous l'insultez aussi.", b: "Vous fixez une limite calmement : 'Je veux vous aider, mais je n'accepte pas ce langage'.", c: "Vous pleurez.", rep: "B", sit: "Situation : Harcèlement." },
-            { q: "Après avoir résolu un conflit, il faut :", a: "En parler à tous les collègues pour rire.", b: "Oublier.", c: "S'assurer que le client part apaisé et satisfait.", rep: "C", sit: "Concept : Récupération de service." }
+            { q: "Après avoir résolu un conflit, il faut :", a: "En parler à tous les collègues pour rire.", b: "Oublier.", c: "S'assurer que le client part apaisé et satisfait (Récupération).", rep: "C", sit: "Concept : Récupération de service." }
         ]
     },
     {
@@ -79,14 +79,14 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v30_academy_pro',
+    secret: 'forfeo_v31_full_production',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
 
 app.set('view engine', 'ejs');
 
-// INITIALISATION BDD AVEC VRAI CONTENU
+// --- BDD & SEEDING ---
 async function setupDatabase() {
     try {
         await pool.query(`
@@ -98,24 +98,23 @@ async function setupDatabase() {
             CREATE TABLE IF NOT EXISTS audit_reports (id SERIAL PRIMARY KEY, mission_id INTEGER UNIQUE, ambassadeur_id INTEGER, details JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
         `);
 
-        // On recharge les questions à chaque démarrage pour garantir qu'elles sont à jour
+        // Rechargement des questions pour s'assurer qu'elles sont à jour
         const countQ = await pool.query("SELECT COUNT(*) FROM formations_questions");
-        // Logique : On vide et on remplit pour être sûr d'avoir les vraies questions
         await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
         await pool.query("TRUNCATE formations_modules RESTART IDENTITY CASCADE");
         
-        for (const mod of COURSES_DATA) {
+        for (const mod of ACADEMY_DATA) {
             await pool.query(`INSERT INTO formations_modules (id, titre, description, image_icon, duree) VALUES ($1, $2, $3, $4, $5)`, [mod.id, mod.titre, mod.description, mod.icon, mod.duree]);
             for (const q of mod.questions) {
                 await pool.query(`INSERT INTO formations_questions (module_id, question, option_a, option_b, option_c, reponse_correcte, mise_en_situation, explication) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`, [mod.id, q.q, q.a, q.b, q.c, q.rep, q.sit, "Explication standard"]);
             }
         }
-        console.log("✅ Académie chargée avec succès.");
+        console.log("✅ Académie & DB prêtes.");
     } catch (err) { console.error("Erreur DB:", err); }
 }
 setupDatabase();
 
-// ROUTES STANDARD
+// --- ROUTES STANDARD ---
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/a-propos', (req, res) => res.render('a-propos', { userName: req.session.userName || null }));
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
@@ -154,15 +153,15 @@ app.post('/profil/update', async (req, res) => {
     res.redirect('/profil?msg=updated');
 });
 
-// ADMIN (AVEC VUE FORMATIONS)
+// --- ADMIN (AVEC SUIVI FORMATIONS) ---
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const missions = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id ORDER BY m.id DESC");
     const users = await pool.query("SELECT * FROM users ORDER BY id DESC");
     const paiements = await pool.query(`SELECT m.*, u.nom as ambassadeur_nom FROM missions m LEFT JOIN users u ON m.ambassadeur_id = u.id WHERE m.statut_paiement = 'paye' ORDER BY m.date_paiement DESC`);
     
-    // NOUVEAU : Suivi des formations pour Admin
-    const formations = await pool.query(`SELECT u.nom as employe, u.entreprise_id, m.titre, s.meilleur_score, s.statut FROM formations_scores s JOIN users u ON s.user_id = u.id JOIN formations_modules m ON s.module_id = m.id ORDER BY s.updated_at DESC LIMIT 20`);
+    // Suivi Global des Formations
+    const formations = await pool.query(`SELECT u.nom as employe, m.titre, s.meilleur_score, s.statut FROM formations_scores s JOIN users u ON s.user_id = u.id JOIN formations_modules m ON s.module_id = m.id ORDER BY s.updated_at DESC LIMIT 20`);
 
     let brut = 0; paiements.rows.forEach(p => brut += (parseFloat(p.recompense) || 0));
     const tps = brut * 0.05; const tvq = brut * 0.09975;
@@ -174,7 +173,6 @@ app.get('/admin/dashboard', async (req, res) => {
         totalAPayer: aPayer.rows[0].total || 0, userName: req.session.userName 
     });
 });
-// (Autres routes admin inchangées : rapport-comptable, payer, approuver, create-user, delete-user, rapport/id...)
 app.get('/admin/rapport-comptable', async (req, res) => {
     const doc = new PDFDocument();
     res.setHeader('Content-Type', 'application/pdf'); doc.pipe(res);
@@ -186,8 +184,7 @@ app.post('/admin/create-user', async (req, res) => { const hash = await bcrypt.h
 app.post('/admin/delete-user', async (req, res) => { await pool.query("DELETE FROM users WHERE id=$1", [req.body.user_id]); res.redirect('/admin/dashboard'); });
 app.get('/admin/rapport/:missionId', async (req, res) => { const data = await pool.query(`SELECT r.*, m.titre, m.type_audit FROM audit_reports r JOIN missions m ON r.mission_id=m.id WHERE m.id=$1`, [req.params.missionId]); res.render('admin-rapport-detail', { rapport: data.rows[0], details: data.rows[0].details, userName: req.session.userName }); });
 
-
-// ENTREPRISE (AVEC VUE FORMATIONS)
+// --- ENTREPRISE (AVEC SUIVI EMPLOYÉS) ---
 const checkLimit = async (req, res, next) => {
     const user = await pool.query("SELECT forfait FROM users WHERE id = $1", [req.session.userId]);
     if (user.rows[0].forfait !== 'Freemium') return next();
@@ -199,7 +196,7 @@ app.get('/entreprise/dashboard', async (req, res) => {
     const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY created_at DESC", [req.session.userId]);
     
-    // NOUVEAU : Récupérer les scores des employés de cette entreprise
+    // Suivi des employés de l'entreprise
     const scores = await pool.query(`
         SELECT u.nom as employe_nom, m.titre as module_titre, s.meilleur_score, s.statut, s.updated_at 
         FROM formations_scores s 
@@ -209,16 +206,13 @@ app.get('/entreprise/dashboard', async (req, res) => {
         ORDER BY s.updated_at DESC`, [req.session.userId]);
 
     res.render('entreprise-dashboard', { 
-        user: user.rows[0], 
-        missions: missions.rows, 
-        scores: scores.rows, // On passe les scores à la vue
-        userName: req.session.userName, 
-        error: req.query.error 
+        user: user.rows[0], missions: missions.rows, scores: scores.rows, 
+        userName: req.session.userName, error: req.query.error 
     });
 });
 app.post('/entreprise/creer-audit', checkLimit, async (req, res) => { await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, adresse) VALUES ($1, $2, $3, 'Visite', $4, 'en_attente', $5)", [req.session.userId, req.body.titre, req.body.type_audit, req.body.recompense, req.body.adresse]); res.redirect('/entreprise/dashboard'); });
 app.post('/entreprise/commander-sondage', checkLimit, async (req, res) => { await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, client_nom, client_email) VALUES ($1, $2, $3, 'Sondage', $4, 'en_attente', $5, $6)", [req.session.userId, "Sondage "+req.body.client_nom, req.body.type_sondage, req.body.recompense, req.body.client_nom, req.body.client_email]); res.redirect('/entreprise/dashboard'); });
-app.post('/entreprise/ajouter-employe', async (req, res) => { // Ajouter un employé lié à l'entreprise
+app.post('/entreprise/ajouter-employe', async (req, res) => { 
     const hash = await bcrypt.hash(req.body.password, 10);
     await pool.query("INSERT INTO users (nom, email, password, role, entreprise_id) VALUES ($1, $2, $3, 'employe', $4)", [req.body.nom, req.body.email, hash, req.session.userId]);
     res.redirect('/entreprise/dashboard');
@@ -249,7 +243,7 @@ app.post('/formations/soumettre-quizz', async (req, res) => {
     const questions = await pool.query("SELECT id, reponse_correcte FROM formations_questions WHERE module_id = $1", [moduleId]);
     
     let score = 0;
-    let total = questions.rows.length; // Devrait être 5
+    let total = questions.rows.length; // 5
 
     questions.rows.forEach(q => {
         if (req.body['q_' + q.id] === q.reponse_correcte) {
@@ -257,11 +251,9 @@ app.post('/formations/soumettre-quizz', async (req, res) => {
         }
     });
 
-    // RÈGLE DU 80%
+    // RÈGLE DU 80% (4/5)
     const pourcentage = (score / total) * 100;
-    const statut = pourcentage >= 80 ? 'reussi' : 'echec'; // 4/5 minimum
-    
-    // Génération code certificat si réussi
+    const statut = pourcentage >= 80 ? 'reussi' : 'echec';
     const code = statut === 'reussi' ? Math.random().toString(36).substring(2, 10).toUpperCase() : null;
 
     await pool.query(`
