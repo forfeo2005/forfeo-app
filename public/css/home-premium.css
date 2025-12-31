@@ -1,18 +1,92 @@
-:root { --primary: #0061ff; --secondary: #1e293b; --bg: #f8fafc; }
-body { font-family: 'Inter', sans-serif; background-color: var(--bg); overflow-x: hidden; }
-
-.navbar-brand { display: flex; flex-direction: column; align-items: center; line-height: 1; margin-right: 2rem; }
-.logo-img { height: 50px; width: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
-.brand-lab-neon {
-    display: block; font-size: 14px; font-weight: 900; letter-spacing: 6px; color: #0061ff; margin-top: -3px;
-    text-transform: uppercase; text-align: center; text-shadow: 0 0 5px #fff, 0 0 10px #0061ff, 0 0 20px #00c6ff;
-    animation: neonPulse 1.5s infinite alternate;
+:root {
+    --primary: #0061ff;
+    --primary-dark: #004ecc;
+    --secondary: #1e293b;
+    --bg-body: #f8fafc;
+    --white: #ffffff;
+    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
-@keyframes neonPulse { 0% { opacity: 0.8; transform: scale(1); } 100% { opacity: 1; transform: scale(1.05); } }
 
-.hero-text-animated { opacity: 0; transform: translateY(20px); animation: fadeInUp 1s ease-out forwards; }
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--secondary);
+    background-color: var(--bg-body);
+    overflow-x: hidden;
+}
+
+/* --- LOGO ULTRA FLASHY & CENTRÉ --- */
+.navbar-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-right: 2rem;
+    position: relative;
+    line-height: 1;
+}
+
+.logo-img {
+    height: 50px;
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    z-index: 2;
+}
+
+.brand-lab-neon {
+    display: block;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 6px;
+    color: #0061ff;
+    margin-top: -3px;
+    text-transform: uppercase;
+    text-align: center;
+    text-shadow: 0 0 5px #fff, 0 0 10px #0061ff, 0 0 20px #00c6ff;
+    animation: neonPulse 1.2s infinite alternate;
+}
+
+@keyframes neonPulse {
+    0% { opacity: 0.8; text-shadow: 0 0 5px #0061ff; transform: scale(1); }
+    100% { opacity: 1; text-shadow: 0 0 15px #00c6ff, 0 0 30px #0061ff; transform: scale(1.05); }
+}
+
+/* --- ANIMATIONS --- */
+.hero-text-animated {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 1s ease-out forwards;
+}
 @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
 
+.reveal-up { opacity: 0; transform: translateY(30px); animation: fadeInUp 0.8s forwards; }
+
+/* --- UI ELEMENTS --- */
+.premium-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; background: #f8fafc; }
+.glass-card { background: rgba(255, 255, 255, 0.95); border: 1px solid white; border-radius: 20px; box-shadow: var(--shadow-sm); padding: 24px; }
+
+/* TABLEAUX & BADGES */
+.premium-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+.premium-table th { color: #64748b; text-transform: uppercase; font-size: 0.75rem; padding: 10px; }
+.premium-table td { padding: 15px 10px; background: white; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.badge-status { padding: 5px 12px; border-radius: 50px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; }
+
+/* BOUTON PRO */
+.btn-flash-pro {
+    background: linear-gradient(90deg, #0061ff, #00c6ff, #0061ff); background-size: 200%;
+    color: white !important; font-weight: 800; border: none;
+    box-shadow: 0 0 20px rgba(0, 97, 255, 0.6); animation: gradientMove 3s infinite linear;
+}
+@keyframes gradientMove { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+
+/* NAVBAR */
+.navbar-premium { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); }
+
+/* STATS */
+.stat-number { font-size: 3.5rem; font-weight: 800; background: -webkit-linear-gradient(45deg, #0061ff, #00c6ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+/* FORFY BULLE */
 .forfy-help-bubble {
     position: absolute; top: -60px; right: 0; background: #0061ff; color: white;
     padding: 6px 14px; border-radius: 20px 20px 0 20px; font-size: 12px; font-weight: bold;
@@ -20,6 +94,37 @@ body { font-family: 'Inter', sans-serif; background-color: var(--bg); overflow-x
 }
 @keyframes floatBubble { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 
-.glass-card { background: rgba(255, 255, 255, 0.95); border: 1px solid #fff; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 24px; }
-.premium-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
-.premium-table td { padding: 15px; background: white; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.blob-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; overflow: hidden; }
+.blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4; }
+.blob-1 { width: 400px; height: 400px; background: #e0f2fe; top: -100px; left: -100px; }
+.blob-2 { width: 300px; height: 300px; background: #f0fdf4; bottom: -50px; right: -50px; }
+
+/* --- ADAPTATION MOBILE (CELLULAIRE) --- */
+@media (max-width: 768px) {
+    /* Ajustement Logo */
+    .navbar-brand { margin-right: 0; margin-bottom: 10px; }
+    .logo-img { height: 40px; }
+    .brand-lab-neon { font-size: 11px; letter-spacing: 4px; }
+    
+    /* Navigation */
+    .navbar-collapse { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-top: 10px; }
+    
+    /* Espacement Hero */
+    .hero-section { padding-top: 100px; }
+    h1.display-3 { font-size: 2.2rem; } /* Titre plus petit */
+    .hero-text-animated { font-size: 1rem; }
+    
+    /* Tableaux responsives */
+    .premium-table { display: block; overflow-x: auto; white-space: nowrap; }
+    
+    /* Cartes */
+    .glass-card { padding: 20px; margin-bottom: 20px; }
+    
+    /* Forfy sur mobile */
+    #forfy-container { bottom: 20px; right: 20px; }
+    #forfy-trigger { width: 60px; height: 60px; }
+    #forfy-window { width: 90vw; height: 60vh; bottom: 80px; right: 0; }
+    
+    /* Icônes */
+    .bi { display: inline-block; vertical-align: middle; } /* Force l'affichage */
+}
