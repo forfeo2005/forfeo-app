@@ -6,13 +6,18 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/premium-dashboard.css">
     <link rel="stylesheet" href="/css/home-premium.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
     <div class="premium-bg"></div>
     <div class="container py-5">
+        
         <% if (typeof error !== 'undefined' && error === 'limit_atteinte') { %>
             <div class="alert alert-warning text-center fw-bold shadow mb-4">⚠️ Limite Freemium atteinte. Choisissez un forfait ci-dessous.</div>
+        <% } %>
+        <% if (typeof msg !== 'undefined' && msg === 'campagne_envoyee') { %>
+            <div class="alert alert-success text-center fw-bold shadow mb-4"><i class="bi bi-send-check-fill me-2"></i>Campagne envoyée avec succès ! Vos clients recevront le sondage sous peu.</div>
         <% } %>
 
         <div class="d-flex justify-content-between mb-5 align-items-center flex-wrap">
@@ -24,40 +29,23 @@
         <% if(user.forfait === 'Freemium') { %>
             <h4 class="fw-bold mb-4 text-center">Nos Forfaits PRO</h4>
             <div class="row g-4 mb-5">
-                <div class="col-md-4">
-                    <div class="card h-100 border-0 shadow-sm p-4 text-center">
-                        <h5 class="fw-bold">Découverte</h5>
-                        <h2 class="text-primary fw-bold">49$</h2>
-                        <a href="https://buy.stripe.com/9B69AUdXAakvfaM9hQd7q0g" target="_blank" class="btn btn-outline-primary w-100 rounded-pill mt-3">Choisir</a>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100 border-primary shadow p-4 text-center" style="transform: scale(1.05);">
-                        <div class="badge bg-primary position-absolute top-0 start-50 translate-middle">Populaire</div>
-                        <h5 class="fw-bold mt-2">Découverte+</h5>
-                        <h2 class="text-primary fw-bold">119$</h2>
-                        <a href="https://buy.stripe.com/8x23cwbPs1NZ3s4cu2d7q0f" target="_blank" class="btn btn-primary w-100 rounded-pill mt-3">Choisir</a>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100 border-0 shadow-sm p-4 text-center">
-                        <h5 class="fw-bold">Croissance</h5>
-                        <h2 class="text-primary fw-bold">69$<small class="fs-6 text-muted">/mois</small></h2>
-                        <a href="https://buy.stripe.com/00w9AU1aO9gr9Qs1Pod7q0e" target="_blank" class="btn btn-outline-primary w-100 rounded-pill mt-3">S'abonner</a>
-                    </div>
-                </div>
+                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Découverte</h5><h2 class="text-primary fw-bold">49$</h2><a href="https://buy.stripe.com/9B69AUdXAakvfaM9hQd7q0g" target="_blank" class="btn btn-outline-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
+                <div class="col-md-4"><div class="card h-100 border-primary shadow p-4 text-center" style="transform: scale(1.05);"><div class="badge bg-primary position-absolute top-0 start-50 translate-middle">Populaire</div><h5 class="fw-bold mt-2">Découverte+</h5><h2 class="text-primary fw-bold">119$</h2><a href="https://buy.stripe.com/8x23cwbPs1NZ3s4cu2d7q0f" target="_blank" class="btn btn-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
+                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Croissance</h5><h2 class="text-primary fw-bold">69$<small class="fs-6 text-muted">/mois</small></h2><a href="https://buy.stripe.com/00w9AU1aO9gr9Qs1Pod7q0e" target="_blank" class="btn btn-outline-primary w-100 rounded-pill mt-3">S'abonner</a></div></div>
             </div>
         <% } else { %>
             <div class="alert alert-success text-center fw-bold mb-4">✅ Vous profitez du forfait <%= user.forfait %> (Illimité)</div>
         <% } %>
 
         <ul class="nav nav-pills mb-4 gap-3 p-2 glass-card d-inline-flex flex-wrap" role="tablist">
-            <li class="nav-item"><button class="nav-link active rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#missions">Missions & Sondages</button></li>
+            <li class="nav-item"><button class="nav-link active rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#missions">Audits & Missions</button></li>
+            <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#campagnes">Campagnes & Sondages</button></li>
             <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#academie">Suivi Académie</button></li>
             <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#employes">Gestion Employés</button></li>
         </ul>
 
         <div class="tab-content">
+            
             <div class="tab-pane fade show active" id="missions">
                 <div class="row g-4">
                     <div class="col-lg-4">
@@ -72,10 +60,11 @@
                             </form>
                         </div>
                         <div class="glass-card border-info">
-                            <h5 class="fw-bold text-info">Commander Sondage</h5>
+                            <h5 class="fw-bold text-info">Commander Sondage Certifié</h5>
+                            <p class="small text-muted">Réalisé par un ambassadeur Forfeo.</p>
                             <form action="/entreprise/commander-sondage" method="POST">
-                                <input type="text" name="client_nom" placeholder="Nom Client" class="form-control mb-2" required>
-                                <input type="email" name="client_email" placeholder="Email Client" class="form-control mb-2" required>
+                                <input type="text" name="client_nom" placeholder="Nom Client Cible" class="form-control mb-2" required>
+                                <input type="email" name="client_email" placeholder="Email Client Cible" class="form-control mb-2" required>
                                 <select name="type_sondage" class="form-select mb-2"><option>Satisfaction Client</option><option>Sondage Après-Vente</option></select>
                                 <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-2" required>
                                 <button class="btn btn-info text-white w-100">Commander</button>
@@ -94,10 +83,99 @@
                 </div>
             </div>
 
+            <div class="tab-pane fade" id="campagnes">
+                <div class="row g-4">
+                    <div class="col-lg-5">
+                        <div class="glass-card h-100 border-primary border-2 shadow-lg">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4 class="fw-bold mb-0 text-primary">QR Code Intelligent</h4>
+                                <span class="badge bg-primary">Automatisé</span>
+                            </div>
+                            <p class="text-muted small">
+                                Placez ce code sur vos tables, comptoirs ou factures. Vos clients le scannent pour donner leur avis instantanément. 
+                                <br><strong>Zéro effort de saisie pour vous.</strong>
+                            </p>
+                            
+                            <div class="text-center p-4 bg-white rounded-4 border mb-4 mt-3">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<%= encodeURIComponent(typeof survey_link !== 'undefined' ? survey_link : 'https://forfeo.com') %>" alt="QR Code Sondage" class="img-fluid">
+                                <p class="small text-muted mt-2 fw-bold mb-0">Scannez pour tester</p>
+                            </div>
+                            
+                            <label class="small fw-bold text-muted mb-1">Votre lien de sondage permanent :</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control form-control-sm bg-light" value="<%= typeof survey_link !== 'undefined' ? survey_link : 'Lien non disponible' %>" readonly>
+                                <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-clipboard"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-7">
+                        <div class="glass-card mb-4">
+                            <h5 class="fw-bold mb-3"><i class="bi bi-envelope-paper-fill me-2 text-primary"></i>Lancer une campagne email</h5>
+                            <p class="text-muted small">Idéal pour les listes de clients après séjour. Copiez-collez vos adresses, Forfeo s'occupe de l'envoi.</p>
+                            
+                            <form action="/entreprise/envoyer-campagne" method="POST">
+                                <div class="mb-3">
+                                    <label class="fw-bold small">Type de questionnaire (IA adaptée)</label>
+                                    <select class="form-select" name="type_activite">
+                                        <option value="Restaurant">Restaurant (Goût, Service, Ambiance)</option>
+                                        <option value="Hôtel">Hôtel (Chambre, Accueil, Propreté)</option>
+                                        <option value="Magasin">Commerce de détail</option>
+                                        <option value="Autre">Général</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="fw-bold small">Liste des emails clients (séparés par virgule ou saut de ligne)</label>
+                                    <textarea name="emails" class="form-control" rows="4" placeholder="client1@gmail.com, client2@yahoo.fr..." required></textarea>
+                                </div>
+                                <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm">
+                                    <i class="bi bi-send-fill me-2"></i>Envoyer le sondage
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="glass-card">
+                            <h5 class="fw-bold mb-3"><i class="bi bi-bar-chart-fill me-2 text-success"></i>Retours Clients (Automatisés)</h5>
+                            <% if(typeof sondages !== 'undefined' && sondages.length > 0) { %>
+                                <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                                    <% sondages.forEach(s => { 
+                                        const rep = s.reponses;
+                                        // Extraction simplifiée pour l'aperçu (Q1 est souvent la note globale)
+                                        let note = rep['q1'] || 'N/A';
+                                    %>
+                                        <div class="list-group-item bg-transparent border-bottom">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="fw-bold text-dark"><%= new Date(s.created_at).toLocaleDateString() %></small>
+                                                <span class="badge bg-light text-secondary border"><%= s.type_activite %></span>
+                                            </div>
+                                            <div class="mt-2 d-flex align-items-center gap-2">
+                                                <span class="small text-muted">Satisfaction :</span>
+                                                <% if(note >= 4) { %>
+                                                    <span class="badge bg-success"><%= note %>/5 ★</span>
+                                                <% } else if(note <= 2) { %>
+                                                    <span class="badge bg-danger"><%= note %>/5 ★</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-warning text-dark"><%= note %>/5 ★</span>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    <% }) %>
+                                </div>
+                            <% } else { %>
+                                <div class="text-center py-4">
+                                    <i class="bi bi-inbox text-muted fs-1"></i>
+                                    <p class="text-muted small mt-2">Aucun retour pour le moment.<br>Lancez une campagne ou partagez votre QR Code !</p>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="tab-pane fade" id="academie">
                 <div class="glass-card">
                     <h4 class="fw-bold mb-4 text-primary">Performance de vos équipes</h4>
-                    <% if(scores && scores.length > 0) { %>
+                    <% if(typeof scores !== 'undefined' && scores.length > 0) { %>
                         <table class="premium-table">
                             <thead><tr><th>Employé</th><th>Module</th><th>Résultat</th><th>Date</th></tr></thead>
                             <tbody>
@@ -107,9 +185,9 @@
                                         <td><%= s.module_titre %></td>
                                         <td>
                                             <% if(s.statut === 'reussi') { %>
-                                                <span class="badge bg-success text-white">RÉUSSI (<%= s.meilleur_score %>%)</span>
+                                                <span class="badge bg-success text-white">RÉUSSI (<%= Math.round(s.meilleur_score) %>%)</span>
                                             <% } else { %>
-                                                <span class="badge bg-danger text-white">ÉCHEC (<%= s.meilleur_score %>%)</span>
+                                                <span class="badge bg-danger text-white">ÉCHEC (<%= Math.round(s.meilleur_score) %>%)</span>
                                             <% } %>
                                         </td>
                                         <td class="text-muted small"><%= new Date(s.updated_at).toLocaleDateString() %></td>
@@ -118,7 +196,7 @@
                             </tbody>
                         </table>
                     <% } else { %>
-                        <div class="text-center py-5 text-muted">Aucune donnée de formation disponible pour le moment.</div>
+                        <div class="text-center py-5 text-muted">Aucune donnée de formation disponible.</div>
                     <% } %>
                 </div>
             </div>
