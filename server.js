@@ -14,7 +14,6 @@ const port = process.env.PORT || 10000;
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// BANQUE DE QUESTIONS (GARANTI L'AFFICHAGE)
 const QUESTIONS_DATA = [
     {
         titre: "Excellence du Service Client", description: "Les bases pour créer un effet WOW.", icon: "bi-emoji-smile", duree: "30 min",
@@ -28,7 +27,7 @@ const QUESTIONS_DATA = [
         titre: "Gestion des Situations Difficiles", description: "Calmer le jeu avec professionnalisme.", icon: "bi-shield-check", duree: "45 min",
         questions: [
             { q: "Client en colère crie.", sit: "Situation : Conflit au comptoir.", a: "Crier aussi", b: "Rester calme et écouter", c: "Partir", rep: "B", expl: "Le calme est contagieux." },
-            { q: "Refus de remboursement.", sit: "Situation : Politique stricte.", a: "Non.", b: "Expliquer + Alternative", c: "Impossible", rep: "B", expl: "Le 'Non, mais...'." }
+            { q: "Refus de remboursement.", sit: "Situation : Politique stricte de l'entreprise.", a: "Non.", b: "Expliquer + Alternative", c: "Impossible", rep: "B", expl: "Le 'Non, mais...'." }
         ]
     }
 ];
@@ -44,14 +43,13 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v26_mega_update',
+    secret: 'forfeo_v25_ultimate_fixed',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
 
 app.set('view engine', 'ejs');
 
-// --- SETUP BDD ---
 async function setupDatabase() {
     try {
         await pool.query(`
@@ -63,7 +61,6 @@ async function setupDatabase() {
             CREATE TABLE IF NOT EXISTS audit_reports (id SERIAL PRIMARY KEY, mission_id INTEGER UNIQUE, ambassadeur_id INTEGER, details JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
         `);
 
-        // RECHARGEMENT DES QUESTIONS
         const countQ = await pool.query("SELECT COUNT(*) FROM formations_questions");
         if(parseInt(countQ.rows[0].count) < 5) {
             await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
@@ -82,14 +79,13 @@ async function setupDatabase() {
 }
 setupDatabase();
 
-// --- ROUTES ---
+// ROUTES
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
-app.get('/a-propos', (req, res) => res.render('a-propos', { userName: req.session.userName || null })); // Nouvelle vue À Propos
+app.get('/a-propos', (req, res) => res.render('a-propos', { userName: req.session.userName || null })); // C'est cette route qui manquait ou buggait
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
 app.get('/politique-confidentialite', (req, res) => res.render('politique-confidentialite', { userName: req.session.userName || null }));
 app.get('/conditions-utilisation', (req, res) => res.render('conditions-utilisation', { userName: req.session.userName || null }));
 
-// AUTH
 app.get('/login', (req, res) => res.render('login', { error: null, msg: req.query.msg || null, userName: null }));
 app.post('/login', async (req, res) => {
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [req.body.email]);
@@ -108,8 +104,6 @@ app.post('/register', async (req, res) => {
     res.redirect('/login?msg=created');
 });
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
-
-// PROFIL
 app.get('/profil', async (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
     const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
@@ -124,7 +118,7 @@ app.post('/profil/update', async (req, res) => {
     res.redirect('/profil?msg=updated');
 });
 
-// ADMIN (TAXES + PDF)
+// ADMIN
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const missions = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id ORDER BY m.id DESC");
@@ -133,12 +127,7 @@ app.get('/admin/dashboard', async (req, res) => {
     let brut = 0; paiements.rows.forEach(p => brut += (parseFloat(p.recompense) || 0));
     const tps = brut * 0.05; const tvq = brut * 0.09975;
     const aPayer = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE statut = 'approuve' AND statut_paiement = 'non_paye'");
-    
-    res.render('admin-dashboard', { 
-        missions: missions.rows, users: users.rows, paiements: paiements.rows, 
-        finance: { brut: brut.toFixed(2), tps: tps.toFixed(2), tvq: tvq.toFixed(2), total: (brut + tps + tvq).toFixed(2) },
-        totalAPayer: aPayer.rows[0].total || 0, userName: req.session.userName 
-    });
+    res.render('admin-dashboard', { missions: missions.rows, users: users.rows, paiements: paiements.rows, finance: { brut: brut.toFixed(2), tps: tps.toFixed(2), tvq: tvq.toFixed(2), total: (brut + tps + tvq).toFixed(2) }, totalAPayer: aPayer.rows[0].total || 0, userName: req.session.userName });
 });
 app.get('/admin/rapport-comptable', async (req, res) => {
     const doc = new PDFDocument();
@@ -182,19 +171,25 @@ app.get('/admin/rapport/:missionId', async (req, res) => {
     res.render('admin-rapport-detail', { rapport: data.rows[0], details: data.rows[0].details, userName: req.session.userName });
 });
 
-// --- ENTREPRISE ---
+// ENTREPRISE
 const checkLimit = async (req, res, next) => {
     const user = await pool.query("SELECT forfait FROM users WHERE id = $1", [req.session.userId]);
-    if (user.rows[0].forfait === 'Freemium') {
-        const count = await pool.query("SELECT COUNT(*) FROM missions WHERE entreprise_id = $1", [req.session.userId]);
-        if (parseInt(count.rows[0].count) >= 1) return res.redirect('/entreprise/dashboard?error=limit_atteinte');
-    }
+    // SI NON FREEMIUM (Pro, Decouverte, etc) ON PASSE
+    if (user.rows[0].forfait !== 'Freemium') return next();
+    
+    const count = await pool.query("SELECT COUNT(*) FROM missions WHERE entreprise_id = $1", [req.session.userId]);
+    if (parseInt(count.rows[0].count) >= 1) return res.redirect('/entreprise/dashboard?error=limit_atteinte');
     next();
 };
 app.get('/entreprise/dashboard', async (req, res) => {
     const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY created_at DESC", [req.session.userId]);
     res.render('entreprise-dashboard', { user: user.rows[0], missions: missions.rows, userName: req.session.userName, error: req.query.error });
+});
+app.get('/entreprise/upgrade', async (req, res) => {
+    // Route de simulation de retour succès (normalement webhook Stripe)
+    await pool.query("UPDATE users SET forfait = 'Pro' WHERE id = $1", [req.session.userId]);
+    res.redirect('/entreprise/dashboard');
 });
 app.post('/entreprise/creer-audit', checkLimit, async (req, res) => {
     const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(req.body.adresse)}`;
@@ -208,36 +203,24 @@ app.post('/entreprise/commander-sondage', checkLimit, async (req, res) => {
 app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     const report = await pool.query(`SELECT r.details, m.titre, m.type_audit, m.created_at, COALESCE(u.nom, 'Ambassadeur certifié') as ambassadeur_nom FROM audit_reports r JOIN missions m ON r.mission_id = m.id LEFT JOIN users u ON r.ambassadeur_id = u.id WHERE m.id = $1 AND m.entreprise_id = $2`, [req.params.id, req.session.userId]);
     if(report.rows.length === 0) return res.send("Non dispo");
-    
     const doc = new PDFDocument();
     res.setHeader('Content-Type', 'application/pdf');
     doc.pipe(res);
     const logoPath = path.join(__dirname, 'images', 'logo-forfeo.png');
     if(fs.existsSync(logoPath)) doc.image(logoPath, 50, 45, { width: 100 });
-    
     doc.moveDown(5).fontSize(20).fillColor('#0061ff').text('RAPPORT FORFEO LAB', { align: 'center' });
-    doc.moveDown().fontSize(10).fillColor('black').text("Merci d'avoir choisi Forfeo Lab, une division de FORFEO INC.", { align: 'center' });
-    doc.text("Ce rapport a été préparé par un ambassadeur sélectionné avec rigueur pour assurer l'objectivité.", { align: 'center' });
-    doc.moveDown(2);
-    
-    doc.fontSize(12).text(`Mission : ${report.rows[0].titre}`);
-    doc.text(`Type : ${report.rows[0].type_audit}`);
-    doc.text(`Auditeur : ${report.rows[0].ambassadeur_nom}`);
-    doc.moveDown();
-    
+    doc.fontSize(10).fillColor('black').text("Merci d'avoir choisi Forfeo Lab, une division de FORFEO INC. Ce rapport a été préparé par un ambassadeur sélectionné avec rigueur.", { align: 'center' });
+    doc.moveDown(2).fontSize(12).text(`Mission : ${report.rows[0].titre}`).text(`Auditeur : ${report.rows[0].ambassadeur_nom}`).moveDown();
     const details = report.rows[0].details;
     if(details) { 
         for(const [k,v] of Object.entries(details)) {
-            // Filtrer les champs système
-            if(k !== 'media_files' && k !== 'proof_stay') {
-                doc.font('Helvetica-Bold').text(`${k} : `).font('Helvetica').text(`${v}`).moveDown(0.5); 
-            }
+            if(k !== 'media_files' && k !== 'proof_stay') doc.font('Helvetica-Bold').text(`${k} : `).font('Helvetica').text(`${v}`).moveDown(0.5); 
         } 
     }
     doc.end();
 });
 
-// --- AMBASSADEUR ---
+// AMBASSADEUR
 app.get('/ambassadeur/dashboard', async (req, res) => {
     const missions = await pool.query("SELECT * FROM missions WHERE statut = 'actif'");
     const historique = await pool.query("SELECT * FROM missions WHERE ambassadeur_id = $1 ORDER BY created_at DESC", [req.session.userId]);
@@ -249,13 +232,12 @@ app.post('/ambassadeur/postuler', async (req, res) => {
     res.redirect('/ambassadeur/dashboard');
 });
 app.post('/ambassadeur/soumettre-rapport', async (req, res) => {
-    // Stocker tout le body du formulaire comme JSON dans details
     await pool.query("INSERT INTO audit_reports (mission_id, ambassadeur_id, details) VALUES ($1, $2, $3)", [req.body.mission_id, req.session.userId, JSON.stringify(req.body)]);
     await pool.query("UPDATE missions SET statut = 'soumis' WHERE id = $1", [req.body.mission_id]);
     res.redirect('/ambassadeur/dashboard');
 });
 
-// --- ACADEMIE ---
+// ACADEMIE
 app.get('/employe/dashboard', async (req, res) => {
     const modules = await pool.query("SELECT * FROM formations_modules ORDER BY id ASC");
     const scores = await pool.query("SELECT * FROM formations_scores WHERE user_id = $1", [req.session.userId]);
