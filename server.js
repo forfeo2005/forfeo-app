@@ -12,10 +12,8 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 10000;
 
-// Config OpenAI
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// --- BANQUE DE DONNÉES DE QUESTIONS (DANS LE SERVEUR POUR 0 ERREUR) ---
 const QUESTIONS_DATA = [
     {
         titre: "Excellence du Service Client", description: "Créer un effet WOW.", icon: "bi-emoji-smile", duree: "30 min",
@@ -41,10 +39,7 @@ const QUESTIONS_DATA = [
 
 const knowledgeBase = `Tu es Forfy, IA de Forfeo Lab (Division de FORFEO INC). Tu aides Ambassadeurs, Entreprises et Admins.`;
 
-const pool = new Pool({ 
-    connectionString: process.env.DATABASE_URL, 
-    ssl: { rejectUnauthorized: false } 
-});
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
 app.use(express.static('public'));
 app.use('/images', express.static(path.join(__dirname, 'images')));
@@ -53,15 +48,13 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v17_final_patch',
-    resave: false, 
-    saveUninitialized: false,
+    secret: 'forfeo_v18_final',
+    resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
 
 app.set('view engine', 'ejs');
 
-// --- SETUP BDD & MIGRATION FORCEE ---
 async function setupDatabase() {
     try {
         await pool.query(`
@@ -72,41 +65,31 @@ async function setupDatabase() {
             CREATE TABLE IF NOT EXISTS formations_scores (id SERIAL PRIMARY KEY, user_id INTEGER, module_id INTEGER, meilleur_score INTEGER DEFAULT 0, tentatives INTEGER DEFAULT 0, statut VARCHAR(50), code_verif VARCHAR(12) UNIQUE, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
             CREATE TABLE IF NOT EXISTS audit_reports (id SERIAL PRIMARY KEY, mission_id INTEGER UNIQUE, ambassadeur_id INTEGER, details JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
         `);
-
-        // Migration Colonnes
-        await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS date_paiement TIMESTAMP;`);
-        await pool.query(`ALTER TABLE missions ADD COLUMN IF NOT EXISTS statut_paiement VARCHAR(50) DEFAULT 'non_paye';`);
-        await pool.query(`ALTER TABLE formations_questions ADD COLUMN IF NOT EXISTS mise_en_situation TEXT;`);
-        await pool.query(`ALTER TABLE formations_questions ADD COLUMN IF NOT EXISTS explication TEXT;`);
-
-        // RESET ET RECHARGEMENT DES QUESTIONS (Pour garantir l'affichage)
+        // Force Reload Questions
         const countQ = await pool.query("SELECT COUNT(*) FROM formations_questions");
-        if(parseInt(countQ.rows[0].count) < 10) {
-            console.log("🔄 Rechargement questions...");
+        if(parseInt(countQ.rows[0].count) < 5) {
             await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
             await pool.query("TRUNCATE formations_modules RESTART IDENTITY CASCADE");
             let modId = 1;
             for (const mod of QUESTIONS_DATA) {
                 await pool.query(`INSERT INTO formations_modules (id, titre, description, image_icon, duree) VALUES ($1, $2, $3, $4, $5)`, [modId, mod.titre, mod.description, mod.icon, mod.duree]);
                 for (const q of mod.questions) {
-                    await pool.query(`INSERT INTO formations_questions (module_id, question, option_a, option_b, option_c, reponse_correcte, mise_en_situation, explication) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-                    [modId, q.q, q.a, q.b, q.c, q.rep, q.sit, q.expl]);
+                    await pool.query(`INSERT INTO formations_questions (module_id, question, option_a, option_b, option_c, reponse_correcte, mise_en_situation, explication) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`, [modId, q.q, q.a, q.b, q.c, q.rep, q.sit, q.expl]);
                 }
                 modId++;
             }
         }
-        console.log("✅ Base de données prête.");
-    } catch (err) { console.error("Erreur DB:", err); }
+        console.log("✅ DB Ready.");
+    } catch (err) { console.error("DB Error:", err); }
 }
 setupDatabase();
 
-// --- ROUTES ---
+// ROUTES
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
 app.get('/politique-confidentialite', (req, res) => res.render('politique-confidentialite', { userName: req.session.userName || null }));
 app.get('/conditions-utilisation', (req, res) => res.render('conditions-utilisation', { userName: req.session.userName || null }));
 
-// --- AUTH ---
 app.get('/login', (req, res) => res.render('login', { error: null, msg: req.query.msg || null, userName: null }));
 app.post('/login', async (req, res) => {
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [req.body.email]);
@@ -126,72 +109,50 @@ app.post('/register', async (req, res) => {
 });
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
-// --- ADMIN (AVEC CALCULS TAXES + PDF) ---
+// ADMIN
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const missions = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id ORDER BY m.id DESC");
     const users = await pool.query("SELECT * FROM users ORDER BY id DESC");
-    
-    // Calculs Finance
     const paiements = await pool.query(`SELECT m.*, u.nom as ambassadeur_nom FROM missions m LEFT JOIN users u ON m.ambassadeur_id = u.id WHERE m.statut_paiement = 'paye' ORDER BY m.date_paiement DESC`);
     let totalBrut = 0;
     paiements.rows.forEach(p => totalBrut += (parseFloat(p.recompense) || 0));
-    
-    // TPS (5%) et TVQ (9.975%)
-    const tps = totalBrut * 0.05;
-    const tvq = totalBrut * 0.09975;
-    const grandTotal = totalBrut + tps + tvq;
-
+    const tps = totalBrut * 0.05; const tvq = totalBrut * 0.09975; const grandTotal = totalBrut + tps + tvq;
     const aPayer = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE statut = 'approuve' AND statut_paiement = 'non_paye'");
-
-    res.render('admin-dashboard', { 
-        missions: missions.rows, 
-        users: users.rows, 
-        paiements: paiements.rows, 
-        finance: { brut: totalBrut.toFixed(2), tps: tps.toFixed(2), tvq: tvq.toFixed(2), total: grandTotal.toFixed(2) },
-        totalAPayer: aPayer.rows[0].total || 0, 
-        userName: req.session.userName 
-    });
+    res.render('admin-dashboard', { missions: missions.rows, users: users.rows, paiements: paiements.rows, finance: { brut: totalBrut.toFixed(2), tps: tps.toFixed(2), tvq: tvq.toFixed(2), total: grandTotal.toFixed(2) }, totalAPayer: aPayer.rows[0].total || 0, userName: req.session.userName });
 });
-
 app.get('/admin/rapport-comptable', async (req, res) => {
-    if (req.session.userRole !== 'admin') return res.redirect('/login');
     const doc = new PDFDocument();
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=Comptabilite_Forfeo.pdf`);
     doc.pipe(res);
-
-    const logoPath = path.join(__dirname, 'images', 'logo-forfeo.png'); 
+    const logoPath = path.join(__dirname, 'images', 'logo-forfeo.png');
     if(fs.existsSync(logoPath)) doc.image(logoPath, 50, 45, { width: 100 });
-    
     doc.moveDown(5);
-    doc.fontSize(20).text('RAPPORT DES PAIEMENTS (TPS/TVQ)', { align: 'center' });
+    doc.fontSize(18).text('RAPPORT DES PAIEMENTS (TPS/TVQ)', { align: 'center' });
     doc.moveDown();
-    
     const paiements = await pool.query(`SELECT m.*, u.nom as ambassadeur_nom FROM missions m LEFT JOIN users u ON m.ambassadeur_id = u.id WHERE m.statut_paiement = 'paye'`);
     let total = 0;
-    
     paiements.rows.forEach(p => {
         doc.fontSize(12).text(`${new Date(p.date_paiement).toLocaleDateString()} - ${p.ambassadeur_nom} - ${p.titre} : ${p.recompense}$`);
         total += parseFloat(p.recompense) || 0;
     });
-    
     doc.moveDown();
-    doc.text(`------------------------------------------------`);
     doc.text(`Sous-total: ${total.toFixed(2)}$`);
     doc.text(`TPS (5%): ${(total * 0.05).toFixed(2)}$`);
     doc.text(`TVQ (9.975%): ${(total * 0.09975).toFixed(2)}$`);
     doc.font('Helvetica-Bold').text(`GRAND TOTAL: ${(total * 1.14975).toFixed(2)}$`);
     doc.end();
 });
-
 app.post('/admin/payer-ambassadeur', async (req, res) => {
     await pool.query("UPDATE missions SET statut_paiement = 'paye', date_paiement = NOW() WHERE id = $1", [req.body.id_mission]);
     res.redirect('/admin/dashboard');
 });
 app.post('/admin/approuver-mission', async (req, res) => {
-    const mission = await pool.query("SELECT statut FROM missions WHERE id = $1", [req.body.id_mission]);
-    let newStatut = mission.rows[0].statut === 'soumis' ? 'approuve' : 'actif';
+    let newStatut = 'actif'; // Par défaut publication
+    // Si c'est pour approuver un rapport soumis (statut 'soumis'), on passe à 'approuve'
+    const current = await pool.query("SELECT statut FROM missions WHERE id = $1", [req.body.id_mission]);
+    if(current.rows[0].statut === 'soumis') newStatut = 'approuve';
     await pool.query("UPDATE missions SET statut = $1 WHERE id = $2", [newStatut, req.body.id_mission]);
     res.redirect('/admin/dashboard');
 });
@@ -210,7 +171,7 @@ app.get('/admin/rapport/:missionId', async (req, res) => {
     res.render('admin-rapport-detail', { rapport: data.rows[0], details: data.rows[0].details, userName: req.session.userName });
 });
 
-// --- ENTREPRISE (FREEMIUM & PDF OFFICIEL) ---
+// --- ENTREPRISE ---
 const checkLimit = async (req, res, next) => {
     const user = await pool.query("SELECT forfait FROM users WHERE id = $1", [req.session.userId]);
     if (user.rows[0].forfait === 'Freemium') {
@@ -243,16 +204,14 @@ app.post('/entreprise/ajouter-employe', async (req, res) => {
 app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     const report = await pool.query(`SELECT r.details, m.titre, m.type_audit, m.created_at, COALESCE(u.nom, 'Ambassadeur') as ambassadeur_nom FROM audit_reports r JOIN missions m ON r.mission_id = m.id LEFT JOIN users u ON r.ambassadeur_id = u.id WHERE m.id = $1 AND m.entreprise_id = $2`, [req.params.id, req.session.userId]);
     if(report.rows.length === 0) return res.send("Non dispo");
-    
     const doc = new PDFDocument();
     res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=Rapport_ForfeoLab.pdf`);
     doc.pipe(res);
-    
     const logoPath = path.join(__dirname, 'images', 'logo-forfeo.png');
     if(fs.existsSync(logoPath)) doc.image(logoPath, 50, 45, { width: 100 });
-    
     doc.moveDown(5);
-    doc.fontSize(22).fillColor('#0061ff').text('RAPPORT FORFEO LAB', { align: 'center' });
+    doc.fontSize(20).fillColor('#0061ff').text('RAPPORT FORFEO LAB', { align: 'center' });
     doc.moveDown();
     doc.fontSize(10).fillColor('black').text("Merci d'avoir choisi Forfeo Lab, une division de FORFEO INC.", { align: 'center' });
     doc.text("Ce rapport a été réalisé par un de nos ambassadeurs sélectionnés avec rigueur pour assurer l'objectivité.", { align: 'center' });
@@ -261,7 +220,6 @@ app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     doc.text(`Type : ${report.rows[0].type_audit}`);
     doc.text(`Auditeur : ${report.rows[0].ambassadeur_nom}`);
     doc.moveDown();
-    
     const details = report.rows[0].details;
     if(details) { for(const [k,v] of Object.entries(details)) { doc.font('Helvetica-Bold').text(`${k} : `); doc.font('Helvetica').text(`${v}`); doc.moveDown(0.5); } }
     doc.end();
@@ -318,14 +276,10 @@ app.get('/certificat/:code', async (req, res) => {
     doc.end();
 });
 
-// --- API IA ---
 app.post('/api/chat', async (req, res) => {
     try {
         const userMsg = req.body.message;
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [{ role: "system", content: knowledgeBase }, { role: "user", content: userMsg }],
-        });
+        const completion = await openai.chat.completions.create({ model: "gpt-4o-mini", messages: [{ role: "system", content: knowledgeBase }, { role: "user", content: userMsg }] });
         res.json({ reply: completion.choices[0].message.content });
     } catch (err) { res.json({ reply: "Désolé, indisponible." }); }
 });
