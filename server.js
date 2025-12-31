@@ -79,7 +79,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v33_pdf_pro',
+    secret: 'forfeo_v33_pdf_pro_fixed',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
@@ -221,7 +221,7 @@ app.post('/entreprise/ajouter-employe', async (req, res) => {
     res.redirect('/entreprise/dashboard');
 });
 
-// --- GÉNÉRATION RAPPORT PDF AMÉLIORÉE (OBJECTIVITÉ) ---
+// --- GÉNÉRATION RAPPORT PDF CORRIGÉE (ALIGNEMENT ET CONTENU) ---
 app.get('/entreprise/telecharger-rapport/:id', async (req, res) => { 
     const report = await pool.query(`SELECT r.details, m.titre, m.type_audit, m.created_at FROM audit_reports r JOIN missions m ON r.mission_id = m.id WHERE m.id = $1`, [req.params.id]);
     if(report.rows.length === 0) return res.send("Non trouvé");
@@ -238,7 +238,7 @@ app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     if(fs.existsSync(logoPath)) doc.image(logoPath, 50, 40, { width: 60 });
 
     // En-tête
-    doc.moveDown();
+    doc.moveDown(1);
     doc.font('Helvetica-Bold').fontSize(22).fillColor('#0061ff').text('RAPPORT D\'AUDIT', {align:'center'});
     doc.font('Helvetica').fontSize(10).fillColor('#333').text('Forfeo Lab - Division de FORFEO INC.', {align:'center'});
     
@@ -248,33 +248,43 @@ app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     doc.text(`Type : ${data.type_audit}`);
     doc.text(`Date : ${new Date(data.created_at).toLocaleDateString()}`);
     
-    // ENCADRÉ OBJECTIVITÉ
-    doc.moveDown(2);
-    doc.rect(50, doc.y, 500, 60).fillAndStroke('#f0f9ff', '#0061ff');
-    doc.fillColor('#0061ff').fontSize(10).text(
+    doc.moveDown(1.5); // Espace avant l'encadré
+
+    // --- ENCADRÉ OBJECTIVITÉ CORRIGÉ ---
+    // 1. Sauvegarder la position Y actuelle
+    const startY = doc.y;
+    const boxHeight = 75; // Hauteur suffisante
+
+    // 2. Dessiner le rectangle
+    doc.rect(50, startY, 500, boxHeight).fillAndStroke('#f0f9ff', '#0061ff');
+    
+    // 3. Écrire le texte DANS le rectangle (startY + padding)
+    doc.fillColor('#0061ff').fontSize(9).text(
         "CERTIFICATION D'INDÉPENDANCE :\nCe rapport a été complété avec objectivité et impartialité par un Ambassadeur Certifié Forfeo LAB. Les observations consignées reflètent fidèlement l'expérience client vécue, conformément aux standards de qualité de Forfeo Inc.",
-        60,
-        doc.y - 50,
+        60, // Marge gauche (x)
+        startY + 15, // Marge haute DANS la boîte (y)
         { width: 480, align: 'center' }
     );
 
+    // 4. Déplacer le curseur APRÈS la boîte pour la suite
+    doc.y = startY + boxHeight + 30; // On descend sous la boîte
+    
     // Détails
-    doc.moveDown(4);
     doc.fillColor('#000').fontSize(14).text('Détails de l\'évaluation :', { underline: true });
-    doc.moveDown();
+    doc.moveDown(1);
     doc.fontSize(11);
     
     const details = data.details;
     for (const [key, value] of Object.entries(details)) {
         if(key !== 'mission_id' && key !== 'ambassadeur_id' && key !== 'media_files') {
-            doc.font('Helvetica-Bold').text(`${key.toUpperCase()} : `, { continued: true });
+            doc.font('Helvetica-Bold').text(`${key.toUpperCase().replace(/_/g, ' ')} : `, { continued: true });
             doc.font('Helvetica').text(`${value}`);
             doc.moveDown(0.5);
         }
     }
 
     // Footer
-    doc.moveDown(2);
+    doc.moveDown(4);
     doc.fontSize(8).fillColor('#999').text('© 2025 Forfeo Inc. Document confidentiel.', {align:'center'});
     
     doc.end(); 
@@ -282,7 +292,7 @@ app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
 
 // --- AMBASSADEUR ---
 app.get('/ambassadeur/dashboard', async (req, res) => { 
-    const missions = await pool.query("SELECT * FROM missions WHERE statut='approuve'"); // Affiche les missions approuvées par l'admin
+    const missions = await pool.query("SELECT * FROM missions WHERE statut='approuve'"); 
     const hist = await pool.query("SELECT * FROM missions WHERE ambassadeur_id=$1", [req.session.userId]); 
     res.render('ambassadeur-dashboard', { missions: missions.rows, historique: hist.rows, totalGains: 0, userName: req.session.userName }); 
 });
