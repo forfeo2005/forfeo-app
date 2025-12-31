@@ -79,7 +79,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v32_fixed_status',
+    secret: 'forfeo_v33_pdf_pro',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
@@ -98,6 +98,7 @@ async function setupDatabase() {
             CREATE TABLE IF NOT EXISTS audit_reports (id SERIAL PRIMARY KEY, mission_id INTEGER UNIQUE, ambassadeur_id INTEGER, details JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
         `);
 
+        // Rechargement des questions
         const countQ = await pool.query("SELECT COUNT(*) FROM formations_questions");
         await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
         await pool.query("TRUNCATE formations_modules RESTART IDENTITY CASCADE");
@@ -158,14 +159,12 @@ app.post('/profil/delete', async (req, res) => {
     res.redirect('/?msg=deleted');
 });
 
-// --- ADMIN (AVEC SUIVI FORMATIONS) ---
+// --- ADMIN ---
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
     const missions = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id ORDER BY m.id DESC");
     const users = await pool.query("SELECT * FROM users ORDER BY id DESC");
     const paiements = await pool.query(`SELECT m.*, u.nom as ambassadeur_nom FROM missions m LEFT JOIN users u ON m.ambassadeur_id = u.id WHERE m.statut_paiement = 'paye' ORDER BY m.date_paiement DESC`);
-    
-    // Suivi Global des Formations
     const formations = await pool.query(`SELECT u.nom as employe, m.titre, s.meilleur_score, s.statut FROM formations_scores s JOIN users u ON s.user_id = u.id JOIN formations_modules m ON s.module_id = m.id ORDER BY s.updated_at DESC LIMIT 20`);
 
     let brut = 0; paiements.rows.forEach(p => brut += (parseFloat(p.recompense) || 0));
@@ -189,7 +188,7 @@ app.post('/admin/create-user', async (req, res) => { const hash = await bcrypt.h
 app.post('/admin/delete-user', async (req, res) => { await pool.query("DELETE FROM users WHERE id=$1", [req.body.user_id]); res.redirect('/admin/dashboard'); });
 app.get('/admin/rapport/:missionId', async (req, res) => { const data = await pool.query(`SELECT r.*, m.titre, m.type_audit FROM audit_reports r JOIN missions m ON r.mission_id=m.id WHERE m.id=$1`, [req.params.missionId]); res.render('admin-rapport-detail', { rapport: data.rows[0], details: data.rows[0].details, userName: req.session.userName }); });
 
-// --- ENTREPRISE (AVEC SUIVI EMPLOYÉS) ---
+// --- ENTREPRISE ---
 const checkLimit = async (req, res, next) => {
     const user = await pool.query("SELECT forfait FROM users WHERE id = $1", [req.session.userId]);
     if (user.rows[0].forfait !== 'Freemium') return next();
@@ -201,7 +200,6 @@ app.get('/entreprise/dashboard', async (req, res) => {
     const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY created_at DESC", [req.session.userId]);
     
-    // Suivi des employés de l'entreprise
     const scores = await pool.query(`
         SELECT u.nom as employe_nom, m.titre as module_titre, s.meilleur_score, s.statut, s.updated_at 
         FROM formations_scores s 
@@ -222,30 +220,76 @@ app.post('/entreprise/ajouter-employe', async (req, res) => {
     await pool.query("INSERT INTO users (nom, email, password, role, entreprise_id) VALUES ($1, $2, $3, 'employe', $4)", [req.body.nom, req.body.email, hash, req.session.userId]);
     res.redirect('/entreprise/dashboard');
 });
+
+// --- GÉNÉRATION RAPPORT PDF AMÉLIORÉE (OBJECTIVITÉ) ---
 app.get('/entreprise/telecharger-rapport/:id', async (req, res) => { 
     const report = await pool.query(`SELECT r.details, m.titre, m.type_audit, m.created_at FROM audit_reports r JOIN missions m ON r.mission_id = m.id WHERE m.id = $1`, [req.params.id]);
-    const doc = new PDFDocument(); 
+    if(report.rows.length === 0) return res.send("Non trouvé");
+
+    const data = report.rows[0];
+    const doc = new PDFDocument({ margin: 50 });
+    
     res.setHeader('Content-Type', 'application/pdf'); 
+    res.setHeader('Content-Disposition', `attachment; filename=Rapport-Forfeo-${req.params.id}.pdf`);
     doc.pipe(res); 
-    doc.fontSize(20).text('Rapport Forfeo Lab', {align:'center'});
-    if(report.rows.length > 0) {
-        const details = report.rows[0].details;
-        doc.moveDown().fontSize(12).text(JSON.stringify(details, null, 2));
+
+    // Logo
+    const logoPath = path.join(__dirname, 'images', 'logo-forfeo.png');
+    if(fs.existsSync(logoPath)) doc.image(logoPath, 50, 40, { width: 60 });
+
+    // En-tête
+    doc.moveDown();
+    doc.font('Helvetica-Bold').fontSize(22).fillColor('#0061ff').text('RAPPORT D\'AUDIT', {align:'center'});
+    doc.font('Helvetica').fontSize(10).fillColor('#333').text('Forfeo Lab - Division de FORFEO INC.', {align:'center'});
+    
+    doc.moveDown(2);
+    doc.fillColor('#000').fontSize(12);
+    doc.text(`Mission : ${data.titre}`);
+    doc.text(`Type : ${data.type_audit}`);
+    doc.text(`Date : ${new Date(data.created_at).toLocaleDateString()}`);
+    
+    // ENCADRÉ OBJECTIVITÉ
+    doc.moveDown(2);
+    doc.rect(50, doc.y, 500, 60).fillAndStroke('#f0f9ff', '#0061ff');
+    doc.fillColor('#0061ff').fontSize(10).text(
+        "CERTIFICATION D'INDÉPENDANCE :\nCe rapport a été complété avec objectivité et impartialité par un Ambassadeur Certifié Forfeo LAB. Les observations consignées reflètent fidèlement l'expérience client vécue, conformément aux standards de qualité de Forfeo Inc.",
+        60,
+        doc.y - 50,
+        { width: 480, align: 'center' }
+    );
+
+    // Détails
+    doc.moveDown(4);
+    doc.fillColor('#000').fontSize(14).text('Détails de l\'évaluation :', { underline: true });
+    doc.moveDown();
+    doc.fontSize(11);
+    
+    const details = data.details;
+    for (const [key, value] of Object.entries(details)) {
+        if(key !== 'mission_id' && key !== 'ambassadeur_id' && key !== 'media_files') {
+            doc.font('Helvetica-Bold').text(`${key.toUpperCase()} : `, { continued: true });
+            doc.font('Helvetica').text(`${value}`);
+            doc.moveDown(0.5);
+        }
     }
+
+    // Footer
+    doc.moveDown(2);
+    doc.fontSize(8).fillColor('#999').text('© 2025 Forfeo Inc. Document confidentiel.', {align:'center'});
+    
     doc.end(); 
 });
 
-// --- AMBASSADEUR (FIX STATUS) ---
-// CORRECTION ICI : WHERE statut='approuve' au lieu de 'actif'
+// --- AMBASSADEUR ---
 app.get('/ambassadeur/dashboard', async (req, res) => { 
-    const missions = await pool.query("SELECT * FROM missions WHERE statut='approuve'"); 
+    const missions = await pool.query("SELECT * FROM missions WHERE statut='approuve'"); // Affiche les missions approuvées par l'admin
     const hist = await pool.query("SELECT * FROM missions WHERE ambassadeur_id=$1", [req.session.userId]); 
     res.render('ambassadeur-dashboard', { missions: missions.rows, historique: hist.rows, totalGains: 0, userName: req.session.userName }); 
 });
 app.post('/ambassadeur/postuler', async (req, res) => { await pool.query("UPDATE missions SET ambassadeur_id=$1, statut='reserve' WHERE id=$2", [req.session.userId, req.body.id_mission]); res.redirect('/ambassadeur/dashboard'); });
 app.post('/ambassadeur/soumettre-rapport', async (req, res) => { await pool.query("INSERT INTO audit_reports (mission_id, ambassadeur_id, details) VALUES ($1,$2,$3)", [req.body.mission_id, req.session.userId, JSON.stringify(req.body)]); await pool.query("UPDATE missions SET statut='soumis' WHERE id=$1", [req.body.mission_id]); res.redirect('/ambassadeur/dashboard'); });
 
-// --- ACADEMIE (EMPLOYÉ) : LOGIQUE 80% ---
+// --- ACADEMIE ---
 app.get('/employe/dashboard', async (req, res) => {
     if (req.session.userRole !== 'employe') return res.redirect('/login');
     const modules = await pool.query("SELECT * FROM formations_modules ORDER BY id ASC");
@@ -264,7 +308,7 @@ app.post('/formations/soumettre-quizz', async (req, res) => {
     const questions = await pool.query("SELECT id, reponse_correcte FROM formations_questions WHERE module_id = $1", [moduleId]);
     
     let score = 0;
-    let total = questions.rows.length; // 5
+    let total = questions.rows.length;
 
     questions.rows.forEach(q => {
         if (req.body['q_' + q.id] === q.reponse_correcte) {
@@ -272,7 +316,6 @@ app.post('/formations/soumettre-quizz', async (req, res) => {
         }
     });
 
-    // RÈGLE DU 80% (4/5)
     const pourcentage = (score / total) * 100;
     const statut = pourcentage >= 80 ? 'reussi' : 'echec';
     const code = statut === 'reussi' ? Math.random().toString(36).substring(2, 10).toUpperCase() : null;
