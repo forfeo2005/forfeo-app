@@ -21,10 +21,12 @@
         <ul class="nav nav-pills mb-4 gap-3 p-2 glass-card d-inline-flex" role="tablist">
             <li class="nav-item"><button class="nav-link active rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#paiements">Comptabilité</button></li>
             <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#validation">Validation</button></li>
+            <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#formations">Formations</button></li>
             <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#users">Utilisateurs</button></li>
         </ul>
 
         <div class="tab-content">
+            
             <div class="tab-pane fade show active" id="paiements">
                 <div class="row g-4">
                     <div class="col-md-6">
@@ -44,7 +46,15 @@
                                 <thead><tr><th>Ambassadeur</th><th>Action</th></tr></thead>
                                 <tbody>
                                     <% missions.filter(m => m.statut === 'approuve' && m.statut_paiement !== 'paye').forEach(m => { %>
-                                        <tr><td>#<%= m.ambassadeur_id %> (<%= m.recompense %>$)</td><td><form action="/admin/payer-ambassadeur" method="POST"><input type="hidden" name="id_mission" value="<%= m.id %>"><button class="btn btn-success btn-sm">Confirmer Payé</button></form></td></tr>
+                                        <tr>
+                                            <td>#<%= m.ambassadeur_id %> (<%= m.recompense %>$)</td>
+                                            <td>
+                                                <form action="/admin/payer-ambassadeur" method="POST">
+                                                    <input type="hidden" name="id_mission" value="<%= m.id %>">
+                                                    <button class="btn btn-success btn-sm rounded-pill">Confirmer Payé</button>
+                                                </form>
+                                            </td>
+                                        </tr>
                                     <% }) %>
                                 </tbody>
                             </table>
@@ -73,26 +83,74 @@
                 </div>
             </div>
 
+            <div class="tab-pane fade" id="formations">
+                <div class="glass-card">
+                    <h5 class="fw-bold mb-3">Suivi Global de l'Académie</h5>
+                    <% if(formations && formations.length > 0) { %>
+                        <table class="premium-table">
+                            <thead><tr><th>Employé</th><th>Module</th><th>Score</th><th>Statut</th></tr></thead>
+                            <tbody>
+                                <% formations.forEach(f => { %>
+                                    <tr>
+                                        <td class="fw-bold"><%= f.employe %></td>
+                                        <td><%= f.titre %></td>
+                                        <td><%= f.meilleur_score %>%</td>
+                                        <td>
+                                            <% if(f.statut === 'reussi') { %>
+                                                <span class="badge bg-success">RÉUSSI</span>
+                                            <% } else { %>
+                                                <span class="badge bg-danger">ÉCHEC</span>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <div class="text-center py-5 text-muted">Aucune formation complétée pour le moment.</div>
+                    <% } %>
+                </div>
+            </div>
+
             <div class="tab-pane fade" id="users">
                 <div class="glass-card">
-                    <h5 class="fw-bold mb-3">Ajouter Utilisateur</h5>
-                    <form action="/admin/create-user" method="POST" class="row g-2 mb-4">
-                        <div class="col"><input type="text" name="nom" placeholder="Nom" class="form-control" required></div>
-                        <div class="col"><input type="email" name="email" placeholder="Email" class="form-control" required></div>
-                        <div class="col"><input type="password" name="password" placeholder="Pass" class="form-control" required></div>
-                        <div class="col"><select name="role" class="form-select"><option value="entreprise">Entreprise</option><option value="ambassadeur">Ambassadeur</option><option value="employe">Employé</option></select></div>
-                        <div class="col"><button class="btn btn-success w-100">Créer</button></div>
+                    <h5 class="fw-bold mb-3">Gestion des Utilisateurs</h5>
+                    
+                    <form action="/admin/create-user" method="POST" class="row g-2 mb-4 bg-light p-3 rounded-4 border">
+                        <div class="col-md-3"><input type="text" name="nom" placeholder="Nom" class="form-control" required></div>
+                        <div class="col-md-3"><input type="email" name="email" placeholder="Email" class="form-control" required></div>
+                        <div class="col-md-3"><input type="password" name="password" placeholder="Mot de passe" class="form-control" required></div>
+                        <div class="col-md-2">
+                            <select name="role" class="form-select">
+                                <option value="entreprise">Entreprise</option>
+                                <option value="ambassadeur">Ambassadeur</option>
+                                <option value="employe">Employé</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1"><button class="btn btn-success w-100"><i class="bi bi-plus-lg"></i></button></div>
                     </form>
+
                     <table class="premium-table">
                         <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Action</th></tr></thead>
                         <tbody>
                             <% users.forEach(u => { %>
-                                <tr><td><%= u.nom %></td><td><%= u.email %></td><td><%= u.role %></td><td><form action="/admin/delete-user" method="POST"><input type="hidden" name="user_id" value="<%= u.id %>"><button class="btn btn-sm btn-outline-danger">X</button></form></td></tr>
+                                <tr>
+                                    <td><%= u.nom %></td>
+                                    <td><%= u.email %></td>
+                                    <td><span class="badge bg-light text-dark border"><%= u.role %></span></td>
+                                    <td>
+                                        <form action="/admin/delete-user" method="POST" onsubmit="return confirm('Supprimer cet utilisateur ?');">
+                                            <input type="hidden" name="user_id" value="<%= u.id %>">
+                                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3">Supprimer</button>
+                                        </form>
+                                    </td>
+                                </tr>
                             <% }) %>
                         </tbody>
                     </table>
                 </div>
             </div>
+
         </div>
     </div>
     <%- include('partials/forfy') %>
