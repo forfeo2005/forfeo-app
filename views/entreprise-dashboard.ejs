@@ -20,7 +20,7 @@
             <div class="alert alert-warning text-center fw-bold shadow mb-4">⚠️ Limite Freemium atteinte.</div>
         <% } %>
         <% if (typeof error !== 'undefined' && error === 'email_fail') { %>
-            <div class="alert alert-danger text-center fw-bold shadow mb-4">❌ Erreur d'envoi. Vérifiez les paramètres SMTP.</div>
+            <div class="alert alert-danger text-center fw-bold shadow mb-4">❌ Erreur d'envoi SMTP.</div>
         <% } %>
         <% if (typeof msg !== 'undefined' && msg === 'campagne_envoyee') { %>
             <div class="alert alert-success text-center fw-bold shadow mb-4"><i class="bi bi-send-check-fill me-2"></i>Campagne envoyée avec succès !</div>
@@ -50,9 +50,9 @@
         <% if(user.forfait === 'Freemium') { %>
             <h4 class="fw-bold mb-4 text-center">Nos Forfaits PRO</h4>
             <div class="row g-4 mb-5">
-                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Découverte</h5><h2 class="text-primary fw-bold">49$</h2><a href="#" class="btn btn-outline-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
-                <div class="col-md-4"><div class="card h-100 border-primary shadow p-4 text-center" style="transform: scale(1.05);"><div class="badge bg-primary position-absolute top-0 start-50 translate-middle">Populaire</div><h5 class="fw-bold mt-2">Découverte+</h5><h2 class="text-primary fw-bold">119$</h2><a href="#" class="btn btn-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
-                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Croissance</h5><h2 class="text-primary fw-bold">69$<small>/mois</small></h2><a href="#" class="btn btn-outline-primary w-100 rounded-pill mt-3">S'abonner</a></div></div>
+                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Découverte</h5><h2 class="text-primary fw-bold">49$</h2><a href="https://buy.stripe.com/9B69AUdXAakvfaM9hQd7q0g" target="_blank" class="btn btn-outline-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
+                <div class="col-md-4"><div class="card h-100 border-primary shadow p-4 text-center" style="transform: scale(1.05);"><div class="badge bg-primary position-absolute top-0 start-50 translate-middle">Populaire</div><h5 class="fw-bold mt-2">Découverte+</h5><h2 class="text-primary fw-bold">119$</h2><a href="https://buy.stripe.com/8x23cwbPs1NZ3s4cu2d7q0f" target="_blank" class="btn btn-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
+                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Croissance</h5><h2 class="text-primary fw-bold">69$<small>/mois</small></h2><a href="https://buy.stripe.com/00w9AU1aO9gr9Qs1Pod7q0e" target="_blank" class="btn btn-outline-primary w-100 rounded-pill mt-3">S'abonner</a></div></div>
             </div>
         <% } %>
 
