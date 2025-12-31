@@ -21,30 +21,31 @@
         </div>
 
         <% if(user.forfait === 'Freemium') { %>
-        <div class="row mb-5 g-4">
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100 p-4 text-center">
-                    <h5 class="fw-bold">Découverte</h5>
-                    <h2 class="text-primary fw-bold">49$</h2>
-                    <a href="https://buy.stripe.com/9B69AUdXAakvfaM9hQd7q0g" target="_blank" class="btn btn-outline-primary rounded-pill w-100 mt-3">Choisir</a>
+            <h4 class="fw-bold mb-4 text-center">Nos Forfaits PRO</h4>
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm p-4 text-center">
+                        <h5 class="fw-bold">Découverte</h5>
+                        <h2 class="text-primary fw-bold">49$</h2>
+                        <a href="https://buy.stripe.com/9B69AUdXAakvfaM9hQd7q0g" target="_blank" class="btn btn-outline-primary w-100 rounded-pill mt-3">Choisir</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-primary shadow p-4 text-center" style="transform: scale(1.05);">
+                        <div class="badge bg-primary position-absolute top-0 start-50 translate-middle">Populaire</div>
+                        <h5 class="fw-bold mt-2">Découverte+</h5>
+                        <h2 class="text-primary fw-bold">119$</h2>
+                        <a href="https://buy.stripe.com/8x23cwbPs1NZ3s4cu2d7q0f" target="_blank" class="btn btn-primary w-100 rounded-pill mt-3">Choisir</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm p-4 text-center">
+                        <h5 class="fw-bold">Croissance</h5>
+                        <h2 class="text-primary fw-bold">69$<small class="fs-6 text-muted">/mois</small></h2>
+                        <a href="https://buy.stripe.com/00w9AU1aO9gr9Qs1Pod7q0e" target="_blank" class="btn btn-outline-primary w-100 rounded-pill mt-3">S'abonner</a>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card border-primary shadow h-100 p-4 text-center" style="transform: scale(1.05);">
-                    <div class="badge bg-primary position-absolute top-0 start-50 translate-middle">Populaire</div>
-                    <h5 class="fw-bold mt-2">Découverte+</h5>
-                    <h2 class="text-primary fw-bold">119$</h2>
-                    <a href="https://buy.stripe.com/8x23cwbPs1NZ3s4cu2d7q0f" target="_blank" class="btn btn-primary rounded-pill w-100 mt-3">Choisir</a>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100 p-4 text-center">
-                    <h5 class="fw-bold">Croissance</h5>
-                    <h2 class="text-primary fw-bold">69$<small class="fs-6 text-muted">/mois</small></h2>
-                    <a href="https://buy.stripe.com/00w9AU1aO9gr9Qs1Pod7q0e" target="_blank" class="btn btn-outline-primary rounded-pill w-100 mt-3">S'abonner</a>
-                </div>
-            </div>
-        </div>
         <% } else { %>
             <div class="alert alert-success text-center fw-bold mb-4">✅ Vous profitez du forfait <%= user.forfait %> (Illimité)</div>
         <% } %>
@@ -61,7 +62,6 @@
                         <button class="btn btn-primary w-100">Publier</button>
                     </form>
                 </div>
-
                 <div class="glass-card border-info">
                     <h5 class="fw-bold text-info">Commander Sondage</h5>
                     <form action="/entreprise/commander-sondage" method="POST">
@@ -73,7 +73,6 @@
                     </form>
                 </div>
             </div>
-            
             <div class="col-lg-8">
                 <div class="glass-card"><h5 class="fw-bold">Historique</h5>
                     <table class="premium-table">
@@ -85,7 +84,6 @@
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <%- include('partials/forfy') %>
 </body>
 </html>
