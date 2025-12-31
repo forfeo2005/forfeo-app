@@ -14,32 +14,33 @@
     <div class="container py-5">
         
         <% if (typeof error !== 'undefined' && error === 'limit_atteinte') { %>
-            <div class="alert alert-warning text-center fw-bold shadow mb-4">⚠️ Limite Freemium atteinte. Choisissez un forfait ci-dessous.</div>
+            <div class="alert alert-warning text-center fw-bold shadow mb-4">⚠️ Limite Freemium atteinte.</div>
         <% } %>
         <% if (typeof error !== 'undefined' && error === 'email_fail') { %>
-            <div class="alert alert-danger text-center fw-bold shadow mb-4">❌ Erreur lors de l'envoi des courriels. Vérifiez la configuration serveur.</div>
+            <div class="alert alert-danger text-center fw-bold shadow mb-4">❌ Erreur d'envoi. Vérifiez la configuration SMTP.</div>
         <% } %>
         <% if (typeof msg !== 'undefined' && msg === 'campagne_envoyee') { %>
-            <div class="alert alert-success text-center fw-bold shadow mb-4">
-                <i class="bi bi-send-check-fill me-2"></i>Campagne envoyée avec succès ! Vos clients ont reçu le sondage.
-            </div>
+            <div class="alert alert-success text-center fw-bold shadow mb-4"><i class="bi bi-send-check-fill me-2"></i>Campagne envoyée avec succès !</div>
         <% } %>
 
         <div class="d-flex justify-content-between mb-5 align-items-center flex-wrap">
             <h3 class="fw-bold">Bonjour, <%= userName %></h3>
-            <div class="d-flex flex-column align-items-center"><img src="/images/logo-forfeo.png" height="40"><span class="brand-lab-neon" style="color:#0061ff;">LAB</span></div>
+            
+            <form action="/entreprise/upload-logo" method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-center bg-white p-2 rounded-pill shadow-sm">
+                <input type="file" name="logo" class="form-control form-control-sm rounded-pill border-0" required style="width: 200px;">
+                <button class="btn btn-sm btn-dark rounded-pill px-3">Logo</button>
+            </form>
+
             <div class="d-flex gap-2 mt-2 mt-md-0"><a href="/profil" class="btn btn-outline-primary btn-sm rounded-pill">Profil</a><a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a></div>
         </div>
 
         <% if(user.forfait === 'Freemium') { %>
             <h4 class="fw-bold mb-4 text-center">Nos Forfaits PRO</h4>
             <div class="row g-4 mb-5">
-                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Découverte</h5><h2 class="text-primary fw-bold">49$</h2><a href="https://buy.stripe.com/9B69AUdXAakvfaM9hQd7q0g" target="_blank" class="btn btn-outline-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
-                <div class="col-md-4"><div class="card h-100 border-primary shadow p-4 text-center" style="transform: scale(1.05);"><div class="badge bg-primary position-absolute top-0 start-50 translate-middle">Populaire</div><h5 class="fw-bold mt-2">Découverte+</h5><h2 class="text-primary fw-bold">119$</h2><a href="https://buy.stripe.com/8x23cwbPs1NZ3s4cu2d7q0f" target="_blank" class="btn btn-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
-                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Croissance</h5><h2 class="text-primary fw-bold">69$<small class="fs-6 text-muted">/mois</small></h2><a href="https://buy.stripe.com/00w9AU1aO9gr9Qs1Pod7q0e" target="_blank" class="btn btn-outline-primary w-100 rounded-pill mt-3">S'abonner</a></div></div>
+                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Découverte</h5><h2 class="text-primary fw-bold">49$</h2><a href="#" class="btn btn-outline-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
+                <div class="col-md-4"><div class="card h-100 border-primary shadow p-4 text-center" style="transform: scale(1.05);"><div class="badge bg-primary position-absolute top-0 start-50 translate-middle">Populaire</div><h5 class="fw-bold mt-2">Découverte+</h5><h2 class="text-primary fw-bold">119$</h2><a href="#" class="btn btn-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
+                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Croissance</h5><h2 class="text-primary fw-bold">69$<small>/mois</small></h2><a href="#" class="btn btn-outline-primary w-100 rounded-pill mt-3">S'abonner</a></div></div>
             </div>
-        <% } else { %>
-            <div class="alert alert-success text-center fw-bold mb-4">✅ Vous profitez du forfait <%= user.forfait %> (Illimité)</div>
         <% } %>
 
         <ul class="nav nav-pills mb-4 gap-3 p-2 glass-card d-inline-flex flex-wrap" role="tablist">
@@ -50,7 +51,6 @@
         </ul>
 
         <div class="tab-content">
-            
             <div class="tab-pane fade show active" id="missions">
                 <div class="row g-4">
                     <div class="col-lg-4">
@@ -59,32 +59,13 @@
                             <form action="/entreprise/creer-audit" method="POST">
                                 <input type="text" name="titre" placeholder="Lieu" class="form-control mb-2" required>
                                 <input type="text" name="adresse" placeholder="Adresse" class="form-control mb-2" required>
-                                <select name="type_audit" class="form-select mb-2"><option>Audit Standard</option><option>Audit Qualité & Propreté</option><option>Audit Conformité</option><option>Audit Vente</option><option>Client Mystère VIP</option></select>
+                                <select name="type_audit" class="form-select mb-2"><option>Audit Standard</option><option>Audit Qualité</option></select>
                                 <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-2" required>
                                 <button class="btn btn-primary w-100">Publier</button>
                             </form>
                         </div>
-                        <div class="glass-card border-info">
-                            <h5 class="fw-bold text-info">Commander Sondage Certifié</h5>
-                            <p class="small text-muted">Réalisé par un ambassadeur Forfeo.</p>
-                            <form action="/entreprise/commander-sondage" method="POST">
-                                <input type="text" name="client_nom" placeholder="Nom Client Cible" class="form-control mb-2" required>
-                                <input type="email" name="client_email" placeholder="Email Client Cible" class="form-control mb-2" required>
-                                <select name="type_sondage" class="form-select mb-2"><option>Satisfaction Client</option><option>Sondage Après-Vente</option></select>
-                                <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-2" required>
-                                <button class="btn btn-info text-white w-100">Commander</button>
-                            </form>
-                        </div>
                     </div>
-                    <div class="col-lg-8">
-                        <div class="glass-card"><h5 class="fw-bold">Historique</h5>
-                            <table class="premium-table">
-                                <% missions.forEach(m => { %>
-                                    <tr><td><%= m.titre %></td><td><span class="badge bg-secondary"><%= m.statut %></span></td><td><% if(m.statut === 'approuve'){ %><a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-success">PDF</a><% } %></td></tr>
-                                <% }) %>
-                            </table>
-                        </div>
-                    </div>
+                    <div class="col-lg-8"><div class="glass-card"><h5 class="fw-bold">Historique</h5><table class="premium-table"><% missions.forEach(m => { %><tr><td><%= m.titre %></td><td><span class="badge bg-secondary"><%= m.statut %></span></td><td><% if(m.statut === 'approuve'){ %><a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-success">PDF</a><% } %></td></tr><% }) %></table></div></div>
                 </div>
             </div>
 
@@ -92,156 +73,115 @@
                 <div class="row g-4">
                     <div class="col-lg-5">
                         <div class="glass-card h-100 border-primary border-2 shadow-lg text-center">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h4 class="fw-bold mb-0 text-primary">QR Code Intelligent</h4>
-                                <span class="badge bg-primary">Automatisé</span>
+                            <h4 class="fw-bold mb-3 text-primary">QR Code Intelligent</h4>
+                            <p class="small text-muted">Ce code change selon le type de sondage choisi.</p>
+                            <div class="bg-white p-4 rounded-4 border d-inline-block mb-3">
+                                <img id="dynamic-qr" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<%= encodeURIComponent(surveyBaseLink + '?type=Général') %>" class="img-fluid">
                             </div>
-                            <p class="text-muted small mb-4">
-                                Placez ce code sur vos tables ou comptoirs. Le questionnaire s'adapte automatiquement au type choisi à droite.
-                            </p>
-                            
-                            <div class="bg-white p-4 rounded-4 border d-inline-block mb-3 shadow-sm">
-                                <img id="dynamic-qr" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<%= encodeURIComponent(surveyBaseLink + '?type=Général') %>" alt="QR Code Sondage" class="img-fluid">
-                                <p class="small text-muted mt-2 fw-bold mb-0">Scannez pour tester</p>
-                            </div>
-                            
                             <div class="input-group">
-                                <span class="input-group-text bg-light border-0"><i class="bi bi-link-45deg"></i></span>
-                                <input type="text" id="dynamic-link" class="form-control form-control-sm bg-light border-0" value="<%= surveyBaseLink %>?type=Général" readonly>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('dynamic-link').value)"><i class="bi bi-clipboard"></i></button>
+                                <input type="text" id="dynamic-link" class="form-control form-control-sm bg-light" value="<%= surveyBaseLink %>?type=Général" readonly>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="copyLink()"><i class="bi bi-clipboard"></i></button>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-lg-7">
                         <div class="glass-card mb-4">
-                            <h5 class="fw-bold mb-3"><i class="bi bi-envelope-paper-fill me-2 text-primary"></i>Lancer une campagne email</h5>
-                            <p class="text-muted small">Sélectionnez le type de questionnaire ci-dessous pour adapter le lien et le QR Code.</p>
-                            
+                            <h5 class="fw-bold mb-3">Campagne Email</h5>
                             <form action="/entreprise/envoyer-campagne" method="POST">
                                 <div class="mb-3">
-                                    <label class="fw-bold small">Type de questionnaire (IA adaptée)</label>
-                                    <select class="form-select border-primary" name="type_activite" id="survey-type-selector">
-                                        <option value="Général">Général (Défaut)</option>
-                                        <option value="Restaurant">Restaurant (Plats, Service)</option>
-                                        <option value="Hôtel">Hôtel (Chambre, Accueil)</option>
-                                        <option value="Magasin">Commerce (Conseil, Prix)</option>
+                                    <label class="fw-bold small">Type de questionnaire</label>
+                                    <select class="form-select" name="type_activite" id="survey-type-selector">
+                                        <option value="Général">Général</option>
+                                        <option value="Restaurant">Restaurant</option>
+                                        <option value="Hôtel">Hôtel</option>
+                                        <option value="Magasin">Magasin</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="fw-bold small">Liste des emails clients (séparés par virgule ou saut de ligne)</label>
-                                    <textarea name="emails" class="form-control" rows="3" placeholder="client1@email.com, client2@email.com..." required></textarea>
+                                    <label class="fw-bold small">Emails clients</label>
+                                    <textarea name="emails" class="form-control" rows="3" required placeholder="client1@email.com, client2@email.com"></textarea>
                                 </div>
-                                <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm">
-                                    <i class="bi bi-send-fill me-2"></i>Envoyer le sondage
-                                </button>
+                                <button class="btn btn-success w-100 rounded-pill">Envoyer</button>
                             </form>
                         </div>
 
                         <div class="glass-card">
-                            <h5 class="fw-bold mb-3"><i class="bi bi-bar-chart-fill me-2 text-success"></i>Réponses reçues</h5>
-                            <% if(typeof sondages !== 'undefined' && sondages.length > 0) { %>
-                                <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                            <h5 class="fw-bold mb-3">Réponses reçues</h5>
+                            <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                                <% if(sondages && sondages.length > 0) { %>
                                     <% sondages.forEach(s => { 
                                         const rep = s.reponses;
-                                        // On tente de trouver une réponse de type étoile ou note pour l'aperçu
-                                        let noteKey = Object.keys(rep).find(k => k.includes('global') || k.includes('accueil') || k.includes('q1'));
-                                        let note = rep[noteKey] || 'N/A';
+                                        // LOGIQUE "N/A" CORRIGÉE
+                                        let displayRep = "Non précisé";
+                                        // On cherche la première valeur qui n'est pas une métadonnée
+                                        const keys = Object.keys(rep);
+                                        for(let k of keys) {
+                                            if(!['entreprise_id', 'entreprise_nom', 'type_activite'].includes(k) && rep[k]) {
+                                                displayRep = rep[k];
+                                                break;
+                                            }
+                                        }
                                     %>
-                                        <div class="list-group-item bg-transparent border-bottom">
-                                            <div class="d-flex justify-content-between align-items-center">
+                                        <div class="list-group-item bg-transparent">
+                                            <div class="d-flex justify-content-between">
                                                 <span class="badge bg-light text-dark border"><%= s.type_activite %></span>
                                                 <small class="text-muted"><%= new Date(s.created_at).toLocaleDateString() %></small>
                                             </div>
-                                            <div class="mt-2 small text-muted">
-                                                <% if(!isNaN(note)) { %>
-                                                    Note : <span class="fw-bold text-<%= note >= 4 ? 'success' : (note <= 2 ? 'danger' : 'warning') %>"><%= note %>/5 ★</span>
-                                                <% } else { %>
-                                                    Réponse : <em><%= note %></em>
-                                                <% } %>
-                                            </div>
+                                            <div class="mt-1 small">Avis : <strong><%= displayRep %></strong></div>
                                         </div>
                                     <% }) %>
-                                </div>
-                            <% } else { %>
-                                <div class="text-center py-3 text-muted small">Aucune réponse pour l'instant.</div>
-                            <% } %>
+                                <% } else { %>
+                                    <p class="text-muted small text-center">Aucune réponse pour l'instant.</p>
+                                <% } %>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="tab-pane fade" id="academie">
-                <div class="glass-card">
-                    <h4 class="fw-bold mb-4 text-primary">Performance de vos équipes</h4>
-                    <% if(typeof scores !== 'undefined' && scores.length > 0) { %>
-                        <table class="premium-table">
-                            <thead><tr><th>Employé</th><th>Module</th><th>Résultat</th><th>Date</th></tr></thead>
-                            <tbody>
-                                <% scores.forEach(s => { %>
-                                    <tr>
-                                        <td class="fw-bold"><%= s.employe_nom %></td>
-                                        <td><%= s.module_titre %></td>
-                                        <td>
-                                            <% if(s.statut === 'reussi') { %>
-                                                <span class="badge bg-success text-white">RÉUSSI (<%= Math.round(s.meilleur_score) %>%)</span>
-                                            <% } else { %>
-                                                <span class="badge bg-danger text-white">ÉCHEC (<%= Math.round(s.meilleur_score) %>%)</span>
-                                            <% } %>
-                                        </td>
-                                        <td class="text-muted small"><%= new Date(s.updated_at).toLocaleDateString() %></td>
-                                    </tr>
-                                <% }) %>
-                            </tbody>
-                        </table>
-                    <% } else { %>
-                        <div class="text-center py-5 text-muted">Aucune donnée de formation disponible.</div>
-                    <% } %>
-                </div>
+                <div class="glass-card"><h5 class="fw-bold">Performance</h5><table class="premium-table"><% scores.forEach(s => { %><tr><td><%= s.employe_nom %></td><td><%= s.module_titre %></td><td><%= s.statut %></td></tr><% }) %></table></div>
             </div>
-
             <div class="tab-pane fade" id="employes">
-                <div class="glass-card" style="max-width: 500px;">
-                    <h5 class="fw-bold mb-3">Ajouter un employé</h5>
-                    <p class="text-muted small mb-4">Créez un compte pour permettre à vos employés d'accéder à l'Académie Forfeo.</p>
-                    <form action="/entreprise/ajouter-employe" method="POST">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small">Nom complet</label>
-                            <input type="text" name="nom" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small">Email professionnel</label>
-                            <input type="email" name="email" class="form-control" required>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label fw-bold small">Mot de passe provisoire</label>
-                            <input type="password" name="password" class="form-control" required>
-                        </div>
-                        <button class="btn btn-success w-100 rounded-pill fw-bold">Créer le compte employé</button>
-                    </form>
-                </div>
+                <div class="glass-card"><h5 class="fw-bold">Ajout Employé</h5><form action="/entreprise/ajouter-employe" method="POST"><input type="text" name="nom" class="form-control mb-2" placeholder="Nom"><input type="email" name="email" class="form-control mb-2" placeholder="Email"><input type="password" name="password" class="form-control mb-2" placeholder="Pass"><button class="btn btn-success w-100">Créer</button></form></div>
             </div>
         </div>
     </div>
     <%- include('partials/forfy') %>
 
     <script>
-        // Ce script écoute le changement de sélection et met à jour l'image QR
+        // SCRIPT COPIER-COLLER FIABLE
+        function copyLink() {
+            const inputElement = document.getElementById("dynamic-link");
+            
+            // Sélectionner le texte
+            inputElement.select();
+            inputElement.setSelectionRange(0, 99999); // Pour mobile
+
+            // Copier dans le presse-papier
+            try {
+                navigator.clipboard.writeText(inputElement.value).then(() => {
+                    alert("Lien copié : " + inputElement.value);
+                });
+            } catch (err) {
+                // Fallback si navigator.clipboard échoue
+                document.execCommand('copy');
+                alert("Lien copié : " + inputElement.value);
+            }
+        }
+
+        // SCRIPT QR DYNAMIQUE
         const baseLink = "<%= typeof surveyBaseLink !== 'undefined' ? surveyBaseLink : '' %>";
         const selector = document.getElementById('survey-type-selector');
         const qrImage = document.getElementById('dynamic-qr');
         const linkInput = document.getElementById('dynamic-link');
 
-        if(selector && qrImage && baseLink) {
+        if(selector && qrImage) {
             selector.addEventListener('change', function() {
                 const type = this.value;
-                // Construction du lien avec le paramètre de type
                 const finalLink = baseLink + "?type=" + encodeURIComponent(type);
-                
-                // Appel à l'API QR Server pour générer la nouvelle image
                 qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(finalLink)}`;
-                
-                // Mise à jour du champ texte pour copie manuelle
                 linkInput.value = finalLink;
             });
         }
