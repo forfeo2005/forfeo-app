@@ -79,7 +79,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v31_full_production',
+    secret: 'forfeo_v32_fixed_status',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
@@ -98,7 +98,6 @@ async function setupDatabase() {
             CREATE TABLE IF NOT EXISTS audit_reports (id SERIAL PRIMARY KEY, mission_id INTEGER UNIQUE, ambassadeur_id INTEGER, details JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
         `);
 
-        // Rechargement des questions pour s'assurer qu'elles sont à jour
         const countQ = await pool.query("SELECT COUNT(*) FROM formations_questions");
         await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
         await pool.query("TRUNCATE formations_modules RESTART IDENTITY CASCADE");
@@ -236,8 +235,13 @@ app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     doc.end(); 
 });
 
-// AMBASSADEUR (Inchangé)
-app.get('/ambassadeur/dashboard', async (req, res) => { const missions = await pool.query("SELECT * FROM missions WHERE statut='actif'"); const hist = await pool.query("SELECT * FROM missions WHERE ambassadeur_id=$1", [req.session.userId]); res.render('ambassadeur-dashboard', { missions: missions.rows, historique: hist.rows, totalGains: 0, userName: req.session.userName }); });
+// --- AMBASSADEUR (FIX STATUS) ---
+// CORRECTION ICI : WHERE statut='approuve' au lieu de 'actif'
+app.get('/ambassadeur/dashboard', async (req, res) => { 
+    const missions = await pool.query("SELECT * FROM missions WHERE statut='approuve'"); 
+    const hist = await pool.query("SELECT * FROM missions WHERE ambassadeur_id=$1", [req.session.userId]); 
+    res.render('ambassadeur-dashboard', { missions: missions.rows, historique: hist.rows, totalGains: 0, userName: req.session.userName }); 
+});
 app.post('/ambassadeur/postuler', async (req, res) => { await pool.query("UPDATE missions SET ambassadeur_id=$1, statut='reserve' WHERE id=$2", [req.session.userId, req.body.id_mission]); res.redirect('/ambassadeur/dashboard'); });
 app.post('/ambassadeur/soumettre-rapport', async (req, res) => { await pool.query("INSERT INTO audit_reports (mission_id, ambassadeur_id, details) VALUES ($1,$2,$3)", [req.body.mission_id, req.session.userId, JSON.stringify(req.body)]); await pool.query("UPDATE missions SET statut='soumis' WHERE id=$1", [req.body.mission_id]); res.redirect('/ambassadeur/dashboard'); });
 
