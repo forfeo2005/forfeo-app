@@ -10,9 +10,12 @@
 <body>
     <div class="premium-bg"></div>
     <div class="container py-5">
-        <div class="d-flex justify-content-between mb-5">
+        <div class="d-flex justify-content-between mb-5 align-items-center">
             <h3 class="fw-bold text-primary">Bienvenue Admin 👋</h3>
-            <a href="/logout" class="btn btn-danger rounded-pill">Déconnexion</a>
+            <div class="d-flex gap-2">
+                <a href="/profil" class="btn btn-outline-primary btn-sm rounded-pill">Profil</a>
+                <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
+            </div>
         </div>
 
         <ul class="nav nav-pills mb-4 gap-3 p-2 glass-card d-inline-flex">
@@ -60,8 +63,12 @@
                             <table class="premium-table">
                                 <thead><tr><th>Ambassadeur</th><th>Montant</th><th>Action</th></tr></thead>
                                 <tbody>
-                                    <% missions.filter(m => m.statut === 'approuve' && m.statut_paiement !== 'non_paye').forEach(m => { %>
-                                        <tr><td>#<%= m.ambassadeur_id %></td><td><%= m.recompense %>$</td><td><form action="/admin/payer-ambassadeur" method="POST"><input type="hidden" name="id_mission" value="<%= m.id %>"><button class="btn btn-success btn-sm rounded-pill">Payer</button></form></td></tr>
+                                    <% missions.filter(m => m.statut === 'approuve' && m.statut_paiement !== 'paye').forEach(m => { %>
+                                        <tr>
+                                            <td>#<%= m.ambassadeur_id %></td>
+                                            <td class="fw-bold text-success"><%= m.recompense %>$</td>
+                                            <td><form action="/admin/payer-ambassadeur" method="POST"><input type="hidden" name="id_mission" value="<%= m.id %>"><button class="btn btn-success btn-sm rounded-pill">Confirmer</button></form></td>
+                                        </tr>
                                     <% }) %>
                                 </tbody>
                             </table>
@@ -77,7 +84,7 @@
                         <div class="col"><input type="text" name="nom" placeholder="Nom" class="form-control" required></div>
                         <div class="col"><input type="email" name="email" placeholder="Email" class="form-control" required></div>
                         <div class="col"><input type="password" name="password" placeholder="Pass" class="form-control" required></div>
-                        <div class="col"><select name="role" class="form-select"><option value="entreprise">Entreprise</option><option value="ambassadeur">Ambassadeur</option></select></div>
+                        <div class="col"><select name="role" class="form-select"><option value="entreprise">Entreprise</option><option value="ambassadeur">Ambassadeur</option><option value="employe">Employé</option></select></div>
                         <div class="col"><button class="btn btn-success w-100">Créer</button></div>
                     </form>
                     <table class="premium-table">
