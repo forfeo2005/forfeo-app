@@ -112,24 +112,65 @@
                                 <button class="btn btn-success w-100 rounded-pill">Envoyer</button>
                             </form>
                         </div>
+                        
                         <div class="glass-card">
                             <h5 class="fw-bold mb-3">Réponses reçues</h5>
                             <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
                                 <% if(sondages && sondages.length > 0) { %>
                                     <% sondages.forEach(s => { 
                                         const rep = s.reponses;
-                                        let displayRep = "Non précisé";
-                                        for(let key in rep) { 
+                                        
+                                        // 1. Calculer la moyenne des étoiles (si présentes)
+                                        let starSum = 0;
+                                        let starCount = 0;
+                                        let comment = "";
+
+                                        for(let key in rep) {
+                                            // Ignorer les métadonnées
                                             if(!['entreprise_id', 'entreprise_nom', 'type_activite'].includes(key)) {
-                                                if(key === 'comment_gen' && rep[key]) { displayRep = rep[key]; break; }
-                                                if(rep[key] && displayRep === "Non précisé") { displayRep = rep[key]; }
+                                                const val = rep[key];
+                                                
+                                                // Si c'est un nombre entre 1 et 5 (Note)
+                                                if(!isNaN(val) && val >= 1 && val <= 5) {
+                                                    starSum += parseInt(val);
+                                                    starCount++;
+                                                }
+                                                // Si c'est du texte long (Commentaire)
+                                                else if(typeof val === 'string' && val.length > 3) {
+                                                    comment = val;
+                                                }
                                             }
                                         }
+
+                                        let avg = starCount > 0 ? (starSum / starCount).toFixed(1) : null;
                                     %>
-                                        <div class="list-group-item bg-transparent"><small><%= new Date(s.created_at).toLocaleDateString() %></small> <strong><%= displayRep %></strong></div>
+                                        <div class="list-group-item bg-transparent border-bottom py-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="badge bg-light text-dark border"><%= s.type_activite %></span>
+                                                <small class="text-muted"><%= new Date(s.created_at).toLocaleDateString() %></small>
+                                            </div>
+                                            
+                                            <div class="mb-1">
+                                                <% if(avg) { %>
+                                                    <span class="text-warning h5 me-2">
+                                                        <% for(let i=0; i<Math.round(avg); i++) { %>★<% } %>
+                                                        <% for(let i=Math.round(avg); i<5; i++) { %>☆<% } %>
+                                                    </span>
+                                                    <span class="fw-bold"><%= avg %>/5</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-secondary">Info</span>
+                                                <% } %>
+                                            </div>
+
+                                            <% if(comment) { %>
+                                                <div class="p-2 bg-light rounded text-muted small fst-italic">
+                                                    "<%= comment %>"
+                                                </div>
+                                            <% } %>
+                                        </div>
                                     <% }) %>
                                 <% } else { %>
-                                    <p class="text-muted small text-center">Aucune réponse.</p>
+                                    <p class="text-muted small text-center">Aucune réponse pour l'instant.</p>
                                 <% } %>
                             </div>
                         </div>
