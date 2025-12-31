@@ -14,106 +14,31 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 10000;
 
-// CONFIGURATION UPLOAD (Stockage en mémoire pour la BDD)
+// CONFIGURATION UPLOAD
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// CONFIGURATION EMAIL ROBUSTE
+// CONFIGURATION EMAIL
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: false, // Utiliser TLS
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
+    secure: false,
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    tls: { rejectUnauthorized: false }
 });
 
-// --- DONNÉES ACADÉMIE ---
+// DONNÉES ACADÉMIE
 const ACADEMY_DATA = [
-    {
-        id: 1, titre: "Excellence du Service Client", description: "Créer un effet WOW et fidéliser.", icon: "bi-emoji-smile", duree: "20 min",
-        questions: [
-            { q: "Un client entre alors que vous êtes au téléphone. Quelle est la meilleure réaction ?", a: "L'ignorer jusqu'à la fin de l'appel.", b: "Lui faire un signe de tête et sourire pour valider sa présence.", c: "Raccrocher au nez de votre interlocuteur.", rep: "B", sit: "Situation : Vous êtes occupé au téléphone." },
-            { q: "La règle du 10-4 (10 pieds, 4 pieds) signifie :", a: "À 10 pieds je souris, à 4 pieds je salue verbalement.", b: "Je reste à 10 pieds du client.", c: "Je dois servir le client en 4 minutes.", rep: "A", sit: "Concept : Proactivité." },
-            { q: "Un client régulier arrive. Vous connaissez son nom.", a: "Bonjour Monsieur !", b: "Bonjour M. Tremblay ! Ravi de vous revoir.", c: "Suivant !", rep: "B", sit: "Concept : Personnalisation." },
-            { q: "Le client vous pose une question dont vous ignorez la réponse.", a: "Je ne sais pas.", b: "Ce n'est pas mon département.", c: "Excellente question, je vérifie pour vous immédiatement.", rep: "C", sit: "Situation : Demande technique." },
-            { q: "Quelle est la dernière étape d'une interaction client réussie ?", a: "Donner la facture.", b: "Le remerciement sincère et l'invitation à revenir.", c: "Tourner le dos pour ranger.", rep: "B", sit: "Concept : La conclusion (Last impression)." }
-        ]
-    },
-    {
-        id: 2, titre: "Communication & Écoute Active", description: "Le ton, l'empathie et la reformulation.", icon: "bi-ear", duree: "25 min",
-        questions: [
-            { q: "L'écoute active, c'est principalement :", a: "Préparer sa réponse pendant que l'autre parle.", b: "Écouter pour comprendre, sans interrompre, et reformuler.", c: "Hocher la tête sans écouter.", rep: "B", sit: "Concept : Écoute." },
-            { q: "Le langage non-verbal (corps, visage) représente quel % du message ?", a: "Environ 7%", b: "Environ 55%", c: "0%", rep: "B", sit: "Concept : Communication non-verbale." },
-            { q: "Si un client parle vite et semble pressé, vous devez :", a: "Parler très lentement pour le calmer.", b: "Adapter votre rythme (Matching) pour être efficace.", c: "Lui dire de se calmer.", rep: "B", sit: "Technique : Le miroir." },
-            { q: "Laquelle est une phrase d'empathie ?", a: "Calmez-vous.", b: "C'est pas de ma faute.", c: "Je comprends votre frustration, regardons cela ensemble.", rep: "C", sit: "Situation : Client déçu." },
-            { q: "Pourquoi reformuler la demande du client ?", a: "Pour gagner du temps.", b: "Pour valider qu'on a bien compris son besoin.", c: "Pour montrer qu'on est intelligent.", rep: "B", sit: "Technique : Reformulation." }
-        ]
-    },
-    {
-        id: 3, titre: "Gestion des Situations Difficiles", description: "Gérer les plaintes et calmer le jeu.", icon: "bi-shield-exclamation", duree: "30 min",
-        questions: [
-            { q: "La méthode L.A.T.T.E pour gérer une plainte signifie :", a: "Listen, Acknowledge, Take action, Thank, Explain.", b: "Late, Angry, Tired, Terrible, End.", c: "Leave, Ask, Tell, Take, Exit.", rep: "A", sit: "Méthode : Starbucks LATTE." },
-            { q: "Face à un client qui crie, vous devez :", a: "Crier plus fort pour dominer.", b: "Rester calme, parler doucement et écouter.", c: "L'ignorer.", rep: "B", sit: "Situation : Agressivité." },
-            { q: "Un client demande un remboursement refusé par la politique.", a: "C'est non.", b: "C'est la politique, je n'y peux rien.", c: "Je ne peux pas rembourser, mais voici ce que je peux faire (alternative).", rep: "C", sit: "Technique : Le Non Positif." },
-            { q: "Si un client vous insulte personnellement :", a: "Vous l'insultez aussi.", b: "Vous fixez une limite calmement : 'Je veux vous aider, mais je n'accepte pas ce langage'.", c: "Vous pleurez.", rep: "B", sit: "Situation : Harcèlement." },
-            { q: "Après avoir résolu un conflit, il faut :", a: "En parler à tous les collègues pour rire.", b: "Oublier.", c: "S'assurer que le client part apaisé et satisfait (Récupération).", rep: "C", sit: "Concept : Récupération de service." }
-        ]
-    },
-    {
-        id: 4, titre: "Culture Qualité & Feedback", description: "L'amélioration continue et le souci du détail.", icon: "bi-gem", duree: "20 min",
-        questions: [
-            { q: "Un détail (papier par terre) nuit-il à l'expérience ?", a: "Non, le client ne le verra pas.", b: "Oui, tout communique une image de marque.", c: "Seulement si le patron est là.", rep: "B", sit: "Concept : Souci du détail." },
-            { q: "Le feedback d'un client est :", a: "Une attaque personnelle.", b: "Un cadeau pour s'améliorer.", c: "Une perte de temps.", rep: "B", sit: "Attitude : Réception du feedback." },
-            { q: "La constance dans le service signifie :", a: "Être bon une fois sur deux.", b: "Offrir la même excellence à chaque client, chaque jour.", c: "Être toujours moyen.", rep: "B", sit: "Concept : Standards." },
-            { q: "Si vous voyez une erreur d'un collègue devant un client :", a: "Vous le chicanez devant le client.", b: "Vous corrigez discrètement ou en parlez après.", c: "Vous riez.", rep: "B", sit: "Savoir-vivre : Correction." },
-            { q: "Qui est responsable de la qualité ?", a: "Le patron.", b: "Le gérant.", c: "Tout le monde.", rep: "C", sit: "Culture : Responsabilisation." }
-        ]
-    },
-    {
-        id: 5, titre: "Professionnalisme & Collaboration", description: "Image de marque et travail d'équipe.", icon: "bi-people", duree: "20 min",
-        questions: [
-            { q: "La ponctualité est :", a: "Optionnelle.", b: "Une forme de respect envers l'équipe et les clients.", c: "Pas grave si on est performant.", rep: "B", sit: "Savoir-être : Respect." },
-            { q: "L'uniforme et l'apparence :", a: "Ne comptent pas.", b: "Sont le premier reflet de la marque.", c: "Sont pour faire joli.", rep: "B", sit: "Image : Présentation." },
-            { q: "Si c'est le 'rush' et qu'un collègue est débordé :", a: "Tant pis pour lui.", b: "Je lui propose mon aide dès que je suis libre.", c: "Je prends une pause.", rep: "B", sit: "Valeur : Entraide." },
-            { q: "L'utilisation du cellulaire personnel devant les clients :", a: "Est acceptée.", b: "Donne une image de désintérêt et est à éviter.", c: "Est cool.", rep: "B", sit: "Comportement : Focus client." },
-            { q: "Parler en mal de l'entreprise en public :", a: "Est normal.", b: "Manque de loyauté et nuit à la réputation.", c: "Est drôle.", rep: "B", sit: "Éthique : Loyauté." }
-        ]
-    }
+    { id: 1, titre: "Excellence du Service Client", description: "Créer un effet WOW.", icon: "bi-emoji-smile", duree: "20 min", questions: [{ q: "Client au téléphone", a: "Ignorer", b: "Signe de tête", c: "Raccrocher", rep: "B", sit: "Multitâche" }, { q: "Règle 10-4", a: "10 pieds sourire", b: "Distance", c: "Temps", rep: "A", sit: "Proactivité" }, { q: "Client connu", a: "Bonjour", b: "Bonjour M. X", c: "Suivant", rep: "B", sit: "Accueil" }, { q: "Question difficile", a: "Sais pas", b: "Pas mon rayon", c: "Je vérifie", rep: "C", sit: "Service" }, { q: "Fin visite", a: "Facture", b: "Merci + Retour", c: "Dos", rep: "B", sit: "Départ" }] },
+    { id: 2, titre: "Communication", description: "Écoute active.", icon: "bi-ear", duree: "25 min", questions: [{q:"Ecoute", a:"Préparer", b:"Comprendre", c:"Hocher", rep:"B"}, {q:"Non verbal", a:"7%", b:"55%", c:"0%", rep:"B"}, {q:"Vitesse", a:"Lent", b:"Miroir", c:"Calmer", rep:"B"}, {q:"Empathie", a:"Calme", b:"Faute", c:"Comprends", rep:"C"}, {q:"Reformuler", a:"Temps", b:"Valider", c:"Intello", rep:"B"}] },
+    { id: 3, titre: "Situations Difficiles", description: "Gérer les plaintes.", icon: "bi-shield-exclamation", duree: "30 min", questions: [{q:"LATTE", a:"Listen...", b:"Late...", c:"Leave...", rep:"A"}, {q:"Cri", a:"Crier", b:"Calme", c:"Ignorer", rep:"B"}, {q:"Refus", a:"Non", b:"Règle", c:"Alternative", rep:"C"}, {q:"Insulte", a:"Insulte", b:"Limite", c:"Pleur", rep:"B"}, {q:"Après", a:"Rire", b:"Oublier", c:"Check client", rep:"C"}] },
+    { id: 4, titre: "Culture Qualité", description: "Standards.", icon: "bi-gem", duree: "20 min", questions: [{q:"Papier sol", a:"Rien", b:"Image", c:"Chef", rep:"B"}, {q:"Feedback", a:"Mal", b:"Cadeau", c:"Perte", rep:"B"}, {q:"Constance", a:"50%", b:"100%", c:"Moyen", rep:"B"}, {q:"Erreur ami", a:"Chicaner", b:"Corriger", c:"Rire", rep:"B"}, {q:"Resp. Qualité", a:"Patron", b:"Gérant", c:"Tous", rep:"C"}] },
+    { id: 5, titre: "Professionnalisme", description: "Image marque.", icon: "bi-people", duree: "20 min", questions: [{q:"Retard", a:"Ok", b:"Irrespect", c:"Bof", rep:"B"}, {q:"Uniforme", a:"Non", b:"Marque", c:"Beau", rep:"B"}, {q:"Rush", a:"Tant pis", b:"Aider", c:"Pause", rep:"B"}, {q:"Cell", a:"Ok", b:"Non", c:"Cool", rep:"B"}, {q:"Critique", a:"Normal", b:"Déloyal", c:"Drôle", rep:"B"}] }
 ];
 
-// --- TEMPLATES DE SONDAGES ---
-const SURVEY_TEMPLATES = {
-    "Restaurant": [
-        { id: "accueil", text: "Comment avez-vous trouvé l'accueil ?", type: "stars" },
-        { id: "qualite", text: "La qualité des plats ?", type: "stars" },
-        { id: "service", text: "Le service était-il rapide ?", type: "yesno" },
-        { id: "comment_gen", text: "Commentaires généraux / Suggestions", type: "text" }
-    ],
-    "Hôtel": [
-        { id: "proprete", text: "Propreté de la chambre ?", type: "stars" },
-        { id: "confort", text: "Confort de la literie ?", type: "stars" },
-        { id: "personnel", text: "L'équipe a-t-elle été utile ?", type: "stars" },
-        { id: "comment_gen", text: "Commentaires généraux / Suggestions", type: "text" }
-    ],
-    "Magasin": [
-        { id: "trouve", text: "Avez-vous trouvé vos produits ?", type: "yesno" },
-        { id: "conseil", text: "Qualité des conseils ?", type: "stars" },
-        { id: "prix", text: "Rapport qualité/prix ?", type: "stars" },
-        { id: "comment_gen", text: "Commentaires généraux / Suggestions", type: "text" }
-    ],
-    "Général": [
-        { id: "global", text: "Votre satisfaction globale ?", type: "stars" },
-        { id: "recommandation", text: "Nous recommanderiez-vous ?", type: "yesno" },
-        { id: "comment_gen", text: "Commentaires généraux / Suggestions", type: "text" }
-    ]
-};
+const SURVEY_TEMPLATES = { "Restaurant": [{id:"accueil", text:"Accueil ?", type:"stars"}, {id:"qualite", text:"Plats ?", type:"stars"}, {id:"service", text:"Service ?", type:"yesno"}, {id:"comment_gen", text:"Avis général", type:"text"}], "Hôtel": [{id:"proprete", text:"Propreté ?", type:"stars"}, {id:"confort", text:"Literie ?", type:"stars"}, {id:"personnel", text:"Staff ?", type:"stars"}, {id:"comment_gen", text:"Avis général", type:"text"}], "Magasin": [{id:"trouve", text:"Produits trouvés ?", type:"yesno"}, {id:"conseil", text:"Conseil ?", type:"stars"}, {id:"prix", text:"Prix ?", type:"stars"}, {id:"comment_gen", text:"Avis général", type:"text"}], "Général": [{id:"global", text:"Satisfaction ?", type:"stars"}, {id:"recommandation", text:"Recommander ?", type:"yesno"}, {id:"comment_gen", text:"Avis général", type:"text"}] };
 
 const knowledgeBase = `Tu es Forfy, IA de Forfeo Lab.`;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
@@ -125,7 +50,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v46_saas_final_fix_flow',
+    secret: 'forfeo_v50_final_gold',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
@@ -144,7 +69,6 @@ async function setupDatabase() {
             CREATE TABLE IF NOT EXISTS audit_reports (id SERIAL PRIMARY KEY, mission_id INTEGER UNIQUE, ambassadeur_id INTEGER, details JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
             CREATE TABLE IF NOT EXISTS sondages_publics (id SERIAL PRIMARY KEY, entreprise_id INTEGER, type_activite VARCHAR(50), reponses JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
         `);
-        
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS logo_data TEXT");
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS date_expiration TIMESTAMP");
 
@@ -158,7 +82,6 @@ async function setupDatabase() {
                 await pool.query(`INSERT INTO formations_questions (module_id, question, option_a, option_b, option_c, reponse_correcte, mise_en_situation, explication) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`, [mod.id, q.q, q.a, q.b, q.c, q.rep, q.sit, "Standard"]);
             }
         }
-        console.log("✅ DB & Académie Prêtes");
     } catch (err) { console.error("Erreur DB:", err); }
 }
 setupDatabase();
@@ -173,41 +96,112 @@ app.get('/conditions-utilisation', (req, res) => res.render('conditions-utilisat
 // AUTH
 app.get('/login', (req, res) => res.render('login', { error: null, msg: req.query.msg || null, userName: null }));
 app.post('/login', async (req, res) => {
-    const result = await pool.query("SELECT * FROM users WHERE email = $1", [req.body.email]);
-    if (result.rows.length > 0 && await bcrypt.compare(req.body.password, result.rows[0].password)) {
-        req.session.userId = result.rows[0].id;
-        req.session.userName = result.rows[0].nom;
-        req.session.userRole = result.rows[0].role;
+    const r = await pool.query("SELECT * FROM users WHERE email=$1", [req.body.email]);
+    if (r.rows.length > 0 && await bcrypt.compare(req.body.password, r.rows[0].password)) {
+        req.session.userId = r.rows[0].id; req.session.userName = r.rows[0].nom; req.session.userRole = r.rows[0].role;
         return res.redirect(`/${req.session.userRole}/dashboard`);
     }
     res.redirect('/login?error=1');
 });
 app.get('/register', (req, res) => res.render('register', { role: req.query.role || 'ambassadeur', error: null, userName: null }));
-app.post('/register', async (req, res) => { const h = await bcrypt.hash(req.body.password, 10); await pool.query("INSERT INTO users (nom, email, password, role, forfait) VALUES ($1, $2, $3, $4, 'Freemium')", [req.body.nom, req.body.email, h, req.body.role]); res.redirect('/login?msg=created'); });
+app.post('/register', async (req, res) => { const h = await bcrypt.hash(req.body.password, 10); await pool.query("INSERT INTO users (nom, email, password, role, forfait) VALUES ($1,$2,$3,$4,'Freemium')", [req.body.nom, req.body.email, h, req.body.role]); res.redirect('/login?msg=created'); });
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
-app.get('/profil', async (req, res) => { if(!req.session.userId) return res.redirect('/login'); const u = await pool.query("SELECT * FROM users WHERE id=$1", [req.session.userId]); res.render('profil', {user:u.rows[0], userName:req.session.userName, userRole: req.session.userRole, message: req.query.msg || null}); });
+app.get('/profil', async (req, res) => { if(!req.session.userId) return res.redirect('/login'); const u = await pool.query("SELECT * FROM users WHERE id=$1", [req.session.userId]); res.render('profil', {user:u.rows[0], userName:req.session.userName, userRole: req.session.userRole, message: req.query.msg}); });
 app.post('/profil/update', async (req, res) => { await pool.query("UPDATE users SET nom=$1, email=$2, telephone=$3, adresse=$4 WHERE id=$5", [req.body.nom, req.body.email, req.body.telephone, req.body.adresse, req.session.userId]); if(req.body.new_password) { const h = await bcrypt.hash(req.body.new_password, 10); await pool.query("UPDATE users SET password=$1 WHERE id=$2", [h, req.session.userId]); } res.redirect('/profil?msg=updated'); });
 app.post('/profil/delete', async (req, res) => { if(!req.session.userId) return res.redirect('/login'); await pool.query("DELETE FROM users WHERE id=$1", [req.session.userId]); req.session.destroy(); res.redirect('/?msg=deleted'); });
 
-// ADMIN
+// --- ADMIN DASHBOARD ---
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
-    const m = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id=u.id ORDER BY m.id DESC");
+    const m = await pool.query("SELECT m.*, u.nom as entreprise_nom, a.nom as ambassadeur_nom FROM missions m JOIN users u ON m.entreprise_id=u.id LEFT JOIN users a ON m.ambassadeur_id=a.id ORDER BY m.id DESC");
     const u = await pool.query("SELECT * FROM users ORDER BY id DESC");
-    const p = await pool.query("SELECT m.*, u.nom as ambassadeur_nom FROM missions m LEFT JOIN users u ON m.ambassadeur_id=u.id WHERE m.statut_paiement='paye' ORDER BY m.date_paiement DESC");
-    const f = await pool.query("SELECT u.nom as employe, m.titre, s.meilleur_score, s.statut FROM formations_scores s JOIN users u ON s.user_id=u.id JOIN formations_modules m ON s.module_id=m.id ORDER BY s.updated_at DESC LIMIT 20");
-    let brut = 0; p.rows.forEach(x => brut += parseFloat(x.recompense)||0);
-    const ap = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE statut='approuve' AND statut_paiement='non_paye'");
-    res.render('admin-dashboard', { missions: m.rows, users: u.rows, paiements: p.rows, formations: f.rows, finance: {brut: brut.toFixed(2), tps: (brut*0.05).toFixed(2), tvq: (brut*0.09975).toFixed(2), total: (brut*1.14975).toFixed(2)}, totalAPayer: ap.rows[0].total||0, userName: req.session.userName });
+    
+    let totalBrut = 0;
+    m.rows.forEach(miss => {
+        if(miss.statut === 'approuve' && miss.statut_paiement === 'non_paye') {
+            totalBrut += parseFloat(miss.recompense) || 0;
+        }
+    });
+    res.render('admin-dashboard', { missions: m.rows, users: u.rows, totalAPayer: totalBrut.toFixed(2), userName: req.session.userName });
 });
-app.get('/admin/rapport-comptable', async (req, res) => { const d = new PDFDocument(); res.setHeader('Content-Type','application/pdf'); d.pipe(res); d.text('COMPTABILITE'); d.end(); });
-app.post('/admin/payer-ambassadeur', async (req, res) => { await pool.query("UPDATE missions SET statut_paiement='paye' WHERE id=$1", [req.body.id_mission]); res.redirect('/admin/dashboard'); });
+
+// --- COMPTABILITE PDF (CORRIGÉ AVEC TAXES QC) ---
+app.get('/admin/rapport-comptable', async (req, res) => {
+    const missions = await pool.query("SELECT m.*, u.nom as ambassadeur_nom FROM missions m JOIN users u ON m.ambassadeur_id=u.id WHERE m.statut IN ('approuve', 'paye') ORDER BY m.date_paiement DESC");
+    
+    const doc = new PDFDocument({ margin: 50 });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=Rapport-Comptable-Forfeo.pdf');
+    doc.pipe(res);
+
+    // En-tête
+    const logoPath = path.join(__dirname, 'images', 'logo-forfeo.png');
+    if(fs.existsSync(logoPath)) doc.image(logoPath, 50, 45, { width: 50 });
+    doc.fontSize(20).font('Helvetica-Bold').text('Rapport Comptable', 120, 57);
+    doc.fontSize(10).font('Helvetica').text('Forfeo Lab Inc.', 120, 80);
+    doc.moveDown(3);
+    
+    // Tableau
+    let y = 150;
+    doc.font('Helvetica-Bold');
+    doc.text('Date', 50, y);
+    doc.text('Mission', 150, y);
+    doc.text('Ambassadeur', 350, y);
+    doc.text('Montant', 500, y);
+    doc.moveTo(50, y + 15).lineTo(550, y + 15).stroke();
+    y += 25;
+
+    let totalBrut = 0;
+    doc.font('Helvetica');
+
+    missions.rows.forEach(m => {
+        const montant = parseFloat(m.recompense) || 0;
+        totalBrut += montant;
+        
+        doc.text(new Date(m.created_at).toLocaleDateString(), 50, y);
+        doc.text(m.titre.substring(0, 30), 150, y);
+        doc.text(m.ambassadeur_nom, 350, y);
+        doc.text(montant.toFixed(2) + '$', 500, y);
+        y += 20;
+        
+        if (y > 700) { doc.addPage(); y = 50; } // Gestion saut de page
+    });
+
+    // Calcul Taxes QC
+    const tps = totalBrut * 0.05;
+    const tvq = totalBrut * 0.09975;
+    const grandTotal = totalBrut + tps + tvq;
+
+    y += 20;
+    doc.moveTo(350, y).lineTo(550, y).stroke();
+    y += 10;
+
+    doc.font('Helvetica-Bold');
+    doc.text('Sous-total :', 350, y, { align: 'right', width: 100 });
+    doc.text(totalBrut.toFixed(2) + '$', 500, y);
+    y += 20;
+    doc.font('Helvetica');
+    doc.text('TPS (5%) :', 350, y, { align: 'right', width: 100 });
+    doc.text(tps.toFixed(2) + '$', 500, y);
+    y += 20;
+    doc.text('TVQ (9.975%) :', 350, y, { align: 'right', width: 100 });
+    doc.text(tvq.toFixed(2) + '$', 500, y);
+    y += 25;
+    
+    doc.font('Helvetica-Bold').fontSize(12).fillColor('#0061ff');
+    doc.text('TOTAL À PAYER :', 350, y, { align: 'right', width: 100 });
+    doc.text(grandTotal.toFixed(2) + '$', 500, y);
+
+    doc.end();
+});
+
+app.post('/admin/payer-ambassadeur', async (req, res) => { await pool.query("UPDATE missions SET statut_paiement='paye', date_paiement=NOW() WHERE id=$1", [req.body.id_mission]); res.redirect('/admin/dashboard'); });
 app.post('/admin/approuver-mission', async (req, res) => { await pool.query("UPDATE missions SET statut='approuve' WHERE id=$1", [req.body.id_mission]); res.redirect('/admin/dashboard'); });
 app.post('/admin/create-user', async (req, res) => { const h = await bcrypt.hash(req.body.password, 10); await pool.query("INSERT INTO users (nom, email, password, role) VALUES ($1,$2,$3,$4)", [req.body.nom, req.body.email, h, req.body.role]); res.redirect('/admin/dashboard'); });
 app.post('/admin/delete-user', async (req, res) => { await pool.query("DELETE FROM users WHERE id=$1", [req.body.user_id]); res.redirect('/admin/dashboard'); });
 app.get('/admin/rapport/:missionId', async (req, res) => { const d = await pool.query(`SELECT r.*, m.titre, m.type_audit FROM audit_reports r JOIN missions m ON r.mission_id=m.id WHERE m.id=$1`, [req.params.missionId]); res.render('admin-rapport-detail', { rapport: d.rows[0], details: d.rows[0].details, userName: req.session.userName }); });
 
-// ENTREPRISE - CHECK LIMIT
+// ENTREPRISE
 const checkLimit = async (req, res, next) => {
     const user = await pool.query("SELECT forfait FROM users WHERE id = $1", [req.session.userId]);
     if (user.rows[0].forfait !== 'Freemium') return next();
@@ -215,7 +209,6 @@ const checkLimit = async (req, res, next) => {
     if (parseInt(count.rows[0].count) >= 1) return res.redirect('/entreprise/dashboard?error=limit_atteinte');
     next();
 };
-
 app.get('/entreprise/dashboard', async (req, res) => {
     const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
     const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY created_at DESC", [req.session.userId]);
@@ -224,12 +217,23 @@ app.get('/entreprise/dashboard', async (req, res) => {
     const protocol = 'https'; const host = req.get('host'); const surveyBaseLink = `${protocol}://${host}/sondage-client/${user.rows[0].id}`;
     res.render('entreprise-dashboard', { user: user.rows[0], missions: missions.rows, scores: scores.rows, sondages: sondages.rows, userName: req.session.userName, error: req.query.error, msg: req.query.msg, surveyBaseLink: surveyBaseLink });
 });
-
 app.post('/entreprise/creer-audit', checkLimit, async (req, res) => { await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, adresse, date_expiration) VALUES ($1, $2, $3, 'Visite', $4, 'en_attente', $5, CURRENT_TIMESTAMP + INTERVAL '30 days')", [req.session.userId, req.body.titre, req.body.type_audit, req.body.recompense, req.body.adresse]); res.redirect('/entreprise/dashboard'); });
 app.post('/entreprise/commander-sondage', checkLimit, async (req, res) => { await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, client_nom, client_email, date_expiration) VALUES ($1, $2, $3, 'Sondage', $4, 'en_attente', $5, $6, CURRENT_TIMESTAMP + INTERVAL '30 days')", [req.session.userId, "Sondage "+req.body.client_nom, req.body.type_sondage, req.body.recompense, req.body.client_nom, req.body.client_email]); res.redirect('/entreprise/dashboard'); });
 app.post('/entreprise/ajouter-employe', async (req, res) => { const h = await bcrypt.hash(req.body.password, 10); await pool.query("INSERT INTO users (nom, email, password, role, entreprise_id) VALUES ($1, $2, $3, 'employe', $4)", [req.body.nom, req.body.email, h, req.session.userId]); res.redirect('/entreprise/dashboard'); });
 app.post('/entreprise/upload-logo', upload.single('logo'), async (req, res) => { if(req.file) { const b64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`; await pool.query("UPDATE users SET logo_data = $1 WHERE id = $2", [b64, req.session.userId]); } res.redirect('/entreprise/dashboard'); });
-app.get('/entreprise/telecharger-rapport/:id', async (req, res) => { const r = await pool.query(`SELECT r.details, m.titre, m.type_audit, m.created_at FROM audit_reports r JOIN missions m ON r.mission_id=m.id WHERE m.id=$1`, [req.params.id]); if(r.rows.length===0) return res.send("Non trouvé"); const d = r.rows[0]; const doc = new PDFDocument({ margin: 50 }); res.setHeader('Content-Type','application/pdf'); res.setHeader('Content-Disposition', `attachment; filename=Rapport-${req.params.id}.pdf`); doc.pipe(res); const lp = path.join(__dirname, 'images', 'logo-forfeo.png'); if(fs.existsSync(lp)) doc.image(lp, 50, 40, { width: 60 }); doc.moveDown(1).font('Helvetica-Bold').fontSize(22).fillColor('#0061ff').text('RAPPORT D\'AUDIT', {align:'center'}).font('Helvetica').fontSize(10).fillColor('#333').text('Forfeo Lab', {align:'center'}); doc.moveDown(2).fillColor('#000').fontSize(12).text(`Mission: ${d.titre}`).text(`Type: ${d.type_audit}`).text(`Date: ${new Date(d.created_at).toLocaleDateString()}`).moveDown(1.5); const y = doc.y; doc.rect(50, y, 500, 75).fillAndStroke('#f0f9ff', '#0061ff'); doc.fillColor('#0061ff').fontSize(9).text("CERTIFICATION D'INDÉPENDANCE :\nCe rapport a été complété avec objectivité et impartialité par un Ambassadeur Certifié Forfeo LAB.", 60, y+15, {width:480, align:'center'}); doc.y = y+105; doc.fillColor('#000').fontSize(14).text('Détails :', {underline:true}).moveDown(); doc.fontSize(11); for(const [k,v] of Object.entries(d.details)) { if(k!=='mission_id' && k!=='ambassadeur_id' && k!=='media_files') doc.font('Helvetica-Bold').text(`${k.toUpperCase().replace(/_/g,' ')}: `, {continued:true}).font('Helvetica').text(`${v}`).moveDown(0.5); } doc.end(); });
+app.get('/entreprise/telecharger-rapport/:id', async (req, res) => { 
+    // CORRECTION FLUX : On récupère le rapport UNIQUEMENT s'il est approuvé
+    const r = await pool.query(`SELECT r.details, m.titre, m.type_audit, m.created_at FROM audit_reports r JOIN missions m ON r.mission_id=m.id WHERE m.id=$1 AND m.statut='approuve'`, [req.params.id]); 
+    if(r.rows.length===0) return res.send("Rapport non disponible ou non approuvé."); 
+    const d = r.rows[0]; const doc = new PDFDocument({ margin: 50 }); res.setHeader('Content-Type','application/pdf'); res.setHeader('Content-Disposition', `attachment; filename=Rapport-${req.params.id}.pdf`); doc.pipe(res); 
+    const lp = path.join(__dirname, 'images', 'logo-forfeo.png'); if(fs.existsSync(lp)) doc.image(lp, 50, 40, { width: 60 }); 
+    doc.moveDown(1).font('Helvetica-Bold').fontSize(22).fillColor('#0061ff').text('RAPPORT D\'AUDIT', {align:'center'}).font('Helvetica').fontSize(10).fillColor('#333').text('Forfeo Lab', {align:'center'}); doc.moveDown(2).fillColor('#000').fontSize(12).text(`Mission: ${d.titre}`).text(`Type: ${d.type_audit}`).text(`Date: ${new Date(d.created_at).toLocaleDateString()}`).moveDown(1.5); 
+    const y = doc.y; doc.rect(50, y, 500, 75).fillAndStroke('#f0f9ff', '#0061ff'); doc.fillColor('#0061ff').fontSize(9).text("CERTIFICATION D'INDÉPENDANCE :\nCe rapport a été complété avec objectivité et impartialité par un Ambassadeur Certifié Forfeo LAB.", 60, y+15, {width:480, align:'center'}); 
+    doc.y = y+105; doc.fillColor('#000').fontSize(14).text('Détails :', {underline:true}).moveDown(); doc.fontSize(11); 
+    const details = JSON.parse(d.details); // Parse JSON si nécessaire
+    for(const [k,v] of Object.entries(details)) { if(k!=='mission_id' && k!=='ambassadeur_id') doc.font('Helvetica-Bold').text(`${k}: `, {continued:true}).font('Helvetica').text(`${v}`).moveDown(0.5); } 
+    doc.end(); 
+});
 app.post('/entreprise/envoyer-campagne', async (req, res) => { const list = req.body.emails.split(/[\n,;]+/).map(e => e.trim()).filter(e => e); const type = req.body.type_activite; const protocol = 'https'; const host = req.get('host'); const fullLink = `${protocol}://${host}/sondage-client/${req.session.userId}?type=${encodeURIComponent(type)}`; try { if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) throw new Error("Config email manquante"); for(const email of list) { await transporter.sendMail({ from: `"Forfeo Lab" <${process.env.EMAIL_USER}>`, to: email, subject: `Votre avis compte - ${req.session.userName}`, html: `<div style="font-family: Arial; padding: 20px; text-align: center; background-color: #f9f9f9;"><h2 style="color: #0061ff;">Bonjour !</h2><p>Merci de votre visite chez <strong>${req.session.userName}</strong>.</p><br><a href="${fullLink}" style="background-color: #0061ff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 25px; display: inline-block;">Répondre au sondage</a></div>` }); } res.redirect('/entreprise/dashboard?msg=campagne_envoyee'); } catch (error) { console.error("ERREUR EMAIL:", error); res.redirect('/entreprise/dashboard?error=email_fail'); } });
 app.get('/sondage-client/:entrepriseId', async (req, res) => { const ent = await pool.query("SELECT nom, id, logo_data FROM users WHERE id=$1", [req.params.entrepriseId]); if(ent.rows.length === 0) return res.send("Entreprise introuvable"); const type = req.query.type || 'Général'; const questions = SURVEY_TEMPLATES[type] || SURVEY_TEMPLATES['Général']; res.render('sondage-public', { entreprise: ent.rows[0], questions: questions, type: type }); });
 app.post('/sondage-client/submit', async (req, res) => { await pool.query("INSERT INTO sondages_publics (entreprise_id, type_activite, reponses) VALUES ($1, $2, $3)", [req.body.entreprise_id, req.body.type_activite, JSON.stringify(req.body)]); res.send(`<div style="font-family:sans-serif; text-align:center; padding:50px;"><h1 style="color:#0061ff;">Merci !</h1><p>Votre avis a été transmis à l'équipe.</p><a href="/">Retour</a></div>`); });
@@ -237,28 +241,21 @@ app.post('/sondage-client/submit', async (req, res) => { await pool.query("INSER
 // AMBASSADEUR & ACADEMIE
 app.get('/ambassadeur/dashboard', async (req, res) => { 
     const m = await pool.query("SELECT * FROM missions WHERE statut='approuve'"); 
-    const h = await pool.query("SELECT * FROM missions WHERE ambassadeur_id=$1", [req.session.userId]); 
+    const h = await pool.query("SELECT m.*, r.created_at as date_soumission FROM missions m LEFT JOIN audit_reports r ON m.id = r.mission_id WHERE m.ambassadeur_id=$1 ORDER BY m.created_at DESC", [req.session.userId]); 
     res.render('ambassadeur-dashboard', { missions: m.rows, historique: h.rows, totalGains: 0, userName: req.session.userName }); 
 });
 app.post('/ambassadeur/postuler', async (req, res) => { await pool.query("UPDATE missions SET ambassadeur_id=$1, statut='reserve' WHERE id=$2", [req.session.userId, req.body.id_mission]); res.redirect('/ambassadeur/dashboard'); });
 
-// CORRECTION BUG FLUX ET DOUBLON RAPPORTS
+// SOUMISSION RAPPORT SÉCURISÉE
 app.post('/ambassadeur/soumettre-rapport', async (req, res) => { 
     try {
-        // 1. On vérifie si un rapport existe déjà pour éviter l'erreur de clé dupliquée
         const existing = await pool.query("SELECT id FROM audit_reports WHERE mission_id=$1", [req.body.mission_id]);
-        
         if (existing.rows.length === 0) {
-            // Pas de rapport : on insère
             await pool.query("INSERT INTO audit_reports (mission_id, ambassadeur_id, details) VALUES ($1,$2,$3)", [req.body.mission_id, req.session.userId, JSON.stringify(req.body)]); 
         } else {
-            // Rapport existe : on met à jour (au cas où correction)
             await pool.query("UPDATE audit_reports SET details=$1 WHERE mission_id=$2", [JSON.stringify(req.body), req.body.mission_id]);
         }
-
-        // 2. IMPORTANT : On force TOUJOURS le statut à 'soumis' pour débloquer le flux Admin
-        await pool.query("UPDATE missions SET statut='soumis' WHERE id=$1", [req.body.mission_id]);
-        
+        await pool.query("UPDATE missions SET statut='soumis' WHERE id=$1", [req.body.mission_id]); 
         res.redirect('/ambassadeur/dashboard'); 
     } catch (e) {
         console.error("Erreur soumission:", e);
@@ -270,7 +267,7 @@ app.get('/employe/dashboard', async (req, res) => { const mod = await pool.query
 app.get('/formations/module/:id', async (req, res) => { const mod = await pool.query("SELECT * FROM formations_modules WHERE id=$1", [req.params.id]); const q = await pool.query("SELECT * FROM formations_questions WHERE module_id=$1 ORDER BY id ASC", [req.params.id]); res.render('formation-detail', { module: mod.rows[0], questions: q.rows, userName: req.session.userName }); });
 app.post('/formations/soumettre-quizz', async (req, res) => { const qs = await pool.query("SELECT id, reponse_correcte FROM formations_questions WHERE module_id=$1", [req.body.module_id]); let score = 0; qs.rows.forEach(q => { if(req.body['q_'+q.id]===q.reponse_correcte) score++; }); const stat = (score/qs.rows.length)*100 >= 80 ? 'reussi' : 'echec'; const code = stat==='reussi' ? Math.random().toString(36).substring(7).toUpperCase() : null; await pool.query("INSERT INTO formations_scores (user_id, module_id, meilleur_score, tentatives, statut, code_verif) VALUES ($1,$2,$3,1,$4,$5) ON CONFLICT (user_id, module_id) DO UPDATE SET meilleur_score=GREATEST(EXCLUDED.meilleur_score, formations_scores.meilleur_score), statut=EXCLUDED.statut, code_verif=EXCLUDED.code_verif", [req.session.userId, req.body.module_id, (score/qs.rows.length)*100, stat, code]); res.redirect('/employe/dashboard'); });
 
-// --- NOUVEAU CERTIFICAT PRO ---
+// --- CERTIFICAT PRO AVEC SCEAU ---
 app.get('/certificat/:code', async (req, res) => { 
     const d = await pool.query(`SELECT s.*, u.nom as user_nom, m.titre as module_titre FROM formations_scores s JOIN users u ON s.user_id = u.id JOIN formations_modules m ON s.module_id = m.id WHERE s.code_verif = $1`, [req.params.code]);
     if(d.rows.length === 0) return res.send('Certificat introuvable');
@@ -281,10 +278,8 @@ app.get('/certificat/:code', async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename=Certificat-${cert.code_verif}.pdf`);
     doc.pipe(res);
 
-    // Fond blanc
+    // Fond et Cadre
     doc.rect(0, 0, 842, 595).fill('#fff');
-
-    // Cadre décoratif bleu
     doc.rect(20, 20, 802, 555).strokeColor('#0061ff').lineWidth(8).stroke();
     doc.rect(30, 30, 782, 535).strokeColor('#e6f0ff').lineWidth(2).stroke();
 
@@ -294,11 +289,17 @@ app.get('/certificat/:code', async (req, res) => {
         doc.image(logoPath, 370, 60, { width: 100 });
     }
 
-    // Titre
+    // SCEAU DORÉ (Simulation graphique)
+    doc.circle(720, 450, 50).fillAndStroke('#FFD700', '#DAA520'); // Cercle Or
+    doc.circle(720, 450, 40).fill('#FFF8DC'); // Intérieur clair
+    doc.fontSize(10).fillColor('#DAA520').text('FORFEO', 690, 440);
+    doc.text('LAB', 705, 455);
+    doc.text('CERTIFIÉ', 690, 470);
+
+    // Titre et Contenu
     doc.moveDown(6);
-    doc.font('Helvetica-Bold').fontSize(45).fillColor('#0061ff').text('CERTIFICAT DE RÉUSSITE', { align: 'center', characterSpacing: 2 });
+    doc.font('Helvetica-Bold').fontSize(45).fillColor('#0061ff').text('CERTIFICAT DE RÉUSSITE', 0, 150, { align: 'center', characterSpacing: 2 });
     
-    // Texte
     doc.moveDown(1);
     doc.font('Helvetica').fontSize(16).fillColor('#555').text('Ce document atteste que', { align: 'center' });
     
@@ -314,18 +315,12 @@ app.get('/certificat/:code', async (req, res) => {
     // Ligne de séparation
     doc.moveTo(200, 420).lineTo(642, 420).strokeColor('#ccc').lineWidth(1).stroke();
 
-    // Pied de page (Détails)
-    doc.moveDown(4);
+    // Pied de page aligné
     doc.fontSize(12).fillColor('#444');
-    
-    // Gauche
-    const yDetails = 460;
-    doc.text(`Délivré le : ${new Date(cert.updated_at).toLocaleDateString('fr-FR', {year:'numeric', month:'long', day:'numeric'})}`, 100, yDetails);
-    doc.text(`Score obtenu : ${Math.round(cert.meilleur_score)}%`, 100, yDetails + 20);
-
-    // Droite
-    doc.text(`ID Unique : ${cert.code_verif}`, 550, yDetails, { align: 'right' });
-    doc.font('Helvetica-Bold').text('Forfeo Lab Academy', 550, yDetails + 20, { align: 'right' });
+    doc.text(`Délivré le : ${new Date(cert.updated_at).toLocaleDateString('fr-FR')}`, 100, 460);
+    doc.text(`Score obtenu : ${Math.round(cert.meilleur_score)}%`, 100, 480);
+    doc.text(`ID Unique : ${cert.code_verif}`, 550, 460, { align: 'right' });
+    doc.font('Helvetica-Bold').text('Forfeo Lab Academy', 550, 480, { align: 'right' });
 
     doc.end();
 });
