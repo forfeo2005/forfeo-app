@@ -9,67 +9,109 @@
     <link rel="stylesheet" href="/css/premium-dashboard.css">
     <link rel="stylesheet" href="/css/home-premium.css">
     <style>
-        /* Styles spécifiques pour l'effet WOW de l'accueil */
-        .text-gradient-primary {
-            background: linear-gradient(45deg, #0061ff, #60efff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .hero-lead {
-            font-size: 1.15rem;
-            line-height: 1.8;
-            color: #4b5563;
-        }
-        .stat-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 97, 255, 0.15) !important;
-        }
+        /* --- STYLE DES BOUTONS ET ONGLETS UNIFORMISÉS --- */
         
-        /* Uniformisation Navbar */
-        .nav-link {
-            transition: color 0.3s ease;
-            font-size: 0.95rem;
-        }
-        .nav-link:hover {
-            color: #0061ff !important;
-        }
-        
-        /* Bouton Site Père */
-        .btn-pere {
-            border: 1px solid #e2e8f0;
-            color: #64748b;
-            background: white;
+        /* Liens de navigation simples */
+        .nav-link-custom {
+            font-weight: 600;
+            color: #1e293b;
+            padding: 8px 16px;
             transition: all 0.3s ease;
+            border-radius: 50px;
         }
-        .btn-pere:hover {
-            border-color: #0061ff;
+        .nav-link-custom:hover {
             color: #0061ff;
-            transform: translateY(-1px);
+            background: rgba(0, 97, 255, 0.05);
         }
 
-        /* Bouton Ambassadeur (Style secondaire mais visible) */
-        .btn-ambassadeur {
+        /* Bouton Site Principal (EFFET WOW SHINE) */
+        .btn-shine-effect {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white !important;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 20px;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            white-space: nowrap;
+        }
+        
+        /* La barre lumineuse qui passe */
+        .btn-shine-effect::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; }
+        }
+        
+        .btn-shine-effect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Bouton Ambassadeur */
+        .btn-outline-custom {
             border: 2px solid #0061ff;
             color: #0061ff;
-            background: transparent;
             font-weight: 700;
+            border-radius: 50px;
+            padding: 8px 20px;
+            background: transparent;
             transition: all 0.3s ease;
+            white-space: nowrap;
         }
-        .btn-ambassadeur:hover {
+        .btn-outline-custom:hover {
             background: #0061ff;
             color: white;
             box-shadow: 0 4px 15px rgba(0, 97, 255, 0.3);
         }
 
-        @media (max-width: 768px) {
-            .hero-title { font-size: 2.5rem !important; }
-            .hero-section { padding-top: 120px !important; }
-            .navbar-nav { gap: 10px !important; margin-top: 15px; }
-            .btn { width: 100%; margin-bottom: 5px; }
+        /* Bouton Entreprise (Déjà défini dans CSS mais forcé ici pour uniformité) */
+        .btn-gradient-custom {
+            background: linear-gradient(90deg, #0061ff, #00c6ff);
+            color: white !important;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 20px;
+            box-shadow: 0 4px 15px rgba(0, 97, 255, 0.4);
+            transition: transform 0.3s ease;
+            white-space: nowrap;
         }
+        .btn-gradient-custom:hover {
+            transform: scale(1.05);
+        }
+
+        /* Ajustements Mobile */
+        @media (max-width: 992px) {
+            .navbar-nav { gap: 10px; margin-top: 15px; }
+            .btn { width: 100%; margin-bottom: 5px; }
+            .hero-title { font-size: 2.5rem !important; }
+        }
+
+        /* Autres styles */
+        .text-gradient-primary {
+            background: linear-gradient(45deg, #0061ff, #60efff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-lead { font-size: 1.15rem; line-height: 1.8; color: #4b5563; }
+        .stat-card { transition: transform 0.3s ease; }
+        .stat-card:hover { transform: translateY(-5px); }
     </style>
 </head>
 <body>
@@ -82,20 +124,31 @@
                 <span class="brand-lab-neon">LAB</span>
             </a>
             
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center gap-2 gap-lg-4">
-                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="https://forfeo.com" target="_blank"><i class="bi bi-box-arrow-up-right small me-1"></i> Forfeo.com</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="/audit-mystere">Solution Audit</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="/a-propos">À Propos</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="/login">Connexion</a></li>
+                <ul class="navbar-nav ms-auto align-items-center gap-2">
                     
-                    <li class="nav-item d-flex flex-column flex-lg-row gap-2">
-                        <a class="btn btn-ambassadeur rounded-pill px-4" href="/register?role=ambassadeur">Espace Ambassadeur</a>
-                        <a class="btn btn-flash-pro rounded-pill px-4 shadow-sm" href="/register?role=entreprise">Espace Entreprise</a>
+                    <li class="nav-item"><a class="nav-link-custom text-decoration-none" href="/audit-mystere">Solution Audit</a></li>
+                    <li class="nav-item"><a class="nav-link-custom text-decoration-none" href="/a-propos">À Propos</a></li>
+                    
+                    <li class="nav-item">
+                        <a class="btn-shine-effect text-decoration-none d-flex align-items-center gap-2" href="https://forfeo.com" target="_blank">
+                            <i class="bi bi-box-arrow-up-right"></i> Site Principal
+                        </a>
+                    </li>
+
+                    <li class="nav-item border-start mx-2 d-none d-lg-block" style="height: 25px; border-color: #ddd;"></li>
+
+                    <li class="nav-item"><a class="nav-link-custom text-decoration-none" href="/login">Connexion</a></li>
+                    
+                    <li class="nav-item">
+                        <a class="btn-outline-custom text-decoration-none" href="/register?role=ambassadeur">Espace Ambassadeur</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn-gradient-custom text-decoration-none" href="/register?role=entreprise">Espace Entreprise</a>
                     </li>
                 </ul>
             </div>
@@ -118,7 +171,6 @@
                     </div>
 
                     <div class="glass-card p-4 p-md-5 text-start shadow-lg reveal-up delay-1 bg-white border-0 position-relative overflow-hidden">
-                        
                         <div class="position-absolute bottom-0 end-0" style="opacity: 0.05; z-index: 0; pointer-events: none; transform: translate(10%, 10%);">
                             <i class="bi bi-bar-chart-line-fill text-primary" style="font-size: 20rem;"></i>
                         </div>
@@ -133,7 +185,7 @@
                                 <div class="p-4 bg-light rounded-4 mb-4 border-start border-primary border-4 shadow-sm position-relative">
                                     <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-people-fill text-primary me-2"></i> L'Écosystème Ambassadeurs</h5>
                                     <p class="mb-0 text-muted">
-                                        Chaque mission est confiée à un(e) ambassadeur(drice) formé(e) pour observer, tester et noter l’expérience de façon neutre et structurée (accueil, rapidité, propreté, attitude, respect des promesses). Après la visite, l’entreprise reçoit un rapport détaillé pour augmenter la satisfaction et les avis positifs.
+                                        Chaque mission est confiée à un(e) ambassadeur(drice) formé(e) pour observer, tester et noter l’expérience de façon neutre et structurée. Après la visite, l’entreprise reçoit un rapport détaillé pour augmenter la satisfaction et les avis positifs.
                                     </p>
                                 </div>
 
@@ -154,10 +206,10 @@
                     </div>
 
                     <div class="mt-5 reveal-up delay-2 d-flex flex-column flex-md-row justify-content-center gap-3">
-                        <a href="/register?role=entreprise" class="btn btn-flash-pro btn-lg rounded-pill px-5 py-3 shadow-lg">
+                        <a href="/register?role=entreprise" class="btn btn-flash-pro btn-lg rounded-pill px-5 py-3 shadow-lg text-decoration-none">
                             Démarrer un Audit
                         </a>
-                        <a href="/a-propos" class="btn btn-outline-dark btn-lg rounded-pill px-5 py-3 fw-bold">
+                        <a href="/a-propos" class="btn btn-outline-dark btn-lg rounded-pill px-5 py-3 fw-bold text-decoration-none">
                             En savoir plus
                         </a>
                     </div>
@@ -182,7 +234,6 @@
                         <p class="text-muted small">Des consommateurs québécois acceptent de payer plus cher pour bénéficier d'une expérience client supérieure.</p>
                     </div>
                 </div>
-                
                 <div class="col-md-4 reveal-up delay-2">
                     <div class="glass-card stat-card h-100 p-4 border border-light shadow-sm">
                         <div class="display-3 fw-bold text-danger mb-2">1/3</div>
@@ -190,7 +241,6 @@
                         <p class="text-muted small">Des clients quittent une marque qu'ils aimaient après <strong>une seule</strong> mauvaise expérience non résolue.</p>
                     </div>
                 </div>
-                
                 <div class="col-md-4 reveal-up delay-3">
                     <div class="glass-card stat-card h-100 p-4 border border-light shadow-sm">
                         <div class="display-3 fw-bold text-success mb-2"><i class="bi bi-people-fill"></i></div>
@@ -231,7 +281,6 @@
     </footer>
 
     <script>
-        // Animation simple au scroll
         document.addEventListener("DOMContentLoaded", function() {
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
