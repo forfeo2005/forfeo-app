@@ -14,48 +14,30 @@ body {
     overflow-x: hidden;
 }
 
-/* --- LOGO ULTRA FLASHY --- */
-.navbar-brand {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    margin-right: 2rem;
-    line-height: 1;
-}
-
-.logo-img {
-    height: 45px;
-    width: auto;
-    display: block;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-}
-
+/* LOGO & LAB NÉON */
+.navbar-brand { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; margin-right: 2rem; line-height: 1; }
+.logo-img { height: 45px; width: auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
 .brand-lab-neon {
-    display: block;
-    font-size: 11px;
-    font-weight: 900;
-    letter-spacing: 5px;
-    color: #0061ff;
-    margin-top: 2px;
-    text-transform: uppercase;
-    text-align: center;
-    /* EFFET NÉON PULSANT */
-    text-shadow: 0 0 5px #00c6ff, 0 0 10px #0061ff;
+    display: block; font-size: 11px; font-weight: 900; letter-spacing: 5px; color: #0061ff; margin-top: 2px;
+    text-transform: uppercase; text-align: center; text-shadow: 0 0 5px #00c6ff, 0 0 10px #0061ff;
     animation: neonPulse 1.5s infinite alternate;
 }
-
 @keyframes neonPulse {
     0% { opacity: 0.8; text-shadow: 0 0 2px #00c6ff; transform: scale(1); }
     100% { opacity: 1; text-shadow: 0 0 10px #00c6ff, 0 0 20px #0061ff; transform: scale(1.05); }
 }
 
-/* --- ELEMENTS UI --- */
+/* FORFY BULLE AIDE */
+.forfy-help-bubble {
+    position: absolute; top: -45px; right: 0; background: #0061ff; color: white;
+    padding: 5px 12px; border-radius: 15px 15px 0 15px; font-size: 12px; font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2); white-space: nowrap; animation: floatBubble 2s infinite;
+}
+@keyframes floatBubble { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+/* UI ELEMENTS */
 .premium-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; background: #f8fafc; }
 .glass-card { background: rgba(255, 255, 255, 0.95); border: 1px solid white; border-radius: 20px; box-shadow: var(--shadow-sm); padding: 24px; }
-
-/* TABLEAUX & BADGES */
 .premium-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
 .premium-table th { color: #64748b; text-transform: uppercase; font-size: 0.75rem; padding: 10px; }
 .premium-table td { padding: 15px 10px; background: white; border-bottom: 1px solid #f1f5f9; }
@@ -77,11 +59,7 @@ body {
 
 /* STATS */
 .stat-number { font-size: 3rem; font-weight: 800; background: -webkit-linear-gradient(45deg, #0061ff, #00c6ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-/* HEADER MODULE */
 .module-header-art { height: 150px; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0061ff, #0033aa); color: white; margin-bottom: 15px; }
-
-/* BACKGROUND BLOB */
 .blob-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; overflow: hidden; }
 .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4; }
 .blob-1 { width: 400px; height: 400px; background: #e0f2fe; top: -100px; left: -100px; }
