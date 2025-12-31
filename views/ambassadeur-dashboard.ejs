@@ -35,13 +35,13 @@
                     <div class="glass-card mb-3 p-4 d-flex justify-content-between align-items-center">
                         <div><h5 class="fw-bold mb-1"><%= h.titre %></h5><span class="badge bg-info text-dark"><%= h.type_audit %></span></div>
                         <div class="d-flex gap-2">
-                            <% if(h.type_audit.includes('Sondage')) { %><a href="mailto:<%= h.client_email %>?subject=Sondage&body=Bonjour..." class="btn btn-info text-white rounded-pill">📧 Email</a><% } %>
-                            <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalFull<%= h.id %>">Remplir Rapport</button>
+                            <% if(h.type_audit.includes('Sondage')) { %><a href="mailto:<%= h.client_email %>?subject=Sondage Satisfaction&body=Bonjour..." class="btn btn-info text-white rounded-pill">📧 Email</a><% } %>
+                            <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalFull<%= h.id %>">Remplir</button>
                         </div>
                     </div>
 
                     <div class="modal fade" id="modalFull<%= h.id %>" tabindex="-1">
-                        <div class="modal-dialog modal-xl">
+                        <div class="modal-dialog modal-lg">
                             <div class="modal-content border-0 shadow-lg">
                                 <div class="modal-header bg-primary text-white"><h5 class="modal-title">Rapport : <%= h.titre %></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
                                 <div class="modal-body p-5 bg-light">
@@ -60,17 +60,13 @@
                                             <h5 class="text-primary fw-bold mb-3">Sondage</h5>
                                             <div class="mb-3"><label class="fw-semibold">Satisfaction</label><select name="niveau_satisfaction" class="form-select"><option>Très Satisfait</option><option>Satisfait</option><option>Neutre</option><option>Insatisfait</option></select></div>
                                             <div class="mb-3"><label class="fw-semibold">Fluidité</label><select name="fluidite" class="form-select"><option>Très fluide</option><option>Fluide</option><option>Difficile</option></select></div>
-                                        
-                                        <% } else if(h.type_audit.includes('Qualité')) { %>
+                                        <% } else { %>
                                             <h5 class="text-primary fw-bold mb-3">Critères Qualité</h5>
                                             <div class="row g-3 mb-3">
-                                                <div class="col-md-4"><label class="fw-semibold">Accueil</label><select name="accueil" class="form-select"><option>Excellent</option><option>Bon</option><option>Moyen</option><option>Mauvais</option></select></div>
-                                                <div class="col-md-4"><label class="fw-semibold">Propreté</label><select name="proprete" class="form-select"><option>Impeccable</option><option>Acceptable</option><option>Sale</option></select></div>
-                                                <div class="col-md-4"><label class="fw-semibold">Vitesse</label><select name="vitesse" class="form-select"><option>Rapide</option><option>Correct</option><option>Lent</option></select></div>
+                                                <div class="col-md-4"><label class="fw-semibold">Accueil</label><select name="accueil" class="form-select"><option>Excellent</option><option>Bon</option><option>Mauvais</option></select></div>
+                                                <div class="col-md-4"><label class="fw-semibold">Propreté</label><select name="proprete" class="form-select"><option>Impeccable</option><option>Sale</option></select></div>
+                                                <div class="col-md-4"><label class="fw-semibold">Vitesse</label><select name="vitesse" class="form-select"><option>Rapide</option><option>Lent</option></select></div>
                                             </div>
-                                        
-                                        <% } else { %>
-                                            <h5 class="text-primary fw-bold mb-3">Évaluation Terrain</h5>
                                             <div class="mb-3"><label class="fw-semibold">Description générale</label><textarea name="description" class="form-control" rows="3" required></textarea></div>
                                             <div class="row g-3 mb-3">
                                                 <div class="col-md-6"><label class="fw-semibold text-success">Points Forts</label><textarea name="points_forts" class="form-control" rows="2"></textarea></div>
