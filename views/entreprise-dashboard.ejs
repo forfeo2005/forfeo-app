@@ -6,6 +6,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/premium-dashboard.css">
     <link rel="stylesheet" href="/css/home-premium.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
     <div class="premium-bg"></div>
@@ -14,10 +15,10 @@
             <div class="alert alert-warning text-center fw-bold shadow mb-4">⚠️ Limite Freemium atteinte. Choisissez un forfait ci-dessous.</div>
         <% } %>
 
-        <div class="d-flex justify-content-between mb-5 align-items-center">
+        <div class="d-flex justify-content-between mb-5 align-items-center flex-wrap">
             <h3 class="fw-bold">Bonjour, <%= userName %></h3>
             <div class="d-flex flex-column align-items-center"><img src="/images/logo-forfeo.png" height="40"><span class="brand-lab-neon">LAB</span></div>
-            <div class="d-flex gap-2"><a href="/profil" class="btn btn-outline-primary btn-sm rounded-pill">Profil</a><a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a></div>
+            <div class="d-flex gap-2 mt-2 mt-md-0"><a href="/profil" class="btn btn-outline-primary btn-sm rounded-pill">Profil</a><a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a></div>
         </div>
 
         <% if(user.forfait === 'Freemium') { %>
@@ -50,36 +51,97 @@
             <div class="alert alert-success text-center fw-bold mb-4">✅ Vous profitez du forfait <%= user.forfait %> (Illimité)</div>
         <% } %>
 
-        <div class="row g-4">
-            <div class="col-lg-4">
-                <div class="glass-card mb-4">
-                    <h5 class="fw-bold">Publier Audit Terrain</h5>
-                    <form action="/entreprise/creer-audit" method="POST">
-                        <input type="text" name="titre" placeholder="Lieu" class="form-control mb-2" required>
-                        <input type="text" name="adresse" placeholder="Adresse" class="form-control mb-2" required>
-                        <select name="type_audit" class="form-select mb-2"><option>Audit Standard</option><option>Audit Qualité & Propreté</option><option>Audit Conformité</option><option>Audit Vente</option><option>Client Mystère VIP</option></select>
-                        <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-2" required>
-                        <button class="btn btn-primary w-100">Publier</button>
-                    </form>
-                </div>
-                <div class="glass-card border-info">
-                    <h5 class="fw-bold text-info">Commander Sondage</h5>
-                    <form action="/entreprise/commander-sondage" method="POST">
-                        <input type="text" name="client_nom" placeholder="Nom Client" class="form-control mb-2" required>
-                        <input type="email" name="client_email" placeholder="Email Client" class="form-control mb-2" required>
-                        <select name="type_sondage" class="form-select mb-2"><option>Satisfaction Client</option><option>Sondage Après-Vente</option></select>
-                        <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-2" required>
-                        <button class="btn btn-info text-white w-100">Commander</button>
-                    </form>
+        <ul class="nav nav-pills mb-4 gap-3 p-2 glass-card d-inline-flex flex-wrap" role="tablist">
+            <li class="nav-item"><button class="nav-link active rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#missions">Missions & Sondages</button></li>
+            <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#academie">Suivi Académie</button></li>
+            <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#employes">Gestion Employés</button></li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="missions">
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <div class="glass-card mb-4">
+                            <h5 class="fw-bold">Publier Audit Terrain</h5>
+                            <form action="/entreprise/creer-audit" method="POST">
+                                <input type="text" name="titre" placeholder="Lieu" class="form-control mb-2" required>
+                                <input type="text" name="adresse" placeholder="Adresse" class="form-control mb-2" required>
+                                <select name="type_audit" class="form-select mb-2"><option>Audit Standard</option><option>Audit Qualité & Propreté</option><option>Audit Conformité</option><option>Audit Vente</option><option>Client Mystère VIP</option></select>
+                                <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-2" required>
+                                <button class="btn btn-primary w-100">Publier</button>
+                            </form>
+                        </div>
+                        <div class="glass-card border-info">
+                            <h5 class="fw-bold text-info">Commander Sondage</h5>
+                            <form action="/entreprise/commander-sondage" method="POST">
+                                <input type="text" name="client_nom" placeholder="Nom Client" class="form-control mb-2" required>
+                                <input type="email" name="client_email" placeholder="Email Client" class="form-control mb-2" required>
+                                <select name="type_sondage" class="form-select mb-2"><option>Satisfaction Client</option><option>Sondage Après-Vente</option></select>
+                                <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-2" required>
+                                <button class="btn btn-info text-white w-100">Commander</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="glass-card"><h5 class="fw-bold">Historique</h5>
+                            <table class="premium-table">
+                                <% missions.forEach(m => { %>
+                                    <tr><td><%= m.titre %></td><td><span class="badge bg-secondary"><%= m.statut %></span></td><td><% if(m.statut === 'approuve'){ %><a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-success">PDF</a><% } %></td></tr>
+                                <% }) %>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-lg-8">
-                <div class="glass-card"><h5 class="fw-bold">Historique</h5>
-                    <table class="premium-table">
-                        <% missions.forEach(m => { %>
-                            <tr><td><%= m.titre %></td><td><span class="badge bg-secondary"><%= m.statut %></span></td><td><% if(m.statut === 'approuve'){ %><a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-success">PDF</a><% } %></td></tr>
-                        <% }) %>
-                    </table>
+
+            <div class="tab-pane fade" id="academie">
+                <div class="glass-card">
+                    <h4 class="fw-bold mb-4 text-primary">Performance de vos équipes</h4>
+                    <% if(scores && scores.length > 0) { %>
+                        <table class="premium-table">
+                            <thead><tr><th>Employé</th><th>Module</th><th>Résultat</th><th>Date</th></tr></thead>
+                            <tbody>
+                                <% scores.forEach(s => { %>
+                                    <tr>
+                                        <td class="fw-bold"><%= s.employe_nom %></td>
+                                        <td><%= s.module_titre %></td>
+                                        <td>
+                                            <% if(s.statut === 'reussi') { %>
+                                                <span class="badge bg-success text-white">RÉUSSI (<%= s.meilleur_score %>%)</span>
+                                            <% } else { %>
+                                                <span class="badge bg-danger text-white">ÉCHEC (<%= s.meilleur_score %>%)</span>
+                                            <% } %>
+                                        </td>
+                                        <td class="text-muted small"><%= new Date(s.updated_at).toLocaleDateString() %></td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <div class="text-center py-5 text-muted">Aucune donnée de formation disponible pour le moment.</div>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="employes">
+                <div class="glass-card" style="max-width: 500px;">
+                    <h5 class="fw-bold mb-3">Ajouter un employé</h5>
+                    <p class="text-muted small mb-4">Créez un compte pour permettre à vos employés d'accéder à l'Académie Forfeo.</p>
+                    <form action="/entreprise/ajouter-employe" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Nom complet</label>
+                            <input type="text" name="nom" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Email professionnel</label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small">Mot de passe provisoire</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+                        <button class="btn btn-success w-100 rounded-pill fw-bold">Créer le compte employé</button>
+                    </form>
                 </div>
             </div>
         </div>
