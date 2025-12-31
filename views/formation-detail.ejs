@@ -2,33 +2,91 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz | FORFEO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/premium-dashboard.css">
 </head>
 <body>
     <div class="premium-bg"></div>
     <div class="container py-5" style="max-width: 800px;">
-        <a href="/employe/dashboard" class="btn btn-outline-secondary btn-sm mb-4">← Retour</a>
+        <a href="/employe/dashboard" class="btn btn-outline-secondary btn-sm mb-4 rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> Retour aux modules
+        </a>
+        
         <div class="glass-card p-5">
-            <h3 class="fw-bold mb-2 text-primary"><%= module.titre %></h3>
-            <p class="text-muted mb-5"><%= module.description %></p>
+            <div class="text-center mb-5">
+                <span class="badge bg-primary bg-opacity-10 text-primary mb-2 px-3 py-2 rounded-pill">Module de formation</span>
+                <h2 class="fw-bold mb-3 text-primary"><%= module.titre %></h2>
+                <p class="text-muted"><%= module.description %></p>
+                <div class="alert alert-warning d-inline-block px-4 py-2 rounded-pill border-0 shadow-sm">
+                    <i class="bi bi-trophy-fill me-2"></i>Note de passage requise : <strong>80%</strong> (4/5)
+                </div>
+            </div>
+            
             <form action="/formations/soumettre-quizz" method="POST">
                 <input type="hidden" name="module_id" value="<%= module.id %>">
+                
                 <% questions.forEach((q, index) => { %>
-                    <div class="mb-5 p-4 bg-light rounded-4 shadow-sm border border-white">
-                        <h6 class="fw-bold text-primary mb-3">Question <%= index + 1 %></h6>
-                        <div class="alert alert-info py-2 small fst-italic mb-3"><%= q.mise_en_situation %></div>
-                        <p class="fw-bold mb-4 fs-5"><%= q.question %></p>
-                        <div class="form-check mb-3"><input class="form-check-input" type="radio" name="q_<%= q.id %>" value="A" required><label class="form-check-label"><%= q.option_a %></label></div>
-                        <div class="form-check mb-3"><input class="form-check-input" type="radio" name="q_<%= q.id %>" value="B"><label class="form-check-label"><%= q.option_b %></label></div>
-                        <div class="form-check mb-3"><input class="form-check-input" type="radio" name="q_<%= q.id %>" value="C"><label class="form-check-label"><%= q.option_c %></label></div>
+                    <div class="card border-0 shadow-sm mb-5 overflow-hidden rounded-4">
+                        <div class="bg-light p-3 border-bottom d-flex align-items-center gap-3">
+                            <span class="badge bg-primary rounded-circle p-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <%= index + 1 %>
+                            </span>
+                            <span class="fw-bold text-secondary">Question <%= index + 1 %> sur <%= questions.length %></span>
+                        </div>
+
+                        <div class="card-body p-4">
+                            <% if(q.mise_en_situation) { %>
+                                <div class="alert alert-info border-0 bg-opacity-10 bg-info text-dark mb-4">
+                                    <i class="bi bi-info-circle-fill me-2 text-info"></i>
+                                    <strong>Contexte :</strong> <%= q.mise_en_situation %>
+                                </div>
+                            <% } %>
+                            
+                            <h5 class="fw-bold mb-4 text-dark"><%= q.question %></h5>
+                            
+                            <div class="d-flex flex-column gap-3">
+                                <div class="position-relative">
+                                    <input class="form-check-input position-absolute top-50 start-0 translate-middle-y ms-3" type="radio" name="q_<%= q.id %>" value="A" id="q<%= q.id %>a" required>
+                                    <label class="form-check-label w-100 p-3 ps-5 border rounded-3 cursor-pointer hover-bg-light" for="q<%= q.id %>a" style="cursor: pointer; transition: all 0.2s;">
+                                        <%= q.option_a %>
+                                    </label>
+                                </div>
+
+                                <div class="position-relative">
+                                    <input class="form-check-input position-absolute top-50 start-0 translate-middle-y ms-3" type="radio" name="q_<%= q.id %>" value="B" id="q<%= q.id %>b">
+                                    <label class="form-check-label w-100 p-3 ps-5 border rounded-3 cursor-pointer hover-bg-light" for="q<%= q.id %>b" style="cursor: pointer; transition: all 0.2s;">
+                                        <%= q.option_b %>
+                                    </label>
+                                </div>
+
+                                <div class="position-relative">
+                                    <input class="form-check-input position-absolute top-50 start-0 translate-middle-y ms-3" type="radio" name="q_<%= q.id %>" value="C" id="q<%= q.id %>c">
+                                    <label class="form-check-label w-100 p-3 ps-5 border rounded-3 cursor-pointer hover-bg-light" for="q<%= q.id %>c" style="cursor: pointer; transition: all 0.2s;">
+                                        <%= q.option_c %>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 <% }) %>
-                <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-lg">Soumettre le quizz</button>
+                
+                <div class="d-grid mt-5">
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill py-3 fw-bold shadow-lg transform-hover">
+                        Valider mes réponses <i class="bi bi-check-lg ms-2"></i>
+                    </button>
+                </div>
             </form>
         </div>
     </div>
     <%- include('partials/forfy') %>
+    
+    <style>
+        .hover-bg-light:hover { background-color: #f8f9fa; border-color: #0061ff !important; }
+        .transform-hover { transition: transform 0.2s; }
+        .transform-hover:hover { transform: translateY(-3px); }
+    </style>
 </body>
 </html>
