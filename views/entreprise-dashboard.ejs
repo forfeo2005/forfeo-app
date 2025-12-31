@@ -10,7 +10,7 @@
     <div class="premium-bg"></div>
     <div class="container py-5">
         <% if (typeof error !== 'undefined' && error === 'limit_atteinte') { %>
-            <div class="alert alert-warning text-center fw-bold shadow mb-4">⚠️ Limite Freemium atteinte. <a href="/entreprise/upgrade">Passez PRO !</a></div>
+            <div class="alert alert-warning text-center fw-bold shadow mb-4">⚠️ Limite Freemium atteinte. <a href="https://buy.stripe.com/7sY4gAbPs9graUw65Ed7q0a">Passez PRO !</a></div>
         <% } %>
 
         <div class="d-flex justify-content-between mb-5 align-items-center">
@@ -19,27 +19,35 @@
                 <img src="/images/logo-forfeo.png" height="40">
                 <span class="brand-lab-neon">LAB</span>
             </div>
-            <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
+            <div class="d-flex gap-2">
+                <a href="/profil" class="btn btn-outline-primary btn-sm rounded-pill">Mon Profil</a>
+                <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
+            </div>
         </div>
 
         <div class="row g-4">
             <div class="col-lg-4">
                 <div class="glass-card mb-4 bg-white border-primary border">
                     <h5 class="fw-bold text-center">Forfait : <%= user.forfait %></h5>
-                    <% if(user.forfait === 'Freemium') { %><a href="/entreprise/upgrade" class="btn btn-flash-pro w-100 py-3 rounded-pill mt-3 shadow">⚡ PASSER PRO (149$) ⚡</a><% } %>
+                    <% if(user.forfait === 'Freemium') { %>
+                        <a href="https://buy.stripe.com/7sY4gAbPs9graUw65Ed7q0a" target="_blank" class="btn btn-flash-pro w-100 py-3 rounded-pill mt-3 shadow">⚡ PASSER PREMIUM (149$) ⚡</a>
+                        <div class="text-center mt-2"><a href="/entreprise/upgrade-success" class="text-muted small text-decoration-underline">(Simuler Paiement Réussi)</a></div>
+                    <% } else { %>
+                        <div class="alert alert-success mt-3 text-center fw-bold">ILLIMITÉ ✅</div>
+                    <% } %>
                 </div>
-                
+
                 <div class="glass-card mb-4">
-                    <h5 class="fw-bold">1. Publier Audit Terrain</h5>
+                    <h5 class="fw-bold">Publier Audit Terrain</h5>
                     <form action="/entreprise/creer-audit" method="POST">
                         <input type="text" name="titre" placeholder="Lieu" class="form-control mb-2" required>
                         <input type="text" name="adresse" placeholder="Adresse" class="form-control mb-2" required>
                         <select name="type_audit" class="form-select mb-2">
                             <option>Audit Standard</option>
                             <option>Audit Qualité & Propreté</option>
-                            <option>Audit Conformité Loi 25</option>
-                            <option>Audit Expérience Vente</option>
-                            <option>Audit Client Mystère VIP</option>
+                            <option>Audit Conformité</option>
+                            <option>Audit Vente</option>
+                            <option>Client Mystère VIP</option>
                         </select>
                         <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-2" required>
                         <button class="btn btn-primary w-100">Publier</button>
@@ -47,7 +55,7 @@
                 </div>
 
                 <div class="glass-card border-info">
-                    <h5 class="fw-bold text-info">2. Commander Sondage</h5>
+                    <h5 class="fw-bold text-info">Commander Sondage</h5>
                     <form action="/entreprise/commander-sondage" method="POST">
                         <input type="text" name="client_nom" placeholder="Nom Client" class="form-control mb-2" required>
                         <input type="email" name="client_email" placeholder="Email Client" class="form-control mb-2" required>
