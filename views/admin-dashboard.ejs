@@ -21,7 +21,6 @@
         <ul class="nav nav-pills mb-4 gap-3 p-2 glass-card d-inline-flex" role="tablist">
             <li class="nav-item"><button class="nav-link active rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#paiements">Comptabilité</button></li>
             <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#validation">Validation</button></li>
-            <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#users">Utilisateurs</button></li>
         </ul>
 
         <div class="tab-content">
@@ -67,27 +66,6 @@
                                         <% if (m.statut === 'en_attente') { %> <form action="/admin/approuver-mission" method="POST"><input type="hidden" name="id_mission" value="<%= m.id %>"><button class="btn btn-sm btn-success rounded-pill">Publier</button></form> <% } %>
                                     </td>
                                 </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="tab-pane fade" id="users">
-                <div class="glass-card">
-                    <h5 class="fw-bold mb-3">Ajouter Utilisateur</h5>
-                    <form action="/admin/create-user" method="POST" class="row g-2 mb-4">
-                        <div class="col"><input type="text" name="nom" placeholder="Nom" class="form-control" required></div>
-                        <div class="col"><input type="email" name="email" placeholder="Email" class="form-control" required></div>
-                        <div class="col"><input type="password" name="password" placeholder="Pass" class="form-control" required></div>
-                        <div class="col"><select name="role" class="form-select"><option value="entreprise">Entreprise</option><option value="ambassadeur">Ambassadeur</option><option value="employe">Employé</option></select></div>
-                        <div class="col"><button class="btn btn-success w-100">Créer</button></div>
-                    </form>
-                    <table class="premium-table">
-                        <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Action</th></tr></thead>
-                        <tbody>
-                            <% users.forEach(u => { %>
-                                <tr><td><%= u.nom %></td><td><%= u.email %></td><td><%= u.role %></td><td><form action="/admin/delete-user" method="POST"><input type="hidden" name="user_id" value="<%= u.id %>"><button class="btn btn-sm btn-outline-danger">X</button></form></td></tr>
                             <% }) %>
                         </tbody>
                     </table>
