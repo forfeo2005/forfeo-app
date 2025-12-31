@@ -16,13 +16,18 @@
         <% if (typeof error !== 'undefined' && error === 'limit_atteinte') { %>
             <div class="alert alert-warning text-center fw-bold shadow mb-4">⚠️ Limite Freemium atteinte. Choisissez un forfait ci-dessous.</div>
         <% } %>
+        <% if (typeof error !== 'undefined' && error === 'email_fail') { %>
+            <div class="alert alert-danger text-center fw-bold shadow mb-4">❌ Erreur lors de l'envoi des courriels. Vérifiez la configuration serveur.</div>
+        <% } %>
         <% if (typeof msg !== 'undefined' && msg === 'campagne_envoyee') { %>
-            <div class="alert alert-success text-center fw-bold shadow mb-4"><i class="bi bi-send-check-fill me-2"></i>Campagne envoyée avec succès ! Vos clients recevront le sondage sous peu.</div>
+            <div class="alert alert-success text-center fw-bold shadow mb-4">
+                <i class="bi bi-send-check-fill me-2"></i>Campagne envoyée avec succès ! Vos clients ont reçu le sondage.
+            </div>
         <% } %>
 
         <div class="d-flex justify-content-between mb-5 align-items-center flex-wrap">
             <h3 class="fw-bold">Bonjour, <%= userName %></h3>
-            <div class="d-flex flex-column align-items-center"><img src="/images/logo-forfeo.png" height="40"><span class="brand-lab-neon">LAB</span></div>
+            <div class="d-flex flex-column align-items-center"><img src="/images/logo-forfeo.png" height="40"><span class="brand-lab-neon" style="color:#0061ff;">LAB</span></div>
             <div class="d-flex gap-2 mt-2 mt-md-0"><a href="/profil" class="btn btn-outline-primary btn-sm rounded-pill">Profil</a><a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a></div>
         </div>
 
@@ -86,25 +91,24 @@
             <div class="tab-pane fade" id="campagnes">
                 <div class="row g-4">
                     <div class="col-lg-5">
-                        <div class="glass-card h-100 border-primary border-2 shadow-lg">
+                        <div class="glass-card h-100 border-primary border-2 shadow-lg text-center">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h4 class="fw-bold mb-0 text-primary">QR Code Intelligent</h4>
                                 <span class="badge bg-primary">Automatisé</span>
                             </div>
-                            <p class="text-muted small">
-                                Placez ce code sur vos tables, comptoirs ou factures. Vos clients le scannent pour donner leur avis instantanément. 
-                                <br><strong>Zéro effort de saisie pour vous.</strong>
+                            <p class="text-muted small mb-4">
+                                Placez ce code sur vos tables ou comptoirs. Le questionnaire s'adapte automatiquement au type choisi à droite.
                             </p>
                             
-                            <div class="text-center p-4 bg-white rounded-4 border mb-4 mt-3">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<%= encodeURIComponent(typeof survey_link !== 'undefined' ? survey_link : 'https://forfeo.com') %>" alt="QR Code Sondage" class="img-fluid">
+                            <div class="bg-white p-4 rounded-4 border d-inline-block mb-3 shadow-sm">
+                                <img id="dynamic-qr" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<%= encodeURIComponent(surveyBaseLink + '?type=Général') %>" alt="QR Code Sondage" class="img-fluid">
                                 <p class="small text-muted mt-2 fw-bold mb-0">Scannez pour tester</p>
                             </div>
                             
-                            <label class="small fw-bold text-muted mb-1">Votre lien de sondage permanent :</label>
                             <div class="input-group">
-                                <input type="text" class="form-control form-control-sm bg-light" value="<%= typeof survey_link !== 'undefined' ? survey_link : 'Lien non disponible' %>" readonly>
-                                <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-clipboard"></i></button>
+                                <span class="input-group-text bg-light border-0"><i class="bi bi-link-45deg"></i></span>
+                                <input type="text" id="dynamic-link" class="form-control form-control-sm bg-light border-0" value="<%= surveyBaseLink %>?type=Général" readonly>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('dynamic-link').value)"><i class="bi bi-clipboard"></i></button>
                             </div>
                         </div>
                     </div>
@@ -112,21 +116,21 @@
                     <div class="col-lg-7">
                         <div class="glass-card mb-4">
                             <h5 class="fw-bold mb-3"><i class="bi bi-envelope-paper-fill me-2 text-primary"></i>Lancer une campagne email</h5>
-                            <p class="text-muted small">Idéal pour les listes de clients après séjour. Copiez-collez vos adresses, Forfeo s'occupe de l'envoi.</p>
+                            <p class="text-muted small">Sélectionnez le type de questionnaire ci-dessous pour adapter le lien et le QR Code.</p>
                             
                             <form action="/entreprise/envoyer-campagne" method="POST">
                                 <div class="mb-3">
                                     <label class="fw-bold small">Type de questionnaire (IA adaptée)</label>
-                                    <select class="form-select" name="type_activite">
-                                        <option value="Restaurant">Restaurant (Goût, Service, Ambiance)</option>
-                                        <option value="Hôtel">Hôtel (Chambre, Accueil, Propreté)</option>
-                                        <option value="Magasin">Commerce de détail</option>
-                                        <option value="Autre">Général</option>
+                                    <select class="form-select border-primary" name="type_activite" id="survey-type-selector">
+                                        <option value="Général">Général (Défaut)</option>
+                                        <option value="Restaurant">Restaurant (Plats, Service)</option>
+                                        <option value="Hôtel">Hôtel (Chambre, Accueil)</option>
+                                        <option value="Magasin">Commerce (Conseil, Prix)</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
                                     <label class="fw-bold small">Liste des emails clients (séparés par virgule ou saut de ligne)</label>
-                                    <textarea name="emails" class="form-control" rows="4" placeholder="client1@gmail.com, client2@yahoo.fr..." required></textarea>
+                                    <textarea name="emails" class="form-control" rows="3" placeholder="client1@email.com, client2@email.com..." required></textarea>
                                 </div>
                                 <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm">
                                     <i class="bi bi-send-fill me-2"></i>Envoyer le sondage
@@ -135,37 +139,32 @@
                         </div>
 
                         <div class="glass-card">
-                            <h5 class="fw-bold mb-3"><i class="bi bi-bar-chart-fill me-2 text-success"></i>Retours Clients (Automatisés)</h5>
+                            <h5 class="fw-bold mb-3"><i class="bi bi-bar-chart-fill me-2 text-success"></i>Réponses reçues</h5>
                             <% if(typeof sondages !== 'undefined' && sondages.length > 0) { %>
                                 <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
                                     <% sondages.forEach(s => { 
                                         const rep = s.reponses;
-                                        // Extraction simplifiée pour l'aperçu (Q1 est souvent la note globale)
-                                        let note = rep['q1'] || 'N/A';
+                                        // On tente de trouver une réponse de type étoile ou note pour l'aperçu
+                                        let noteKey = Object.keys(rep).find(k => k.includes('global') || k.includes('accueil') || k.includes('q1'));
+                                        let note = rep[noteKey] || 'N/A';
                                     %>
                                         <div class="list-group-item bg-transparent border-bottom">
                                             <div class="d-flex justify-content-between align-items-center">
-                                                <small class="fw-bold text-dark"><%= new Date(s.created_at).toLocaleDateString() %></small>
-                                                <span class="badge bg-light text-secondary border"><%= s.type_activite %></span>
+                                                <span class="badge bg-light text-dark border"><%= s.type_activite %></span>
+                                                <small class="text-muted"><%= new Date(s.created_at).toLocaleDateString() %></small>
                                             </div>
-                                            <div class="mt-2 d-flex align-items-center gap-2">
-                                                <span class="small text-muted">Satisfaction :</span>
-                                                <% if(note >= 4) { %>
-                                                    <span class="badge bg-success"><%= note %>/5 ★</span>
-                                                <% } else if(note <= 2) { %>
-                                                    <span class="badge bg-danger"><%= note %>/5 ★</span>
+                                            <div class="mt-2 small text-muted">
+                                                <% if(!isNaN(note)) { %>
+                                                    Note : <span class="fw-bold text-<%= note >= 4 ? 'success' : (note <= 2 ? 'danger' : 'warning') %>"><%= note %>/5 ★</span>
                                                 <% } else { %>
-                                                    <span class="badge bg-warning text-dark"><%= note %>/5 ★</span>
+                                                    Réponse : <em><%= note %></em>
                                                 <% } %>
                                             </div>
                                         </div>
                                     <% }) %>
                                 </div>
                             <% } else { %>
-                                <div class="text-center py-4">
-                                    <i class="bi bi-inbox text-muted fs-1"></i>
-                                    <p class="text-muted small mt-2">Aucun retour pour le moment.<br>Lancez une campagne ou partagez votre QR Code !</p>
-                                </div>
+                                <div class="text-center py-3 text-muted small">Aucune réponse pour l'instant.</div>
                             <% } %>
                         </div>
                     </div>
@@ -225,5 +224,27 @@
         </div>
     </div>
     <%- include('partials/forfy') %>
+
+    <script>
+        // Ce script écoute le changement de sélection et met à jour l'image QR
+        const baseLink = "<%= typeof surveyBaseLink !== 'undefined' ? surveyBaseLink : '' %>";
+        const selector = document.getElementById('survey-type-selector');
+        const qrImage = document.getElementById('dynamic-qr');
+        const linkInput = document.getElementById('dynamic-link');
+
+        if(selector && qrImage && baseLink) {
+            selector.addEventListener('change', function() {
+                const type = this.value;
+                // Construction du lien avec le paramètre de type
+                const finalLink = baseLink + "?type=" + encodeURIComponent(type);
+                
+                // Appel à l'API QR Server pour générer la nouvelle image
+                qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(finalLink)}`;
+                
+                // Mise à jour du champ texte pour copie manuelle
+                linkInput.value = finalLink;
+            });
+        }
+    </script>
 </body>
 </html>
