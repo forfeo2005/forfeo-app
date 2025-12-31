@@ -2,157 +2,151 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Admin | FORFEO</title>
+    <title>Admin Dashboard | FORFEO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/premium-dashboard.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Inter', sans-serif; }
+        .admin-card { background: white; border-radius: 15px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 25px; margin-bottom: 25px; }
+        .table th { font-weight: 600; color: #555; text-transform: uppercase; font-size: 0.85rem; }
+    </style>
 </head>
 <body>
-    <div class="premium-bg"></div>
-    <div class="container py-5">
-        <div class="d-flex justify-content-between mb-5 align-items-center">
-            <h3 class="fw-bold text-primary">Bienvenue Admin 👋</h3>
+    <div class="container-fluid py-4 px-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold text-dark">Super Admin Dashboard</h3>
             <div class="d-flex gap-2">
-                <a href="/profil" class="btn btn-outline-primary btn-sm rounded-pill">Profil</a>
-                <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
+                <a href="/admin/rapport-comptable" class="btn btn-dark btn-sm rounded-pill px-3">Comptabilité</a>
+                <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3">Déconnexion</a>
             </div>
         </div>
 
-        <ul class="nav nav-pills mb-4 gap-3 p-2 glass-card d-inline-flex" role="tablist">
-            <li class="nav-item"><button class="nav-link active rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#paiements">Comptabilité</button></li>
-            <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#validation">Validation</button></li>
-            <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#formations">Formations</button></li>
-            <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#users">Utilisateurs</button></li>
-        </ul>
-
-        <div class="tab-content">
-            
-            <div class="tab-pane fade show active" id="paiements">
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <div class="glass-card bg-white border h-100">
-                            <h5 class="fw-bold mb-3">Comptabilité (Payés)</h5>
-                            <div class="d-flex justify-content-between border-bottom py-2"><span>Sous-total</span><span><%= finance.brut %> $</span></div>
-                            <div class="d-flex justify-content-between border-bottom py-2"><span>TPS (5%)</span><span><%= finance.tps %> $</span></div>
-                            <div class="d-flex justify-content-between border-bottom py-2"><span>TVQ (9.975%)</span><span><%= finance.tvq %> $</span></div>
-                            <div class="d-flex justify-content-between py-3 fw-bold text-success h5"><span>TOTAL</span><span><%= finance.total %> $</span></div>
-                            <a href="/admin/rapport-comptable" class="btn btn-dark w-100 mt-3">Télécharger PDF</a>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="glass-card border-success">
-                            <h5 class="fw-bold text-success mb-3">Paiements en attente (<%= totalAPayer %> $)</h5>
-                            <table class="premium-table">
-                                <thead><tr><th>Ambassadeur</th><th>Action</th></tr></thead>
-                                <tbody>
-                                    <% missions.filter(m => m.statut === 'approuve' && m.statut_paiement !== 'paye').forEach(m => { %>
+        <div class="row g-4">
+            <div class="col-lg-8">
+                
+                <div class="admin-card border-warning border-start border-5">
+                    <h5 class="fw-bold mb-3 text-warning">1. Rapports à Approuver (Statut: Soumis)</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light"><tr><th>Mission</th><th>Entreprise</th><th>Ambassadeur</th><th>Action</th></tr></thead>
+                            <tbody>
+                                <% const toApprove = missions.filter(m => m.statut === 'soumis'); %>
+                                <% if(toApprove.length > 0) { %>
+                                    <% toApprove.forEach(m => { %>
                                         <tr>
-                                            <td>#<%= m.ambassadeur_id %> (<%= m.recompense %>$)</td>
+                                            <td><%= m.titre %></td>
+                                            <td><%= m.entreprise_nom %></td>
+                                            <td><%= m.ambassadeur_nom || 'N/A' %></td>
+                                            <td>
+                                                <div class="d-flex gap-2">
+                                                    <a href="/admin/rapport/<%= m.id %>" class="btn btn-sm btn-outline-primary" target="_blank">Voir</a>
+                                                    <form action="/admin/approuver-mission" method="POST">
+                                                        <input type="hidden" name="id_mission" value="<%= m.id %>">
+                                                        <button class="btn btn-sm btn-success fw-bold">Approuver ✅</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr><td colspan="4" class="text-muted text-center py-3">Aucun rapport en attente.</td></tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="admin-card border-success border-start border-5">
+                    <h5 class="fw-bold mb-3 text-success">2. Paiements à effectuer (Statut: Approuvé)</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light"><tr><th>Mission</th><th>Montant</th><th>Action</th></tr></thead>
+                            <tbody>
+                                <% const toPay = missions.filter(m => m.statut === 'approuve' && m.statut_paiement === 'non_paye'); %>
+                                <% if(toPay.length > 0) { %>
+                                    <% toPay.forEach(m => { %>
+                                        <tr>
+                                            <td><%= m.titre %></td>
+                                            <td class="fw-bold text-success"><%= m.recompense %></td>
                                             <td>
                                                 <form action="/admin/payer-ambassadeur" method="POST">
                                                     <input type="hidden" name="id_mission" value="<%= m.id %>">
-                                                    <button class="btn btn-success btn-sm rounded-pill">Confirmer Payé</button>
+                                                    <button class="btn btn-sm btn-outline-success rounded-pill px-3">Marquer Payé 💵</button>
                                                 </form>
                                             </td>
                                         </tr>
                                     <% }) %>
-                                </tbody>
-                            </table>
-                        </div>
+                                <% } else { %>
+                                    <tr><td colspan="3" class="text-muted text-center py-3">Tout est payé.</td></tr>
+                                <% } %>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
-            
-            <div class="tab-pane fade" id="validation">
-                <div class="glass-card">
-                    <table class="premium-table">
-                        <thead><tr><th>Mission</th><th>Statut</th><th>Action</th></tr></thead>
-                        <tbody>
-                            <% missions.filter(m => m.statut !== 'approuve').forEach(m => { %>
-                                <tr>
-                                    <td><%= m.titre %></td>
-                                    <td><span class="badge bg-secondary"><%= m.statut %></span></td>
-                                    <td>
-                                        <% if (m.statut === 'soumis') { %> <a href="/admin/rapport/<%= m.id %>" class="btn btn-sm btn-primary rounded-pill">Examiner</a> <% } %>
-                                        <% if (m.statut === 'en_attente') { %> <form action="/admin/approuver-mission" method="POST"><input type="hidden" name="id_mission" value="<%= m.id %>"><button class="btn btn-sm btn-success rounded-pill">Publier</button></form> <% } %>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
 
-            <div class="tab-pane fade" id="formations">
-                <div class="glass-card">
-                    <h5 class="fw-bold mb-3">Suivi Global de l'Académie</h5>
-                    <% if(formations && formations.length > 0) { %>
-                        <table class="premium-table">
-                            <thead><tr><th>Employé</th><th>Module</th><th>Score</th><th>Statut</th></tr></thead>
+                <div class="admin-card">
+                    <h5 class="fw-bold mb-3">Vue d'ensemble Missions</h5>
+                    <div class="table-responsive" style="max-height: 400px;">
+                        <table class="table table-sm table-striped">
+                            <thead><tr><th>ID</th><th>Titre</th><th>Statut</th><th>Date</th></tr></thead>
                             <tbody>
-                                <% formations.forEach(f => { %>
+                                <% missions.forEach(m => { %>
                                     <tr>
-                                        <td class="fw-bold"><%= f.employe %></td>
-                                        <td><%= f.titre %></td>
-                                        <td><%= f.meilleur_score %>%</td>
-                                        <td>
-                                            <% if(f.statut === 'reussi') { %>
-                                                <span class="badge bg-success">RÉUSSI</span>
-                                            <% } else { %>
-                                                <span class="badge bg-danger">ÉCHEC</span>
-                                            <% } %>
-                                        </td>
+                                        <td>#<%= m.id %></td>
+                                        <td><%= m.titre %></td>
+                                        <td><span class="badge bg-secondary"><%= m.statut %></span></td>
+                                        <td><%= new Date(m.created_at).toLocaleDateString() %></td>
                                     </tr>
                                 <% }) %>
                             </tbody>
                         </table>
-                    <% } else { %>
-                        <div class="text-center py-5 text-muted">Aucune formation complétée pour le moment.</div>
-                    <% } %>
+                    </div>
                 </div>
             </div>
 
-            <div class="tab-pane fade" id="users">
-                <div class="glass-card">
-                    <h5 class="fw-bold mb-3">Gestion des Utilisateurs</h5>
-                    
-                    <form action="/admin/create-user" method="POST" class="row g-2 mb-4 bg-light p-3 rounded-4 border">
-                        <div class="col-md-3"><input type="text" name="nom" placeholder="Nom" class="form-control" required></div>
-                        <div class="col-md-3"><input type="email" name="email" placeholder="Email" class="form-control" required></div>
-                        <div class="col-md-3"><input type="password" name="password" placeholder="Mot de passe" class="form-control" required></div>
-                        <div class="col-md-2">
+            <div class="col-lg-4">
+                <div class="admin-card bg-primary text-white">
+                    <h5 class="fw-bold mb-4">Finance (À Payer)</h5>
+                    <h1 class="display-4 fw-bold mb-0"><%= totalAPayer %>$</h1>
+                    <p class="opacity-75">Montant total dû aux ambassadeurs</p>
+                </div>
+
+                <div class="admin-card">
+                    <h5 class="fw-bold mb-3">Créer un utilisateur</h5>
+                    <form action="/admin/create-user" method="POST">
+                        <div class="mb-2"><input type="text" name="nom" class="form-control" placeholder="Nom" required></div>
+                        <div class="mb-2"><input type="email" name="email" class="form-control" placeholder="Email" required></div>
+                        <div class="mb-2"><input type="password" name="password" class="form-control" placeholder="Mot de passe" required></div>
+                        <div class="mb-3">
                             <select name="role" class="form-select">
+                                <option value="admin">Admin</option>
                                 <option value="entreprise">Entreprise</option>
                                 <option value="ambassadeur">Ambassadeur</option>
-                                <option value="employe">Employé</option>
                             </select>
                         </div>
-                        <div class="col-md-1"><button class="btn btn-success w-100"><i class="bi bi-plus-lg"></i></button></div>
+                        <button class="btn btn-dark w-100">Créer</button>
                     </form>
+                </div>
 
-                    <table class="premium-table">
-                        <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Action</th></tr></thead>
-                        <tbody>
-                            <% users.forEach(u => { %>
-                                <tr>
-                                    <td><%= u.nom %></td>
-                                    <td><%= u.email %></td>
-                                    <td><span class="badge bg-light text-dark border"><%= u.role %></span></td>
-                                    <td>
-                                        <form action="/admin/delete-user" method="POST" onsubmit="return confirm('Supprimer cet utilisateur ?');">
-                                            <input type="hidden" name="user_id" value="<%= u.id %>">
-                                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3">Supprimer</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
+                <div class="admin-card">
+                    <h5 class="fw-bold mb-3">Utilisateurs récents</h5>
+                    <ul class="list-group list-group-flush">
+                        <% users.slice(0, 5).forEach(u => { %>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <strong><%= u.nom %></strong><br>
+                                    <small class="text-muted"><%= u.role %></small>
+                                </div>
+                                <form action="/admin/delete-user" method="POST" onsubmit="return confirm('Supprimer ?');">
+                                    <input type="hidden" name="user_id" value="<%= u.id %>">
+                                    <button class="btn btn-sm text-danger"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </li>
+                        <% }) %>
+                    </ul>
                 </div>
             </div>
-
         </div>
     </div>
-    <%- include('partials/forfy') %>
 </body>
 </html>
