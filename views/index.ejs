@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/css/premium-dashboard.css">
     <link rel="stylesheet" href="/css/home-premium.css">
     <style>
-        /* Styles spécifiques pour l'uniformité des boutons */
+        /* Styles spécifiques pour l'effet WOW de l'accueil */
         .text-gradient-primary {
             background: linear-gradient(45deg, #0061ff, #60efff);
             -webkit-background-clip: text;
@@ -118,16 +118,19 @@
                     </div>
 
                     <div class="glass-card p-4 p-md-5 text-start shadow-lg reveal-up delay-1 bg-white border-0 position-relative overflow-hidden">
-                        <div class="position-absolute top-0 end-0 p-4 opacity-10"><i class="bi bi-bar-chart-line-fill display-1 text-primary"></i></div>
                         
-                        <div class="row align-items-center position-relative z-1">
+                        <div class="position-absolute bottom-0 end-0" style="opacity: 0.05; z-index: 0; pointer-events: none; transform: translate(10%, 10%);">
+                            <i class="bi bi-bar-chart-line-fill text-primary" style="font-size: 20rem;"></i>
+                        </div>
+                        
+                        <div class="row align-items-center position-relative" style="z-index: 10;">
                             <div class="col-lg-12">
                                 <p class="hero-lead mb-4">
                                     <strong>FORFEO LAB</strong> permet aux entreprises d’évaluer concrètement la qualité de leurs services grâce à des audits mystères réalisés sur le terrain et à des sondages clients certifiés. <br><br>
                                     <span class="text-primary fw-bold">L’objectif :</span> transformer l’expérience vécue en données claires, en constats précis et en actions simples à appliquer.
                                 </p>
                                 
-                                <div class="p-4 bg-light rounded-4 mb-4 border-start border-primary border-4 shadow-sm">
+                                <div class="p-4 bg-light rounded-4 mb-4 border-start border-primary border-4 shadow-sm position-relative">
                                     <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-people-fill text-primary me-2"></i> L'Écosystème Ambassadeurs</h5>
                                     <p class="mb-0 text-muted">
                                         Chaque mission est confiée à un(e) ambassadeur(drice) formé(e) pour observer, tester et noter l’expérience de façon neutre et structurée (accueil, rapidité, propreté, attitude, respect des promesses). Après la visite, l’entreprise reçoit un rapport détaillé pour augmenter la satisfaction et les avis positifs.
@@ -154,8 +157,8 @@
                         <a href="/register?role=entreprise" class="btn btn-flash-pro btn-lg rounded-pill px-5 py-3 shadow-lg">
                             Démarrer un Audit
                         </a>
-                        <a href="https://forfeo.com" target="_blank" class="btn btn-outline-dark btn-lg rounded-pill px-5 py-3 fw-bold">
-                            Visiter Forfeo.com <i class="bi bi-arrow-right ms-2"></i>
+                        <a href="/a-propos" class="btn btn-outline-dark btn-lg rounded-pill px-5 py-3 fw-bold">
+                            En savoir plus
                         </a>
                     </div>
 
@@ -228,6 +231,7 @@
     </footer>
 
     <script>
+        // Animation simple au scroll
         document.addEventListener("DOMContentLoaded", function() {
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
