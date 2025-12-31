@@ -2,113 +2,67 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FORFEO LAB | Une division de FORFEO INC.</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/premium-dashboard.css">
     <link rel="stylesheet" href="/css/home-premium.css">
 </head>
 <body>
-    <div class="blob-container"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
-
-    <nav class="navbar navbar-expand-lg fixed-top navbar-premium py-2">
+    <nav class="navbar navbar-expand-lg fixed-top navbar-premium py-2 shadow-sm">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <img src="/images/logo-forfeo.png" class="logo-img" alt="Forfeo Logo">
+                <img src="/images/logo-forfeo.png" class="logo-img" alt="Logo">
                 <span class="brand-lab-neon">LAB</span>
             </a>
-            
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto gap-3 align-items-center">
+                <ul class="navbar-nav ms-auto align-items-center gap-3">
+                    <li class="nav-item"><a class="nav-link" href="/audit-mystere">Solution Audit</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/a-propos">À Propos</a></li>
                     <li class="nav-item"><a class="nav-link" href="/login">Connexion</a></li>
-                    <li class="nav-item d-flex gap-2">
-                        <a class="btn btn-outline-primary rounded-pill px-3 fw-bold" href="/register?role=ambassadeur">Espace Ambassadeur</a>
-                        <a class="btn btn-primary rounded-pill px-3 fw-bold shadow-sm" href="/register?role=entreprise">Espace Entreprise</a>
-                    </li>
+                    <li class="nav-item"><a class="btn btn-primary rounded-pill px-4 shadow" href="/register?role=entreprise">Espace Entreprise</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <section class="hero-section d-flex align-items-center" style="min-height: 95vh; padding-top: 120px; padding-bottom: 60px;">
-        <div class="container">
+    <section class="hero-section py-5 mt-5">
+        <div class="container py-5">
             <div class="row justify-content-center text-center">
                 <div class="col-lg-10">
                     <h1 class="display-3 fw-bolder mb-4">L'expérience client <span style="color: #0061ff;">mesurable.</span></h1>
-                    
-                    <div class="hero-text-animated text-muted lead mb-5 text-start mx-auto" style="max-width: 900px; font-size: 1.1rem; line-height: 1.6;">
-                        <p class="mb-4">
-                            FORFEO LAB permet aux entreprises d’évaluer concrètement la qualité de leurs services grâce à des audits mystères réalisés sur le terrain et à des sondages clients certifiés. <strong>L’objectif : transformer l’expérience vécue en données claires, en constats précis et en actions simples à appliquer.</strong>
-                        </p>
-                        <p class="mb-4">
-                            Grâce à l’écosystème Forfeo Ambassadeurs, chaque mission est confiée à un(e) ambassadeur(drice) formé(e) pour observer, tester et noter l’expérience de façon neutre et structurée (accueil, rapidité, propreté, attitude, respect des promesses, qualité du service, etc.). Après la visite, l’entreprise reçoit un rapport détaillé, des points forts, des points à améliorer et des recommandations concrètes pour augmenter la satisfaction et les avis positifs.
-                        </p>
-                        <p class="mb-4">
-                            Depuis leur Espace Entreprise, les partenaires peuvent commander en quelques clics : une mission client mystère, un sondage client, ou une combinaison des deux pour obtenir une vision complète. Une fois la demande envoyée, la mission est assignée automatiquement à un ambassadeur Forfeo disponible dans la région. L’entreprise peut ensuite suivre le statut, consulter les résultats et comparer l’évolution dans le temps.
-                        </p>
-                        <p class="fw-bold text-primary h5">
-                            Avec FORFEO LAB, l’expérience client n’est plus une impression : elle devient un outil de performance, mesurable, suivi, et orienté vers l’amélioration continue.
-                        </p>
+                    <div class="hero-text-animated text-start mx-auto p-4 glass-card shadow-lg" style="max-width: 900px; line-height: 1.7;">
+                        <p class="mb-3"><strong>FORFEO LAB</strong> permet aux entreprises d’évaluer concrètement la qualité de leurs services grâce à des audits mystères réalisés sur le terrain et à des sondages clients certifiés. L’objectif : transformer l’expérience vécue en données claires, en constats précis et en actions simples à appliquer.</p>
+                        <p class="mb-3">Grâce à l’écosystème Forfeo Ambassadeurs, chaque mission est confiée à un(e) ambassadeur(drice) formé(e) pour observer, tester et noter l’expérience de façon neutre et structurée (accueil, rapidité, propreté, attitude, respect des promesses, qualité du service, etc.). Après la visite, l’entreprise reçoit un rapport détaillé, des points forts, des points à améliorer et des recommandations concrètes pour augmenter la satisfaction et les avis positifs.</p>
+                        <p class="mb-3">Depuis leur Espace Entreprise, les partenaires peuvent commander en quelques clics : une mission client mystère, un sondage client, ou une combinaison des deux pour obtenir une vision complète. Une fois la demande envoyée, la mission est assignée automatiquement à un ambassadeur Forfeo disponible dans la région. L’entreprise peut ensuite suivre le statut, consulter les résultats et comparer l’évolution dans le temps.</p>
+                        <p class="fw-bold text-primary mb-0">Avec FORFEO LAB, l’expérience client n’est plus une impression : elle devient un outil de performance, mesurable, suivi, et orienté vers l’amélioration continue.</p>
                     </div>
-
-                    <div>
-                        <a href="/register?role=entreprise" class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg fw-bold me-3">Commencer maintenant</a>
-                        <a href="/audit-mystere" class="btn btn-outline-primary btn-lg rounded-pill px-5 fw-bold">En savoir plus</a>
-                    </div>
+                    <div class="mt-5"><a href="/register?role=entreprise" class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg">Commencer maintenant</a></div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="py-5 bg-light">
-        <div class="container text-center">
-            <h2 class="fw-bold mb-5">Pourquoi évaluer vos services ?</h2>
-            <div class="row g-4 justify-content-center">
-                <div class="col-md-4">
-                    <h2 class="display-4 fw-bold text-primary">86%</h2>
-                    <p class="fw-medium text-muted">des clients paient plus pour une meilleure expérience.</p>
-                </div>
-                <div class="col-md-4">
-                    <h2 class="display-4 fw-bold text-primary">1/3</h2>
-                    <p class="fw-medium text-muted">quittent une marque après une seule mauvaise expérience.</p>
-                </div>
-                <div class="col-md-4">
-                    <h2 class="display-4 fw-bold text-primary"><i class="bi bi-people-fill"></i></h2>
-                    <p class="fw-medium text-muted">1 client satisfait en vaut deux.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <footer class="py-5 bg-white border-top mt-auto">
+    <section class="py-5 bg-light text-center">
         <div class="container">
-            <div class="row gy-4">
-                <div class="col-md-6 text-center text-md-start">
-                    <div class="d-flex flex-column align-items-center d-md-inline-flex mb-3">
-                        <img src="/images/logo-forfeo.png" height="40">
-                        <span class="brand-lab-neon" style="font-size: 11px; margin-top: 2px;">LAB</span>
-                    </div>
-                    <p class="small text-muted mb-2">
-                        <strong>Forfeo Lab</strong> est une division de <strong>FORFEO INC.</strong>, entreprise enregistrée au Québec.
-                    </p>
-                    <div class="small">
-                        <a href="/politique-confidentialite" class="text-decoration-none text-muted me-3">Politique de confidentialité</a>
-                        <a href="/conditions-utilisation" class="text-decoration-none text-muted">Conditions d'utilisation</a>
-                    </div>
-                </div>
-                <div class="col-md-6 text-center text-md-end d-flex flex-column justify-content-center">
-                    <p class="small text-muted mb-1">Les ambassadeurs sont des prestataires de services indépendants.</p>
-                    <p class="small text-muted fw-bold mb-0">© 2025 FORFEO INC. Tous droits réservés.</p>
-                </div>
+            <h2 class="fw-bold mb-5">Pourquoi évaluer vos services ?</h2>
+            <div class="row g-4">
+                <div class="col-md-4"><h2 class="display-4 fw-bold text-primary">86%</h2><p>paient plus pour un meilleur service.</p></div>
+                <div class="col-md-4"><h2 class="display-4 fw-bold text-primary">1/3</h2><p>quittent après une seule erreur.</p></div>
+                <div class="col-md-4"><h2 class="display-4 fw-bold text-primary"><i class="bi bi-people-fill"></i></h2><p>1 client satisfait en vaut deux.</p></div>
             </div>
+        </div>
+    </section>
+
+    <footer class="py-5 bg-white border-top">
+        <div class="container text-center">
+            <div class="d-flex flex-column align-items-center mb-3">
+                <img src="/images/logo-forfeo.png" height="40">
+                <span class="brand-lab-neon" style="font-size: 10px;">LAB</span>
+            </div>
+            <p class="small text-muted mt-3">Forfeo Lab est une division de <strong>FORFEO INC.</strong>, enregistrée au Québec. © 2025.</p>
+            <div class="small mt-2"><a href="/politique-confidentialite" class="text-muted">Politique de confidentialité</a> | <a href="/conditions-utilisation" class="text-muted">Conditions</a></div>
         </div>
     </footer>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <%- include('partials/forfy') %>
 </body>
 </html>
