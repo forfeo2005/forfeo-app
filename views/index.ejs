@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/css/premium-dashboard.css">
     <link rel="stylesheet" href="/css/home-premium.css">
     <style>
-        /* Styles spécifiques pour l'effet WOW de l'accueil */
+        /* Styles spécifiques pour l'uniformité des boutons */
         .text-gradient-primary {
             background: linear-gradient(45deg, #0061ff, #60efff);
             -webkit-background-clip: text;
@@ -27,9 +27,48 @@
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(0, 97, 255, 0.15) !important;
         }
+        
+        /* Uniformisation Navbar */
+        .nav-link {
+            transition: color 0.3s ease;
+            font-size: 0.95rem;
+        }
+        .nav-link:hover {
+            color: #0061ff !important;
+        }
+        
+        /* Bouton Site Père */
+        .btn-pere {
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        .btn-pere:hover {
+            border-color: #0061ff;
+            color: #0061ff;
+            transform: translateY(-1px);
+        }
+
+        /* Bouton Ambassadeur (Style secondaire mais visible) */
+        .btn-ambassadeur {
+            border: 2px solid #0061ff;
+            color: #0061ff;
+            background: transparent;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        .btn-ambassadeur:hover {
+            background: #0061ff;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 97, 255, 0.3);
+        }
+
         @media (max-width: 768px) {
             .hero-title { font-size: 2.5rem !important; }
             .hero-section { padding-top: 120px !important; }
+            .navbar-nav { gap: 10px !important; margin-top: 15px; }
+            .btn { width: 100%; margin-bottom: 5px; }
         }
     </style>
 </head>
@@ -37,7 +76,7 @@
     <div class="blob-container"><div class="blob blob-1"></div><div class="blob blob-2"></div></div>
 
     <nav class="navbar navbar-expand-lg fixed-top navbar-premium py-3 shadow-sm">
-        <div class="container">
+        <div class="container-fluid px-4">
             <a class="navbar-brand" href="/">
                 <img src="/images/logo-forfeo.png" class="logo-img" alt="Logo Forfeo" height="45">
                 <span class="brand-lab-neon">LAB</span>
@@ -48,12 +87,15 @@
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center gap-3 mt-3 mt-lg-0">
-                    <li class="nav-item"><a class="nav-link fw-bold" href="/audit-mystere">Solution Audit</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold" href="/a-propos">À Propos</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold" href="/login">Connexion</a></li>
-                    <li class="nav-item w-100 w-lg-auto">
-                        <a class="btn btn-primary rounded-pill px-4 shadow w-100 fw-bold" href="/register?role=entreprise">Espace Entreprise</a>
+                <ul class="navbar-nav ms-auto align-items-center gap-2 gap-lg-4">
+                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="https://forfeo.com" target="_blank"><i class="bi bi-box-arrow-up-right small me-1"></i> Forfeo.com</a></li>
+                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="/audit-mystere">Solution Audit</a></li>
+                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="/a-propos">À Propos</a></li>
+                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="/login">Connexion</a></li>
+                    
+                    <li class="nav-item d-flex flex-column flex-lg-row gap-2">
+                        <a class="btn btn-ambassadeur rounded-pill px-4" href="/register?role=ambassadeur">Espace Ambassadeur</a>
+                        <a class="btn btn-flash-pro rounded-pill px-4 shadow-sm" href="/register?role=entreprise">Espace Entreprise</a>
                     </li>
                 </ul>
             </div>
@@ -75,28 +117,30 @@
                         </h1>
                     </div>
 
-                    <div class="glass-card p-4 p-md-5 text-start shadow-lg reveal-up delay-1 bg-white border-0">
-                        <div class="row align-items-center">
+                    <div class="glass-card p-4 p-md-5 text-start shadow-lg reveal-up delay-1 bg-white border-0 position-relative overflow-hidden">
+                        <div class="position-absolute top-0 end-0 p-4 opacity-10"><i class="bi bi-bar-chart-line-fill display-1 text-primary"></i></div>
+                        
+                        <div class="row align-items-center position-relative z-1">
                             <div class="col-lg-12">
                                 <p class="hero-lead mb-4">
                                     <strong>FORFEO LAB</strong> permet aux entreprises d’évaluer concrètement la qualité de leurs services grâce à des audits mystères réalisés sur le terrain et à des sondages clients certifiés. <br><br>
                                     <span class="text-primary fw-bold">L’objectif :</span> transformer l’expérience vécue en données claires, en constats précis et en actions simples à appliquer.
                                 </p>
                                 
-                                <div class="p-4 bg-light rounded-4 mb-4 border-start border-primary border-4">
-                                    <h5 class="fw-bold mb-3"><i class="bi bi-people-fill text-primary me-2"></i> L'Écosystème Ambassadeurs</h5>
+                                <div class="p-4 bg-light rounded-4 mb-4 border-start border-primary border-4 shadow-sm">
+                                    <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-people-fill text-primary me-2"></i> L'Écosystème Ambassadeurs</h5>
                                     <p class="mb-0 text-muted">
                                         Chaque mission est confiée à un(e) ambassadeur(drice) formé(e) pour observer, tester et noter l’expérience de façon neutre et structurée (accueil, rapidité, propreté, attitude, respect des promesses). Après la visite, l’entreprise reçoit un rapport détaillé pour augmenter la satisfaction et les avis positifs.
                                     </p>
                                 </div>
 
-                                <p class="hero-lead mb-4">
+                                <p class="hero-lead mb-3">
                                     Depuis leur Espace Entreprise, les partenaires peuvent commander en quelques clics :
                                 </p>
                                 <ul class="list-unstyled d-flex flex-wrap gap-3 mb-4">
-                                    <li class="bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold"><i class="bi bi-check2 me-1"></i> Mission Client Mystère</li>
-                                    <li class="bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold"><i class="bi bi-check2 me-1"></i> Sondage Client Certifié</li>
-                                    <li class="bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold"><i class="bi bi-check2 me-1"></i> Audit de Conformité</li>
+                                    <li class="bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold border border-primary border-opacity-25"><i class="bi bi-check2 me-1"></i> Mission Client Mystère</li>
+                                    <li class="bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold border border-primary border-opacity-25"><i class="bi bi-check2 me-1"></i> Sondage Client Certifié</li>
+                                    <li class="bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold border border-primary border-opacity-25"><i class="bi bi-check2 me-1"></i> Audit de Conformité</li>
                                 </ul>
 
                                 <p class="h5 fw-bold text-dark mt-4 fst-italic">
@@ -110,8 +154,8 @@
                         <a href="/register?role=entreprise" class="btn btn-flash-pro btn-lg rounded-pill px-5 py-3 shadow-lg">
                             Démarrer un Audit
                         </a>
-                        <a href="/a-propos" class="btn btn-outline-dark btn-lg rounded-pill px-5 py-3 fw-bold">
-                            En savoir plus
+                        <a href="https://forfeo.com" target="_blank" class="btn btn-outline-dark btn-lg rounded-pill px-5 py-3 fw-bold">
+                            Visiter Forfeo.com <i class="bi bi-arrow-right ms-2"></i>
                         </a>
                     </div>
 
@@ -184,7 +228,6 @@
     </footer>
 
     <script>
-        // Animation simple au scroll
         document.addEventListener("DOMContentLoaded", function() {
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
