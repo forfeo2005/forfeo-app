@@ -14,29 +14,21 @@
 
     <nav class="navbar navbar-expand-lg fixed-top navbar-premium py-2">
         <div class="container">
-            <a class="navbar-brand p-0 d-flex flex-column align-items-center" href="/" style="line-height: 1;">
-                <img src="/images/logo-forfeo.png" alt="Forfeo" height="45">
-                <span style="font-size: 10px; font-weight: 900; letter-spacing: 4px; color: #0061ff; margin-top: 3px; text-transform: uppercase;">LAB</span>
+            <a class="navbar-brand" href="/">
+                <img src="/images/logo-forfeo.png" class="logo-img" alt="Forfeo Logo">
+                <span class="brand-lab-neon">LAB</span>
             </a>
             
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center gap-3">
-                    <li class="nav-item"><a class="nav-link fw-medium" href="/audit-mystere">Solution Audit</a></li>
-                    
-                    <% if (typeof userName !== 'undefined' && userName) { %>
-                        <li class="nav-item"><a class="nav-link fw-bold text-primary" href="/profil"><i class="bi bi-person-circle"></i> <%= userName %></a></li>
-                        <li class="nav-item"><a class="btn btn-sm btn-outline-danger rounded-pill" href="/logout">Déconnexion</a></li>
-                    <% } else { %>
-                        <li class="nav-item"><a class="nav-link fw-medium" href="/login">Connexion</a></li>
-                        <li class="nav-item d-flex gap-2">
-                             <a class="btn btn-outline-primary rounded-pill px-3 py-2 fw-bold" href="/register?role=ambassadeur">Espace Ambassadeur</a>
-                             <a class="btn btn-primary rounded-pill px-3 py-2 fw-bold shadow-sm" href="/register?role=entreprise">Espace Entreprise</a>
-                        </li>
-                    <% } %>
+                    <li class="nav-item"><a class="nav-link" href="/login">Connexion</a></li>
+                    <li class="nav-item d-flex gap-2">
+                        <a class="btn btn-outline-primary rounded-pill px-3 fw-bold" href="/register?role=ambassadeur">Espace Ambassadeur</a>
+                        <a class="btn btn-primary rounded-pill px-3 fw-bold shadow-sm" href="/register?role=entreprise">Espace Entreprise</a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -44,58 +36,23 @@
 
     <section class="hero-section d-flex align-items-center" style="min-height: 90vh; padding-top: 100px;">
         <div class="container">
-            <div class="row align-items-center g-5">
+            <div class="row align-items-center">
                 <div class="col-lg-6">
-                    <div class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 mb-3 fw-bold">Leader Québécois</div>
-                    <h1 class="display-3 fw-bolder mb-4 text-dark">L'expérience client <span style="color: #0061ff;">mesurable.</span></h1>
-                    <p class="lead text-muted mb-5">
-                        FORFEO LAB permet aux entreprises d'évaluer la qualité de leurs services grâce à des audits mystères et des sondages certifiés.
-                    </p>
-                    <div class="d-flex gap-3">
-                        <a href="/register?role=entreprise" class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg fw-bold">Commencer maintenant</a>
-                    </div>
+                    <h1 class="display-3 fw-bolder mb-4">L'expérience client <span style="color: #0061ff;">mesurable.</span></h1>
+                    <p class="lead text-muted mb-5">FORFEO LAB permet aux entreprises d'évaluer la qualité de leurs services.</p>
+                    <a href="/register?role=entreprise" class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg fw-bold">Commencer</a>
                 </div>
                 <div class="col-lg-6">
-                    <div class="glass-card p-4 tilt-effect">
+                    <div class="mockup-3d p-4 bg-white">
                         <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                            <h5 class="fw-bold m-0"><i class="bi bi-speedometer2 text-primary"></i> Tableau de bord</h5>
+                            <h5 class="fw-bold m-0">Tableau de bord</h5>
                             <span class="badge bg-success">Score: 94%</span>
                         </div>
-                        <div class="bg-light p-3 rounded-3 mb-3 d-flex align-items-center gap-3">
-                            <div class="bg-white p-2 rounded-circle shadow-sm"><i class="bi bi-shop text-primary fs-4"></i></div>
-                            <div>
-                                <div class="fw-bold">Audit Service</div>
-                                <small class="text-muted">Succursale Québec</small>
-                            </div>
-                            <div class="ms-auto fw-bold text-success">+12%</div>
-                        </div>
-                        <div class="bg-primary text-white p-3 rounded-3 d-flex align-items-center gap-3 shadow-sm">
-                            <i class="bi bi-envelope-paper fs-3"></i>
-                            <div>
-                                <div class="fw-bold">Nouveau Sondage</div>
-                                <small style="opacity:0.8">Réponses clients en direct</small>
-                            </div>
+                        <div class="bg-primary text-white p-3 rounded-3 d-flex align-items-center gap-3 shadow-sm badge-flash">
+                            <i class="bi bi-stars fs-3"></i>
+                            <div><div class="fw-bold">Nouveau Sondage</div><small>Réponses en direct</small></div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="py-5 bg-light">
-        <div class="container">
-            <div class="row text-center g-4">
-                <div class="col-md-4">
-                    <h2 class="display-4 fw-bold text-primary">86%</h2>
-                    <p class="text-muted fw-bold text-uppercase small">Des clients paient plus pour une meilleure expérience</p>
-                </div>
-                <div class="col-md-4">
-                    <h2 class="display-4 fw-bold text-primary">1/3</h2>
-                    <p class="text-muted fw-bold text-uppercase small">Abandonnent une marque après une seule mauvaise expérience</p>
-                </div>
-                <div class="col-md-4">
-                    <h2 class="display-4 fw-bold text-primary">Loi 25</h2>
-                    <p class="text-muted fw-bold text-uppercase small">Plateforme 100% conforme aux normes du Québec</p>
                 </div>
             </div>
         </div>
@@ -103,39 +60,24 @@
 
     <footer class="py-5 bg-white border-top mt-auto">
         <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-5 mb-4 mb-md-0">
+            <div class="row">
+                <div class="col-md-6">
                     <div class="d-flex flex-column align-items-start mb-3">
-                        <img src="/images/logo-forfeo.png" alt="Forfeo" height="35" style="opacity: 0.8; filter: grayscale(100%);">
-                        <span style="font-size: 9px; font-weight: 900; letter-spacing: 3px; color: #999; margin-top: 2px; text-transform: uppercase;">LAB</span>
+                        <img src="/images/logo-forfeo.png" height="35">
+                        <span class="brand-lab-neon" style="font-size: 10px; margin-left: 5px;">LAB</span>
                     </div>
-                    <p class="small text-muted mb-1">
-                        <strong>Forfeo Lab</strong> est une division de <strong>FORFEO INC.</strong>, une société par actions immatriculée au Registraire des entreprises du Québec.
+                    <p class="small text-muted">
+                        <strong>Forfeo Lab</strong> est une division de <strong>FORFEO INC.</strong>, entreprise enregistrée au Québec.
+                        <br>Conformité Loi 25. Responsable : confidentialite@forfeo.com.
                     </p>
-                    <p class="small text-muted mb-0">© 2025 FORFEO INC. Tous droits réservés.</p>
                 </div>
-                
-                <div class="col-md-3 mb-4 mb-md-0">
-                    <h6 class="fw-bold text-uppercase small mb-3">Légal</h6>
-                    <ul class="list-unstyled small text-muted">
-                        <li class="mb-2"><a href="/politique-confidentialite" class="text-decoration-none text-muted">Politique de Confidentialité (Loi 25)</a></li>
-                        <li><a href="/conditions-utilisation" class="text-decoration-none text-muted">Conditions d'utilisation</a></li>
-                    </ul>
-                </div>
-
-                <div class="col-md-4 text-md-end">
-                    <div class="p-3 bg-light rounded border border-light">
-                        <p class="mb-1 fw-bold small text-dark"><i class="bi bi-info-circle me-1"></i> Note Juridique</p>
-                        <p class="mb-0" style="font-size: 11px; color: #666; line-height: 1.4;">
-                            Les ambassadeurs inscrits sur la plateforme agissent à titre de prestataires de services indépendants (travailleurs autonomes) et non comme salariés de Forfeo Inc.
-                        </p>
-                    </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="small text-muted">Les ambassadeurs sont des travailleurs autonomes indépendants.</p>
+                    <p class="small text-muted">© 2025 FORFEO INC.</p>
                 </div>
             </div>
         </div>
     </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <%- include('partials/forfy') %>
 </body>
 </html>
