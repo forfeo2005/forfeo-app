@@ -20,7 +20,7 @@ const upload = multer({ storage: storage });
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// CONFIGURATION EMAIL
+// CONFIGURATION EMAIL ROBUSTE
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.SMTP_PORT) || 587,
@@ -148,6 +148,7 @@ async function setupDatabase() {
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS logo_data TEXT");
         await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS date_expiration TIMESTAMP");
 
+        // RESTAURATION ACADEMIE
         const countQ = await pool.query("SELECT COUNT(*) FROM formations_questions");
         await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
         await pool.query("TRUNCATE formations_modules RESTART IDENTITY CASCADE");
@@ -207,7 +208,7 @@ app.post('/admin/create-user', async (req, res) => { const h = await bcrypt.hash
 app.post('/admin/delete-user', async (req, res) => { await pool.query("DELETE FROM users WHERE id=$1", [req.body.user_id]); res.redirect('/admin/dashboard'); });
 app.get('/admin/rapport/:missionId', async (req, res) => { const d = await pool.query(`SELECT r.*, m.titre, m.type_audit FROM audit_reports r JOIN missions m ON r.mission_id=m.id WHERE m.id=$1`, [req.params.missionId]); res.render('admin-rapport-detail', { rapport: d.rows[0], details: d.rows[0].details, userName: req.session.userName }); });
 
-// ENTREPRISE - MIDDLEWARE DE VERIFICATION DE LIMITE
+// ENTREPRISE - CHECK LIMIT
 const checkLimit = async (req, res, next) => {
     const user = await pool.query("SELECT forfait FROM users WHERE id = $1", [req.session.userId]);
     if (user.rows[0].forfait !== 'Freemium') return next();
@@ -232,7 +233,7 @@ app.post('/entreprise/upload-logo', upload.single('logo'), async (req, res) => {
 app.get('/entreprise/telecharger-rapport/:id', async (req, res) => { const r = await pool.query(`SELECT r.details, m.titre, m.type_audit, m.created_at FROM audit_reports r JOIN missions m ON r.mission_id=m.id WHERE m.id=$1`, [req.params.id]); if(r.rows.length===0) return res.send("Non trouvé"); const d = r.rows[0]; const doc = new PDFDocument({ margin: 50 }); res.setHeader('Content-Type','application/pdf'); res.setHeader('Content-Disposition', `attachment; filename=Rapport-${req.params.id}.pdf`); doc.pipe(res); const lp = path.join(__dirname, 'images', 'logo-forfeo.png'); if(fs.existsSync(lp)) doc.image(lp, 50, 40, { width: 60 }); doc.moveDown(1).font('Helvetica-Bold').fontSize(22).fillColor('#0061ff').text('RAPPORT D\'AUDIT', {align:'center'}).font('Helvetica').fontSize(10).fillColor('#333').text('Forfeo Lab', {align:'center'}); doc.moveDown(2).fillColor('#000').fontSize(12).text(`Mission: ${d.titre}`).text(`Type: ${d.type_audit}`).text(`Date: ${new Date(d.created_at).toLocaleDateString()}`).moveDown(1.5); const y = doc.y; doc.rect(50, y, 500, 75).fillAndStroke('#f0f9ff', '#0061ff'); doc.fillColor('#0061ff').fontSize(9).text("CERTIFICATION D'INDÉPENDANCE :\nCe rapport a été complété avec objectivité et impartialité par un Ambassadeur Certifié Forfeo LAB.", 60, y+15, {width:480, align:'center'}); doc.y = y+105; doc.fillColor('#000').fontSize(14).text('Détails :', {underline:true}).moveDown(); doc.fontSize(11); for(const [k,v] of Object.entries(d.details)) { if(k!=='mission_id' && k!=='ambassadeur_id' && k!=='media_files') doc.font('Helvetica-Bold').text(`${k.toUpperCase().replace(/_/g,' ')}: `, {continued:true}).font('Helvetica').text(`${v}`).moveDown(0.5); } doc.end(); });
 app.post('/entreprise/envoyer-campagne', async (req, res) => { const list = req.body.emails.split(/[\n,;]+/).map(e => e.trim()).filter(e => e); const type = req.body.type_activite; const protocol = 'https'; const host = req.get('host'); const fullLink = `${protocol}://${host}/sondage-client/${req.session.userId}?type=${encodeURIComponent(type)}`; try { if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) throw new Error("Config email manquante"); for(const email of list) { await transporter.sendMail({ from: `"Forfeo Lab" <${process.env.EMAIL_USER}>`, to: email, subject: `Votre avis compte - ${req.session.userName}`, html: `<div style="font-family: Arial; padding: 20px; text-align: center; background-color: #f9f9f9;"><h2 style="color: #0061ff;">Bonjour !</h2><p>Merci de votre visite chez <strong>${req.session.userName}</strong>.</p><br><a href="${fullLink}" style="background-color: #0061ff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 25px; display: inline-block;">Répondre au sondage</a></div>` }); } res.redirect('/entreprise/dashboard?msg=campagne_envoyee'); } catch (error) { console.error("ERREUR EMAIL:", error); res.redirect('/entreprise/dashboard?error=email_fail'); } });
 app.get('/sondage-client/:entrepriseId', async (req, res) => { const ent = await pool.query("SELECT nom, id, logo_data FROM users WHERE id=$1", [req.params.entrepriseId]); if(ent.rows.length === 0) return res.send("Entreprise introuvable"); const type = req.query.type || 'Général'; const questions = SURVEY_TEMPLATES[type] || SURVEY_TEMPLATES['Général']; res.render('sondage-public', { entreprise: ent.rows[0], questions: questions, type: type }); });
-app.post('/sondage-client/submit', async (req, res) => { await pool.query("INSERT INTO sondages_publics (entreprise_id, type_activite, reponses) VALUES ($1, $2, $3)", [req.body.entreprise_id, req.body.type_activite, JSON.stringify(req.body)]); res.send(`<div style="font-family:sans-serif; text-align:center; padding:50px;"><h1 style="color:#0061ff;">Merci !</h1><p>Votre avis a été transmis.</p><a href="/">Retour</a></div>`); });
+app.post('/sondage-client/submit', async (req, res) => { await pool.query("INSERT INTO sondages_publics (entreprise_id, type_activite, reponses) VALUES ($1, $2, $3)", [req.body.entreprise_id, req.body.type_activite, JSON.stringify(req.body)]); res.send(`<div style="font-family:sans-serif; text-align:center; padding:50px;"><h1 style="color:#0061ff;">Merci !</h1><p>Votre avis a été transmis à l'équipe.</p><a href="/">Retour</a></div>`); });
 
 // AMBASSADEUR & ACADEMIE
 app.get('/ambassadeur/dashboard', async (req, res) => { 
@@ -245,7 +246,49 @@ app.post('/ambassadeur/soumettre-rapport', async (req, res) => { await pool.quer
 app.get('/employe/dashboard', async (req, res) => { const mod = await pool.query("SELECT * FROM formations_modules ORDER BY id ASC"); const s = await pool.query("SELECT * FROM formations_scores WHERE user_id=$1", [req.session.userId]); res.render('employe-dashboard', { modules: mod.rows, scores: s.rows, userName: req.session.userName }); });
 app.get('/formations/module/:id', async (req, res) => { const mod = await pool.query("SELECT * FROM formations_modules WHERE id=$1", [req.params.id]); const q = await pool.query("SELECT * FROM formations_questions WHERE module_id=$1 ORDER BY id ASC", [req.params.id]); res.render('formation-detail', { module: mod.rows[0], questions: q.rows, userName: req.session.userName }); });
 app.post('/formations/soumettre-quizz', async (req, res) => { const qs = await pool.query("SELECT id, reponse_correcte FROM formations_questions WHERE module_id=$1", [req.body.module_id]); let score = 0; qs.rows.forEach(q => { if(req.body['q_'+q.id]===q.reponse_correcte) score++; }); const stat = (score/qs.rows.length)*100 >= 80 ? 'reussi' : 'echec'; const code = stat==='reussi' ? Math.random().toString(36).substring(7).toUpperCase() : null; await pool.query("INSERT INTO formations_scores (user_id, module_id, meilleur_score, tentatives, statut, code_verif) VALUES ($1,$2,$3,1,$4,$5) ON CONFLICT (user_id, module_id) DO UPDATE SET meilleur_score=GREATEST(EXCLUDED.meilleur_score, formations_scores.meilleur_score), statut=EXCLUDED.statut, code_verif=EXCLUDED.code_verif", [req.session.userId, req.body.module_id, (score/qs.rows.length)*100, stat, code]); res.redirect('/employe/dashboard'); });
-app.get('/certificat/:code', async (req, res) => { const d = await pool.query("SELECT * FROM formations_scores WHERE code_verif=$1", [req.params.code]); if(d.rows.length===0) return res.send('Invalide'); const doc = new PDFDocument({layout:'landscape'}); doc.pipe(res); doc.fontSize(30).text('CERTIFICAT', {align:'center'}); doc.end(); });
+
+// --- NOUVEAU CERTIFICAT PRO ---
+app.get('/certificat/:code', async (req, res) => { 
+    const d = await pool.query(`SELECT s.*, u.nom as user_nom, m.titre as module_titre FROM formations_scores s JOIN users u ON s.user_id = u.id JOIN formations_modules m ON s.module_id = m.id WHERE s.code_verif = $1`, [req.params.code]);
+    if(d.rows.length === 0) return res.send('Invalide');
+    const cert = d.rows[0];
+    const doc = new PDFDocument({ layout: 'landscape', size: 'A4' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=Certificat-${cert.code_verif}.pdf`);
+    doc.pipe(res);
+
+    // Bordure
+    doc.rect(20, 20, 802, 555).strokeColor('#0061ff').lineWidth(5).stroke();
+    
+    // Logo
+    const logoPath = path.join(__dirname, 'images', 'logo-forfeo.png');
+    if(fs.existsSync(logoPath)) {
+        doc.image(logoPath, 360, 50, { width: 120 });
+    }
+    
+    // Contenu
+    doc.moveDown(5);
+    doc.font('Helvetica-Bold').fontSize(40).fillColor('#0061ff').text('CERTIFICAT DE RÉUSSITE', { align: 'center' });
+    doc.moveDown(1);
+    doc.font('Helvetica').fontSize(20).fillColor('#333').text('Ce certificat est fièrement décerné à', { align: 'center' });
+    doc.moveDown(1);
+    doc.font('Helvetica-Bold').fontSize(30).text(cert.user_nom, { align: 'center' });
+    doc.moveDown(1);
+    doc.font('Helvetica').fontSize(18).text('Pour avoir complété avec succès le module de formation :', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.font('Helvetica-Bold').fontSize(22).text(cert.module_titre, { align: 'center' });
+    doc.moveDown(4);
+    
+    // Pied de page
+    doc.fontSize(12).fillColor('#666');
+    doc.text(`Délivré le : ${new Date(cert.updated_at).toLocaleDateString('fr-FR')}`, 100, 450);
+    doc.text(`Score : ${Math.round(cert.meilleur_score)}%`, 100, 470);
+    doc.text(`Numéro de série : ${cert.code_verif}`, 550, 450, { align: 'right' });
+    doc.text('Forfeo Lab - Certification Officielle', 550, 470, { align: 'right' });
+
+    doc.end();
+});
+
 app.post('/api/chat', async (req, res) => { try { const c = await openai.chat.completions.create({model:"gpt-4o-mini", messages:[{role:"system",content:knowledgeBase},{role:"user",content:req.body.message}]}); res.json({reply:c.choices[0].message.content}); } catch(e) { res.json({reply:"Erreur."}); } });
 
 app.listen(port, () => console.log('🚀 LIVE'));
