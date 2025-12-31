@@ -11,46 +11,18 @@
     <div class="container py-5" style="max-width: 600px;">
         <div class="glass-card">
             <h3 class="fw-bold mb-4">Mon Profil</h3>
-            
-            <div class="text-center mb-4">
-                <a class="d-inline-flex flex-column align-items-center text-decoration-none" href="/">
-                    <img src="/images/logo-forfeo.png" alt="Forfeo" height="40">
-                    <span class="brand-lab-neon">LAB</span>
-                </a>
-            </div>
-
+            <div class="text-center mb-4"><img src="/images/logo-forfeo.png" height="40"><span class="brand-lab-neon">LAB</span></div>
             <form action="/profil/update" method="POST">
                 <div class="row g-2">
-                    <div class="col-md-6 mb-3">
-                        <label class="fw-bold small">Nom</label>
-                        <input type="text" name="nom" value="<%= user.nom %>" class="form-control" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="fw-bold small">Email</label>
-                        <input type="email" name="email" value="<%= user.email %>" class="form-control" required>
-                    </div>
+                    <div class="col-md-6 mb-3"><label class="fw-bold small">Nom</label><input type="text" name="nom" value="<%= user.nom %>" class="form-control" required></div>
+                    <div class="col-md-6 mb-3"><label class="fw-bold small">Email</label><input type="email" name="email" value="<%= user.email %>" class="form-control" required></div>
                 </div>
-                <div class="mb-3">
-                    <label class="fw-bold small">Téléphone</label>
-                    <input type="text" name="telephone" value="<%= user.telephone || '' %>" class="form-control" placeholder="ex: 514-555-5555">
-                </div>
-                <div class="mb-3">
-                    <label class="fw-bold small">Adresse (Optionnel)</label>
-                    <input type="text" name="adresse" value="<%= user.adresse || '' %>" class="form-control" placeholder="ex: 123 Rue Principale, Montréal">
-                </div>
-                <div class="mb-3">
-                    <label class="fw-bold small">Nouveau Mot de Passe (Laisser vide si inchangé)</label>
-                    <input type="password" name="new_password" class="form-control">
-                </div>
+                <div class="mb-3"><label class="fw-bold small">Téléphone</label><input type="text" name="telephone" value="<%= user.telephone || '' %>" class="form-control"></div>
+                <div class="mb-3"><label class="fw-bold small">Adresse</label><textarea name="adresse" class="form-control" rows="2"><%= user.adresse || '' %></textarea></div>
+                <div class="mb-3"><label class="fw-bold small">Nouveau MDP (Optionnel)</label><input type="password" name="new_password" class="form-control mb-4"></div>
                 <button class="btn btn-primary w-100 rounded-pill mb-3">Mettre à jour</button>
             </form>
-            <hr>
-            <div class="text-center">
-                <form action="/profil/delete" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer votre compte ?');">
-                    <button class="btn btn-outline-danger btn-sm rounded-pill w-100">Supprimer mon compte</button>
-                </form>
-                <a href="/" class="d-block mt-3 text-muted small">Retour à l'accueil</a>
-            </div>
+            <hr class="my-4"><div class="text-center"><a href="/" class="d-block mt-3 text-muted small">Retour à l'accueil</a></div>
         </div>
     </div>
     <%- include('partials/forfy') %>
