@@ -10,134 +10,83 @@
 <body>
     <div class="premium-bg"></div>
     <div class="container py-5">
-        <div class="d-flex justify-content-between mb-5">
-            <h3 class="fw-bold">Administration</h3>
-            <a href="/logout" class="btn btn-danger rounded-pill">Déconnexion</a>
-        </div>
+        <div class="d-flex justify-content-between mb-5"><h3 class="fw-bold">Admin</h3><a href="/logout" class="btn btn-danger rounded-pill">Déconnexion</a></div>
 
-        <ul class="nav nav-pills mb-4 gap-3 p-2 glass-card d-inline-flex" role="tablist">
-            <li class="nav-item"><button class="nav-link active rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#validation">1. Validation</button></li>
-            <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#paiements">2. Paiements</button></li>
-            <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#users">3. Utilisateurs</button></li>
+        <ul class="nav nav-pills mb-4 gap-3 p-2 glass-card d-inline-flex">
+            <li class="nav-item"><button class="nav-link active rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#validation">Validation</button></li>
+            <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#paiements">Comptabilité</button></li>
+            <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#users">Utilisateurs</button></li>
         </ul>
 
         <div class="tab-content">
             <div class="tab-pane fade show active" id="validation">
                 <div class="glass-card">
-                    <h5 class="fw-bold mb-3 text-primary">Audits & Sondages à valider</h5>
                     <table class="premium-table">
-                        <thead><tr><th>Mission</th><th>Type</th><th>Statut</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Mission</th><th>Statut</th><th>Action</th></tr></thead>
                         <tbody>
-                            <% if(typeof missions !== 'undefined') { %>
-                                <% missions.filter(m => m.statut !== 'approuve').forEach(m => { %>
-                                    <tr>
-                                        <td class="fw-bold"><%= m.titre %></td>
-                                        <td><%= m.type_audit %></td>
-                                        <td><span class="badge bg-secondary"><%= m.statut %></span></td>
-                                        <td>
-                                            <% if (m.statut === 'soumis') { %> 
-                                                <a href="/admin/rapport/<%= m.id %>" class="btn btn-sm btn-primary rounded-pill">Examiner</a> 
-                                            <% } else if (m.statut === 'en_attente') { %> 
-                                                <form action="/admin/approuver-mission" method="POST" class="d-inline">
-                                                    <input type="hidden" name="id_mission" value="<%= m.id %>">
-                                                    <button class="btn btn-sm btn-success rounded-pill">Publier</button>
-                                                </form> 
-                                            <% } else { %> 
-                                                <span class="text-muted small">-</span> 
-                                            <% } %>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            <% } %>
+                            <% missions.filter(m => m.statut !== 'approuve').forEach(m => { %>
+                                <tr>
+                                    <td><%= m.titre %></td>
+                                    <td><span class="badge bg-secondary"><%= m.statut %></span></td>
+                                    <td>
+                                        <% if (m.statut === 'soumis') { %> <a href="/admin/rapport/<%= m.id %>" class="btn btn-sm btn-primary rounded-pill">Examiner</a> <% } %>
+                                        <% if (m.statut === 'en_attente') { %> <form action="/admin/approuver-mission" method="POST"><input type="hidden" name="id_mission" value="<%= m.id %>"><button class="btn btn-sm btn-success rounded-pill">Publier</button></form> <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
                         </tbody>
                     </table>
                 </div>
             </div>
 
             <div class="tab-pane fade" id="paiements">
-                <div class="glass-card bg-success text-white mb-4 p-4">
-                    <h5 class="fw-bold text-white mb-2">💰 Caisse de Sortie (À Payer)</h5>
-                    <div class="display-4 fw-bold"><%= typeof totalAPayer !== 'undefined' ? totalAPayer : 0 %> $ CAD</div>
-                </div>
-                
-                <div class="glass-card border-success mb-4">
-                    <h5 class="fw-bold text-success mb-3">Payer Ambassadeurs (Virements à faire)</h5>
-                    <table class="premium-table">
-                        <thead><tr><th>Ambassadeur ID</th><th>Montant</th><th>Action</th></tr></thead>
-                        <tbody>
-                            <% if(typeof missions !== 'undefined') { %>
-                                <% missions.filter(m => m.statut === 'approuve' && m.statut_paiement !== 'paye').forEach(m => { %>
-                                    <tr>
-                                        <td>#<%= m.ambassadeur_id %></td>
-                                        <td class="fw-bold text-success"><%= m.recompense %>$</td>
-                                        <td>
-                                            <form action="/admin/payer-ambassadeur" method="POST" onsubmit="return confirm('Confirmez-vous avoir fait le virement ?');">
-                                                <input type="hidden" name="id_mission" value="<%= m.id %>">
-                                                <button class="btn btn-success btn-sm rounded-pill">Confirmer Paiement</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="glass-card">
-                    <h5 class="fw-bold mb-3">Historique des Paiements Confirmés</h5>
-                    <table class="premium-table">
-                        <thead><tr><th>Ambassadeur</th><th>Montant</th><th>Date Paiement</th></tr></thead>
-                        <tbody>
-                            <% if(typeof paiements !== 'undefined') { %>
-                                <% paiements.forEach(p => { %>
-                                    <tr>
-                                        <td><%= p.ambassadeur_nom || 'Inconnu' %></td>
-                                        <td><%= p.recompense %>$</td>
-                                        <td><%= p.date_paiement ? new Date(p.date_paiement).toLocaleDateString() : 'Date inconnue' %></td>
-                                    </tr>
-                                <% }) %>
-                            <% } %>
-                        </tbody>
-                    </table>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="glass-card bg-white border h-100">
+                            <h5 class="fw-bold mb-3">Sommaire (Paiements Effectués)</h5>
+                            <div class="d-flex justify-content-between border-bottom py-2"><span>Sous-total</span><span><%= finance.brut %> $</span></div>
+                            <div class="d-flex justify-content-between border-bottom py-2"><span>TPS (5%)</span><span><%= finance.tps %> $</span></div>
+                            <div class="d-flex justify-content-between border-bottom py-2"><span>TVQ (9.975%)</span><span><%= finance.tvq %> $</span></div>
+                            <div class="d-flex justify-content-between py-3"><span class="fw-bold text-success h5">TOTAL</span><span class="fw-bold text-success h5"><%= finance.total %> $</span></div>
+                            <a href="/admin/rapport-comptable" class="btn btn-dark w-100 mt-3"><i class="bi bi-file-pdf"></i> Télécharger Rapport PDF</a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="glass-card border-success">
+                            <h5 class="fw-bold text-success">À Payer (<%= totalAPayer %> $)</h5>
+                            <table class="premium-table">
+                                <thead><tr><th>Ambassadeur</th><th>Montant</th><th>Action</th></tr></thead>
+                                <tbody>
+                                    <% missions.filter(m => m.statut === 'approuve' && m.statut_paiement !== 'paye').forEach(m => { %>
+                                        <tr>
+                                            <td>#<%= m.ambassadeur_id %></td>
+                                            <td class="fw-bold text-success"><%= m.recompense %>$</td>
+                                            <td><form action="/admin/payer-ambassadeur" method="POST"><input type="hidden" name="id_mission" value="<%= m.id %>"><button class="btn btn-success btn-sm rounded-pill">Payer</button></form></td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="tab-pane fade" id="users">
                 <div class="glass-card">
-                    <h5 class="fw-bold mb-3">Ajouter manuellement</h5>
+                    <h5 class="fw-bold mb-3">Ajouter Utilisateur</h5>
                     <form action="/admin/create-user" method="POST" class="row g-2 mb-4">
-                        <div class="col-md-3"><input type="text" name="nom" placeholder="Nom" class="form-control" required></div>
-                        <div class="col-md-3"><input type="email" name="email" placeholder="Email" class="form-control" required></div>
-                        <div class="col-md-2"><input type="password" name="password" placeholder="Mdp" class="form-control" required></div>
-                        <div class="col-md-2">
-                            <select name="role" class="form-select">
-                                <option value="entreprise">Entreprise</option>
-                                <option value="ambassadeur">Ambassadeur</option>
-                                <option value="employe">Employé</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2"><button class="btn btn-success w-100">Créer</button></div>
+                        <div class="col"><input type="text" name="nom" placeholder="Nom" class="form-control" required></div>
+                        <div class="col"><input type="email" name="email" placeholder="Email" class="form-control" required></div>
+                        <div class="col"><input type="password" name="password" placeholder="Pass" class="form-control" required></div>
+                        <div class="col"><select name="role" class="form-select"><option value="entreprise">Entreprise</option><option value="ambassadeur">Ambassadeur</option><option value="employe">Employé</option></select></div>
+                        <div class="col"><button class="btn btn-success w-100">Créer</button></div>
                     </form>
-
-                    <h5 class="fw-bold">Liste des Utilisateurs</h5>
                     <table class="premium-table">
                         <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Action</th></tr></thead>
                         <tbody>
-                            <% if(typeof users !== 'undefined') { %>
-                                <% users.forEach(u => { %>
-                                    <tr>
-                                        <td><%= u.nom %></td>
-                                        <td><%= u.email %></td>
-                                        <td><span class="badge bg-light text-dark border"><%= u.role %></span></td>
-                                        <td>
-                                            <form action="/admin/delete-user" method="POST" onsubmit="return confirm('Supprimer ce compte ?');">
-                                                <input type="hidden" name="user_id" value="<%= u.id %>">
-                                                <button class="btn btn-sm btn-outline-danger">Supprimer</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            <% } %>
+                            <% users.forEach(u => { %>
+                                <tr><td><%= u.nom %></td><td><%= u.email %></td><td><%= u.role %></td><td><form action="/admin/delete-user" method="POST"><input type="hidden" name="user_id" value="<%= u.id %>"><button class="btn btn-sm btn-outline-danger">X</button></form></td></tr>
+                            <% }) %>
                         </tbody>
                     </table>
                 </div>
