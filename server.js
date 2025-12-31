@@ -50,7 +50,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v50_final_gold',
+    secret: 'forfeo_v51_certif_fix_layout',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
@@ -125,7 +125,7 @@ app.get('/admin/dashboard', async (req, res) => {
     res.render('admin-dashboard', { missions: m.rows, users: u.rows, totalAPayer: totalBrut.toFixed(2), userName: req.session.userName });
 });
 
-// --- COMPTABILITE PDF (CORRIGÉ AVEC TAXES QC) ---
+// --- COMPTABILITE PDF (AVEC TAXES QC) ---
 app.get('/admin/rapport-comptable', async (req, res) => {
     const missions = await pool.query("SELECT m.*, u.nom as ambassadeur_nom FROM missions m JOIN users u ON m.ambassadeur_id=u.id WHERE m.statut IN ('approuve', 'paye') ORDER BY m.date_paiement DESC");
     
@@ -164,7 +164,7 @@ app.get('/admin/rapport-comptable', async (req, res) => {
         doc.text(montant.toFixed(2) + '$', 500, y);
         y += 20;
         
-        if (y > 700) { doc.addPage(); y = 50; } // Gestion saut de page
+        if (y > 700) { doc.addPage(); y = 50; }
     });
 
     // Calcul Taxes QC
@@ -222,7 +222,6 @@ app.post('/entreprise/commander-sondage', checkLimit, async (req, res) => { awai
 app.post('/entreprise/ajouter-employe', async (req, res) => { const h = await bcrypt.hash(req.body.password, 10); await pool.query("INSERT INTO users (nom, email, password, role, entreprise_id) VALUES ($1, $2, $3, 'employe', $4)", [req.body.nom, req.body.email, h, req.session.userId]); res.redirect('/entreprise/dashboard'); });
 app.post('/entreprise/upload-logo', upload.single('logo'), async (req, res) => { if(req.file) { const b64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`; await pool.query("UPDATE users SET logo_data = $1 WHERE id = $2", [b64, req.session.userId]); } res.redirect('/entreprise/dashboard'); });
 app.get('/entreprise/telecharger-rapport/:id', async (req, res) => { 
-    // CORRECTION FLUX : On récupère le rapport UNIQUEMENT s'il est approuvé
     const r = await pool.query(`SELECT r.details, m.titre, m.type_audit, m.created_at FROM audit_reports r JOIN missions m ON r.mission_id=m.id WHERE m.id=$1 AND m.statut='approuve'`, [req.params.id]); 
     if(r.rows.length===0) return res.send("Rapport non disponible ou non approuvé."); 
     const d = r.rows[0]; const doc = new PDFDocument({ margin: 50 }); res.setHeader('Content-Type','application/pdf'); res.setHeader('Content-Disposition', `attachment; filename=Rapport-${req.params.id}.pdf`); doc.pipe(res); 
@@ -230,7 +229,7 @@ app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
     doc.moveDown(1).font('Helvetica-Bold').fontSize(22).fillColor('#0061ff').text('RAPPORT D\'AUDIT', {align:'center'}).font('Helvetica').fontSize(10).fillColor('#333').text('Forfeo Lab', {align:'center'}); doc.moveDown(2).fillColor('#000').fontSize(12).text(`Mission: ${d.titre}`).text(`Type: ${d.type_audit}`).text(`Date: ${new Date(d.created_at).toLocaleDateString()}`).moveDown(1.5); 
     const y = doc.y; doc.rect(50, y, 500, 75).fillAndStroke('#f0f9ff', '#0061ff'); doc.fillColor('#0061ff').fontSize(9).text("CERTIFICATION D'INDÉPENDANCE :\nCe rapport a été complété avec objectivité et impartialité par un Ambassadeur Certifié Forfeo LAB.", 60, y+15, {width:480, align:'center'}); 
     doc.y = y+105; doc.fillColor('#000').fontSize(14).text('Détails :', {underline:true}).moveDown(); doc.fontSize(11); 
-    const details = JSON.parse(d.details); // Parse JSON si nécessaire
+    const details = JSON.parse(d.details);
     for(const [k,v] of Object.entries(details)) { if(k!=='mission_id' && k!=='ambassadeur_id') doc.font('Helvetica-Bold').text(`${k}: `, {continued:true}).font('Helvetica').text(`${v}`).moveDown(0.5); } 
     doc.end(); 
 });
@@ -245,8 +244,6 @@ app.get('/ambassadeur/dashboard', async (req, res) => {
     res.render('ambassadeur-dashboard', { missions: m.rows, historique: h.rows, totalGains: 0, userName: req.session.userName }); 
 });
 app.post('/ambassadeur/postuler', async (req, res) => { await pool.query("UPDATE missions SET ambassadeur_id=$1, statut='reserve' WHERE id=$2", [req.session.userId, req.body.id_mission]); res.redirect('/ambassadeur/dashboard'); });
-
-// SOUMISSION RAPPORT SÉCURISÉE
 app.post('/ambassadeur/soumettre-rapport', async (req, res) => { 
     try {
         const existing = await pool.query("SELECT id FROM audit_reports WHERE mission_id=$1", [req.body.mission_id]);
@@ -267,7 +264,7 @@ app.get('/employe/dashboard', async (req, res) => { const mod = await pool.query
 app.get('/formations/module/:id', async (req, res) => { const mod = await pool.query("SELECT * FROM formations_modules WHERE id=$1", [req.params.id]); const q = await pool.query("SELECT * FROM formations_questions WHERE module_id=$1 ORDER BY id ASC", [req.params.id]); res.render('formation-detail', { module: mod.rows[0], questions: q.rows, userName: req.session.userName }); });
 app.post('/formations/soumettre-quizz', async (req, res) => { const qs = await pool.query("SELECT id, reponse_correcte FROM formations_questions WHERE module_id=$1", [req.body.module_id]); let score = 0; qs.rows.forEach(q => { if(req.body['q_'+q.id]===q.reponse_correcte) score++; }); const stat = (score/qs.rows.length)*100 >= 80 ? 'reussi' : 'echec'; const code = stat==='reussi' ? Math.random().toString(36).substring(7).toUpperCase() : null; await pool.query("INSERT INTO formations_scores (user_id, module_id, meilleur_score, tentatives, statut, code_verif) VALUES ($1,$2,$3,1,$4,$5) ON CONFLICT (user_id, module_id) DO UPDATE SET meilleur_score=GREATEST(EXCLUDED.meilleur_score, formations_scores.meilleur_score), statut=EXCLUDED.statut, code_verif=EXCLUDED.code_verif", [req.session.userId, req.body.module_id, (score/qs.rows.length)*100, stat, code]); res.redirect('/employe/dashboard'); });
 
-// --- CERTIFICAT PRO AVEC SCEAU ---
+// --- CERTIFICAT PRO AVEC SCEAU (LAYOUT CORRIGÉ) ---
 app.get('/certificat/:code', async (req, res) => { 
     const d = await pool.query(`SELECT s.*, u.nom as user_nom, m.titre as module_titre FROM formations_scores s JOIN users u ON s.user_id = u.id JOIN formations_modules m ON s.module_id = m.id WHERE s.code_verif = $1`, [req.params.code]);
     if(d.rows.length === 0) return res.send('Certificat introuvable');
@@ -289,9 +286,9 @@ app.get('/certificat/:code', async (req, res) => {
         doc.image(logoPath, 370, 60, { width: 100 });
     }
 
-    // SCEAU DORÉ (Simulation graphique)
-    doc.circle(720, 450, 50).fillAndStroke('#FFD700', '#DAA520'); // Cercle Or
-    doc.circle(720, 450, 40).fill('#FFF8DC'); // Intérieur clair
+    // SCEAU DORÉ (Centré à droite)
+    doc.circle(720, 450, 50).fillAndStroke('#FFD700', '#DAA520');
+    doc.circle(720, 450, 40).fill('#FFF8DC');
     doc.fontSize(10).fillColor('#DAA520').text('FORFEO', 690, 440);
     doc.text('LAB', 705, 455);
     doc.text('CERTIFIÉ', 690, 470);
@@ -299,28 +296,29 @@ app.get('/certificat/:code', async (req, res) => {
     // Titre et Contenu
     doc.moveDown(6);
     doc.font('Helvetica-Bold').fontSize(45).fillColor('#0061ff').text('CERTIFICAT DE RÉUSSITE', 0, 150, { align: 'center', characterSpacing: 2 });
-    
     doc.moveDown(1);
     doc.font('Helvetica').fontSize(16).fillColor('#555').text('Ce document atteste que', { align: 'center' });
-    
     doc.moveDown(1);
     doc.font('Helvetica-Bold').fontSize(32).fillColor('#000').text(cert.user_nom, { align: 'center' });
-    
     doc.moveDown(1);
     doc.font('Helvetica').fontSize(16).fillColor('#555').text('a validé avec succès le module de formation', { align: 'center' });
-    
     doc.moveDown(0.5);
     doc.font('Helvetica-Bold').fontSize(24).fillColor('#0061ff').text(cert.module_titre, { align: 'center' });
 
     // Ligne de séparation
     doc.moveTo(200, 420).lineTo(642, 420).strokeColor('#ccc').lineWidth(1).stroke();
 
-    // Pied de page aligné
+    // Pied de page (CORRIGÉ POUR ÉVITER LE SCEAU)
     doc.fontSize(12).fillColor('#444');
-    doc.text(`Délivré le : ${new Date(cert.updated_at).toLocaleDateString('fr-FR')}`, 100, 460);
-    doc.text(`Score obtenu : ${Math.round(cert.meilleur_score)}%`, 100, 480);
-    doc.text(`ID Unique : ${cert.code_verif}`, 550, 460, { align: 'right' });
-    doc.font('Helvetica-Bold').text('Forfeo Lab Academy', 550, 480, { align: 'right' });
+
+    // Bloc Gauche (Date et Score)
+    doc.text(`Délivré le : ${new Date(cert.updated_at).toLocaleDateString('fr-FR')}`, 80, 460);
+    doc.text(`Score obtenu : ${Math.round(cert.meilleur_score)}%`, 80, 480);
+
+    // Bloc Droite (ID et Signature) - Positionné à gauche du sceau
+    // On utilise une largeur fixe pour aligner à droite avant le sceau
+    doc.text(`ID Unique : ${cert.code_verif}`, 400, 460, { align: 'right', width: 250 });
+    doc.font('Helvetica-Bold').text('Forfeo Lab Academy', 400, 480, { align: 'right', width: 250 });
 
     doc.end();
 });
