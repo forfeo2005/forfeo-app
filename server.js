@@ -7,21 +7,40 @@ const PDFDocument = require('pdfkit');
 const OpenAI = require('openai');
 const path = require('path');
 const fs = require('fs');
-const nodemailer = require('nodemailer'); // AJOUT IMPORTANT
+const nodemailer = require('nodemailer');
+const multer = require('multer');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 10000;
 
+// CONFIGURATION UPLOAD IMAGE (LOGO)
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = 'public/uploads';
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, 'logo-' + Date.now() + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// --- CONFIGURATION EMAIL RÉEL ---
-// Assure-toi d'avoir EMAIL_USER et EMAIL_PASS dans ton fichier .env
+// --- CONFIGURATION EMAIL UNIVERSELLE (COMPATIBLE RENDER) ---
+// Utilise les variables SMTP définies dans Render
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // Ou 'outlook', ou host/port pour un domaine pro
+    host: process.env.SMTP_HOST || 'smtp.gmail.com', // Fallback sur Gmail si vide
+    port: parseInt(process.env.SMTP_PORT) || 587,
+    secure: false, // true pour le port 465, false pour les autres
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false // Aide parfois à contourner les problèmes de certificats SSL
     }
 });
 
@@ -37,25 +56,27 @@ const ACADEMY_DATA = [
 // --- TEMPLATES DE SONDAGES ---
 const SURVEY_TEMPLATES = {
     "Restaurant": [
-        { id: "accueil", text: "L'accueil à votre arrivée ?", type: "stars" },
-        { id: "qualite_plats", text: "La qualité des plats ?", type: "stars" },
+        { id: "accueil", text: "Comment avez-vous trouvé l'accueil ?", type: "stars" },
+        { id: "qualite", text: "La qualité des plats ?", type: "stars" },
         { id: "service", text: "Le service était-il rapide ?", type: "yesno" },
-        { id: "recommandation", text: "Recommanderiez-vous ce restaurant ?", type: "stars" }
+        { id: "general_comment", text: "Commentaires généraux / Suggestions", type: "text" }
     ],
     "Hôtel": [
         { id: "proprete", text: "Propreté de la chambre ?", type: "stars" },
         { id: "confort", text: "Confort de la literie ?", type: "stars" },
         { id: "personnel", text: "L'équipe a-t-elle été utile ?", type: "stars" },
-        { id: "bruit", text: "Avez-vous été dérangé par du bruit ?", type: "yesno" }
+        { id: "general_comment", text: "Commentaires généraux / Suggestions", type: "text" }
     ],
     "Magasin": [
         { id: "trouve", text: "Avez-vous trouvé vos produits ?", type: "yesno" },
         { id: "conseil", text: "Qualité des conseils ?", type: "stars" },
-        { id: "prix", text: "Satisfaction rapport qualité/prix ?", type: "stars" }
+        { id: "prix", text: "Rapport qualité/prix ?", type: "stars" },
+        { id: "general_comment", text: "Commentaires généraux / Suggestions", type: "text" }
     ],
     "Général": [
         { id: "global", text: "Votre satisfaction globale ?", type: "stars" },
-        { id: "commentaire", text: "Un commentaire pour nous améliorer ?", type: "text" }
+        { id: "recommandation", text: "Nous recommanderiez-vous ?", type: "yesno" },
+        { id: "general_comment", text: "Commentaires généraux / Suggestions", type: "text" }
     ]
 };
 
@@ -69,7 +90,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v36_real_email_system',
+    secret: 'forfeo_v38_prod_smtp_fix',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
@@ -80,7 +101,7 @@ app.set('view engine', 'ejs');
 async function setupDatabase() {
     try {
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, nom VARCHAR(255), email VARCHAR(255) UNIQUE, password VARCHAR(255), role VARCHAR(50), entreprise_id INTEGER, forfait VARCHAR(50) DEFAULT 'Freemium', telephone VARCHAR(50), adresse TEXT);
+            CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, nom VARCHAR(255), email VARCHAR(255) UNIQUE, password VARCHAR(255), role VARCHAR(50), entreprise_id INTEGER, forfait VARCHAR(50) DEFAULT 'Freemium', telephone VARCHAR(50), adresse TEXT, logo_url TEXT);
             CREATE TABLE IF NOT EXISTS missions (id SERIAL PRIMARY KEY, entreprise_id INTEGER, ambassadeur_id INTEGER, titre VARCHAR(255), type_audit VARCHAR(100), description TEXT, recompense VARCHAR(50), statut VARCHAR(50) DEFAULT 'en_attente', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, client_nom VARCHAR(255), client_email VARCHAR(255), adresse VARCHAR(255), google_map_link TEXT, statut_paiement VARCHAR(50) DEFAULT 'non_paye', date_paiement TIMESTAMP);
             CREATE TABLE IF NOT EXISTS formations_modules (id SERIAL PRIMARY KEY, titre VARCHAR(255), description TEXT, image_icon VARCHAR(50), duree VARCHAR(50));
             CREATE TABLE IF NOT EXISTS formations_questions (id SERIAL PRIMARY KEY, module_id INTEGER, question TEXT, option_a TEXT, option_b TEXT, option_c TEXT, reponse_correcte CHAR(1), mise_en_situation TEXT, explication TEXT);
@@ -88,15 +109,21 @@ async function setupDatabase() {
             CREATE TABLE IF NOT EXISTS audit_reports (id SERIAL PRIMARY KEY, mission_id INTEGER UNIQUE, ambassadeur_id INTEGER, details JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
             CREATE TABLE IF NOT EXISTS sondages_publics (id SERIAL PRIMARY KEY, entreprise_id INTEGER, type_activite VARCHAR(50), reponses JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
         `);
-        // Seed Académie
-        const c = await pool.query("SELECT COUNT(*) FROM formations_questions");
-        await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE"); await pool.query("TRUNCATE formations_modules RESTART IDENTITY CASCADE");
-        for (const m of ACADEMY_DATA) {
-            await pool.query("INSERT INTO formations_modules (id, titre, description, image_icon, duree) VALUES ($1,$2,$3,$4,$5)", [m.id, m.titre, m.description, m.icon, m.duree]);
-            for (const q of m.questions) await pool.query("INSERT INTO formations_questions (module_id, question, option_a, option_b, option_c, reponse_correcte, mise_en_situation, explication) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)", [m.id, q.q, q.a, q.b, q.c, q.rep, q.sit, "Standard"]);
+        
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS logo_url TEXT");
+
+        const countQ = await pool.query("SELECT COUNT(*) FROM formations_questions");
+        await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
+        await pool.query("TRUNCATE formations_modules RESTART IDENTITY CASCADE");
+        
+        for (const mod of ACADEMY_DATA) {
+            await pool.query(`INSERT INTO formations_modules (id, titre, description, image_icon, duree) VALUES ($1, $2, $3, $4, $5)`, [mod.id, mod.titre, mod.description, mod.icon, mod.duree]);
+            for (const q of mod.questions) {
+                await pool.query(`INSERT INTO formations_questions (module_id, question, option_a, option_b, option_c, reponse_correcte, mise_en_situation, explication) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`, [mod.id, q.q, q.a, q.b, q.c, q.rep, q.sit, "Explication standard"]);
+            }
         }
         console.log("✅ DB & Académie Prêtes");
-    } catch (e) { console.error(e); }
+    } catch (err) { console.error("Erreur DB:", err); }
 }
 setupDatabase();
 
@@ -107,95 +134,141 @@ app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: 
 app.get('/politique-confidentialite', (req, res) => res.render('politique-confidentialite', { userName: req.session.userName || null }));
 app.get('/conditions-utilisation', (req, res) => res.render('conditions-utilisation', { userName: req.session.userName || null }));
 
-// AUTH
 app.get('/login', (req, res) => res.render('login', { error: null, msg: req.query.msg || null, userName: null }));
 app.post('/login', async (req, res) => {
-    const r = await pool.query("SELECT * FROM users WHERE email=$1", [req.body.email]);
-    if (r.rows.length > 0 && await bcrypt.compare(req.body.password, r.rows[0].password)) {
-        req.session.userId = r.rows[0].id; req.session.userName = r.rows[0].nom; req.session.userRole = r.rows[0].role;
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [req.body.email]);
+    if (result.rows.length > 0 && await bcrypt.compare(req.body.password, result.rows[0].password)) {
+        req.session.userId = result.rows[0].id;
+        req.session.userName = result.rows[0].nom;
+        req.session.userRole = result.rows[0].role;
         return res.redirect(`/${req.session.userRole}/dashboard`);
     }
     res.redirect('/login?error=1');
 });
 app.get('/register', (req, res) => res.render('register', { role: req.query.role || 'ambassadeur', error: null, userName: null }));
-app.post('/register', async (req, res) => { const h = await bcrypt.hash(req.body.password, 10); await pool.query("INSERT INTO users (nom, email, password, role, forfait) VALUES ($1,$2,$3,$4,'Freemium')", [req.body.nom, req.body.email, h, req.body.role]); res.redirect('/login?msg=created'); });
+app.post('/register', async (req, res) => {
+    const hash = await bcrypt.hash(req.body.password, 10);
+    await pool.query("INSERT INTO users (nom, email, password, role, forfait) VALUES ($1, $2, $3, $4, 'Freemium')", [req.body.nom, req.body.email, hash, req.body.role]);
+    res.redirect('/login?msg=created');
+});
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
-app.get('/profil', async (req, res) => { if(!req.session.userId) return res.redirect('/login'); const u = await pool.query("SELECT * FROM users WHERE id=$1", [req.session.userId]); res.render('profil', {user:u.rows[0], userName:req.session.userName, message: req.query.msg}); });
-app.post('/profil/update', async (req, res) => { await pool.query("UPDATE users SET nom=$1, email=$2, telephone=$3, adresse=$4 WHERE id=$5", [req.body.nom, req.body.email, req.body.telephone, req.body.adresse, req.session.userId]); if(req.body.new_password) { const h = await bcrypt.hash(req.body.new_password, 10); await pool.query("UPDATE users SET password=$1 WHERE id=$2", [h, req.session.userId]); } res.redirect('/profil?msg=updated'); });
-app.post('/profil/delete', async (req, res) => { if(!req.session.userId) return res.redirect('/login'); await pool.query("DELETE FROM users WHERE id=$1", [req.session.userId]); req.session.destroy(); res.redirect('/?msg=deleted'); });
+app.get('/profil', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
+    res.render('profil', { user: user.rows[0], userName: req.session.userName, message: req.query.msg || null });
+});
+app.post('/profil/update', async (req, res) => {
+    await pool.query("UPDATE users SET nom = $1, email = $2, telephone = $3, adresse = $4 WHERE id = $5", [req.body.nom, req.body.email, req.body.telephone, req.body.adresse, req.session.userId]);
+    if(req.body.new_password) {
+        const hash = await bcrypt.hash(req.body.new_password, 10);
+        await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hash, req.session.userId]);
+    }
+    res.redirect('/profil?msg=updated');
+});
+app.post('/profil/delete', async (req, res) => {
+    if (!req.session.userId) return res.redirect('/login');
+    await pool.query("DELETE FROM users WHERE id = $1", [req.session.userId]);
+    req.session.destroy();
+    res.redirect('/?msg=deleted');
+});
 
 // ADMIN
 app.get('/admin/dashboard', async (req, res) => {
     if (req.session.userRole !== 'admin') return res.redirect('/login');
-    const m = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id=u.id ORDER BY m.id DESC");
-    const u = await pool.query("SELECT * FROM users ORDER BY id DESC");
-    const p = await pool.query("SELECT m.*, u.nom as ambassadeur_nom FROM missions m LEFT JOIN users u ON m.ambassadeur_id=u.id WHERE m.statut_paiement='paye' ORDER BY m.date_paiement DESC");
-    const f = await pool.query("SELECT u.nom as employe, m.titre, s.meilleur_score, s.statut FROM formations_scores s JOIN users u ON s.user_id=u.id JOIN formations_modules m ON s.module_id=m.id ORDER BY s.updated_at DESC LIMIT 20");
-    let brut = 0; p.rows.forEach(x => brut += parseFloat(x.recompense)||0);
-    const ap = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE statut='approuve' AND statut_paiement='non_paye'");
-    res.render('admin-dashboard', { missions: m.rows, users: u.rows, paiements: p.rows, formations: f.rows, finance: {brut: brut.toFixed(2), tps: (brut*0.05).toFixed(2), tvq: (brut*0.09975).toFixed(2), total: (brut*1.14975).toFixed(2)}, totalAPayer: ap.rows[0].total||0, userName: req.session.userName });
+    const missions = await pool.query("SELECT m.*, u.nom as entreprise_nom FROM missions m JOIN users u ON m.entreprise_id = u.id ORDER BY m.id DESC");
+    const users = await pool.query("SELECT * FROM users ORDER BY id DESC");
+    const paiements = await pool.query(`SELECT m.*, u.nom as ambassadeur_nom FROM missions m LEFT JOIN users u ON m.ambassadeur_id = u.id WHERE m.statut_paiement = 'paye' ORDER BY m.date_paiement DESC`);
+    const formations = await pool.query(`SELECT u.nom as employe, m.titre, s.meilleur_score, s.statut FROM formations_scores s JOIN users u ON s.user_id = u.id JOIN formations_modules m ON s.module_id = m.id ORDER BY s.updated_at DESC LIMIT 20`);
+
+    let brut = 0; paiements.rows.forEach(p => brut += (parseFloat(p.recompense) || 0));
+    const tps = brut * 0.05; const tvq = brut * 0.09975;
+    const aPayer = await pool.query("SELECT SUM(CASE WHEN recompense ~ '^[0-9.]+$' THEN CAST(recompense AS NUMERIC) ELSE 0 END) as total FROM missions WHERE statut = 'approuve' AND statut_paiement = 'non_paye'");
+    
+    res.render('admin-dashboard', { 
+        missions: missions.rows, users: users.rows, paiements: paiements.rows, formations: formations.rows,
+        finance: { brut: brut.toFixed(2), tps: tps.toFixed(2), tvq: tvq.toFixed(2), total: (brut + tps + tvq).toFixed(2) },
+        totalAPayer: aPayer.rows[0].total || 0, userName: req.session.userName 
+    });
 });
-app.get('/admin/rapport-comptable', async (req, res) => { const d = new PDFDocument(); res.setHeader('Content-Type','application/pdf'); d.pipe(res); d.text('COMPTABILITE'); d.end(); });
+app.get('/admin/rapport-comptable', async (req, res) => {
+    const doc = new PDFDocument();
+    res.setHeader('Content-Type', 'application/pdf'); doc.pipe(res);
+    doc.fontSize(20).text('RAPPORT COMPTABLE', {align:'center'}); doc.end();
+});
 app.post('/admin/payer-ambassadeur', async (req, res) => { await pool.query("UPDATE missions SET statut_paiement='paye' WHERE id=$1", [req.body.id_mission]); res.redirect('/admin/dashboard'); });
 app.post('/admin/approuver-mission', async (req, res) => { await pool.query("UPDATE missions SET statut='approuve' WHERE id=$1", [req.body.id_mission]); res.redirect('/admin/dashboard'); });
-app.post('/admin/create-user', async (req, res) => { const h = await bcrypt.hash(req.body.password, 10); await pool.query("INSERT INTO users (nom, email, password, role) VALUES ($1,$2,$3,$4)", [req.body.nom, req.body.email, h, req.body.role]); res.redirect('/admin/dashboard'); });
+app.post('/admin/create-user', async (req, res) => { const hash = await bcrypt.hash(req.body.password, 10); await pool.query("INSERT INTO users (nom, email, password, role) VALUES ($1,$2,$3,$4)", [req.body.nom, req.body.email, hash, req.body.role]); res.redirect('/admin/dashboard'); });
 app.post('/admin/delete-user', async (req, res) => { await pool.query("DELETE FROM users WHERE id=$1", [req.body.user_id]); res.redirect('/admin/dashboard'); });
-app.get('/admin/rapport/:missionId', async (req, res) => { const d = await pool.query("SELECT r.*, m.titre, m.type_audit FROM audit_reports r JOIN missions m ON r.mission_id=m.id WHERE m.id=$1", [req.params.missionId]); res.render('admin-rapport-detail', { rapport: d.rows[0], details: d.rows[0].details, userName: req.session.userName }); });
+app.get('/admin/rapport/:missionId', async (req, res) => { const data = await pool.query(`SELECT r.*, m.titre, m.type_audit FROM audit_reports r JOIN missions m ON r.mission_id=m.id WHERE m.id=$1`, [req.params.missionId]); res.render('admin-rapport-detail', { rapport: data.rows[0], details: data.rows[0].details, userName: req.session.userName }); });
 
 // ENTREPRISE
+const checkLimit = async (req, res, next) => {
+    const user = await pool.query("SELECT forfait FROM users WHERE id = $1", [req.session.userId]);
+    if (user.rows[0].forfait !== 'Freemium') return next();
+    const count = await pool.query("SELECT COUNT(*) FROM missions WHERE entreprise_id = $1", [req.session.userId]);
+    if (parseInt(count.rows[0].count) >= 1) return res.redirect('/entreprise/dashboard?error=limit_atteinte');
+    next();
+};
 app.get('/entreprise/dashboard', async (req, res) => {
-    const u = await pool.query("SELECT * FROM users WHERE id=$1", [req.session.userId]);
-    const m = await pool.query("SELECT * FROM missions WHERE entreprise_id=$1 ORDER BY created_at DESC", [req.session.userId]);
-    const s = await pool.query("SELECT u.nom as employe_nom, m.titre as module_titre, s.meilleur_score, s.statut, s.updated_at FROM formations_scores s JOIN users u ON s.user_id=u.id JOIN formations_modules m ON s.module_id=m.id WHERE u.entreprise_id=$1 ORDER BY s.updated_at DESC", [req.session.userId]);
-    const sp = await pool.query("SELECT * FROM sondages_publics WHERE entreprise_id=$1 ORDER BY created_at DESC", [req.session.userId]);
+    const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
+    const missions = await pool.query("SELECT * FROM missions WHERE entreprise_id = $1 ORDER BY created_at DESC", [req.session.userId]);
     
-    // URL QR Code
-    const host = req.get('host'); 
+    const scores = await pool.query(`
+        SELECT u.nom as employe_nom, m.titre as module_titre, s.meilleur_score, s.statut, s.updated_at 
+        FROM formations_scores s 
+        JOIN users u ON s.user_id = u.id 
+        JOIN formations_modules m ON s.module_id = m.id 
+        WHERE u.entreprise_id = $1 
+        ORDER BY s.updated_at DESC`, [req.session.userId]);
+
+    const sondages = await pool.query("SELECT * FROM sondages_publics WHERE entreprise_id = $1 ORDER BY created_at DESC", [req.session.userId]);
+
     const protocol = req.protocol;
-    const surveyBaseLink = `${protocol}://${host}/sondage-client/${u.rows[0].id}`;
+    const host = req.get('host');
+    const surveyBaseLink = `${protocol}://${host}/sondage-client/${user.rows[0].id}`;
 
     res.render('entreprise-dashboard', { 
-        user: u.rows[0], missions: m.rows, scores: s.rows, sondages: sp.rows, 
+        user: user.rows[0], missions: missions.rows, scores: scores.rows, sondages: sondages.rows,
         userName: req.session.userName, error: req.query.error, msg: req.query.msg,
         surveyBaseLink: surveyBaseLink
     });
 });
-app.post('/entreprise/creer-audit', async (req, res) => { await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, adresse) VALUES ($1,$2,$3,'Visite',$4,'en_attente',$5)", [req.session.userId, req.body.titre, req.body.type_audit, req.body.recompense, req.body.adresse]); res.redirect('/entreprise/dashboard'); });
-app.post('/entreprise/commander-sondage', async (req, res) => { await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, client_nom, client_email) VALUES ($1,$2,$3,'Sondage',$4,'en_attente',$5,$6)", [req.session.userId, "Sondage "+req.body.client_nom, req.body.type_sondage, req.body.recompense, req.body.client_nom, req.body.client_email]); res.redirect('/entreprise/dashboard'); });
-app.post('/entreprise/ajouter-employe', async (req, res) => { const h = await bcrypt.hash(req.body.password, 10); await pool.query("INSERT INTO users (nom, email, password, role, entreprise_id) VALUES ($1,$2,$3,'employe',$4)", [req.body.nom, req.body.email, h, req.session.userId]); res.redirect('/entreprise/dashboard'); });
-
-// PDF
-app.get('/entreprise/telecharger-rapport/:id', async (req, res) => {
-    const r = await pool.query("SELECT r.details, m.titre, m.type_audit, m.created_at FROM audit_reports r JOIN missions m ON r.mission_id=m.id WHERE m.id=$1", [req.params.id]);
-    if(r.rows.length===0) return res.send("Non trouvé");
-    const d = r.rows[0]; const doc = new PDFDocument({ margin: 50 });
-    res.setHeader('Content-Type','application/pdf'); res.setHeader('Content-Disposition', `attachment; filename=Rapport-${req.params.id}.pdf`); doc.pipe(res);
-    const lp = path.join(__dirname, 'images', 'logo-forfeo.png'); if(fs.existsSync(lp)) doc.image(lp, 50, 40, { width: 60 });
-    doc.moveDown(1).font('Helvetica-Bold').fontSize(22).fillColor('#0061ff').text('RAPPORT D\'AUDIT', {align:'center'}).font('Helvetica').fontSize(10).fillColor('#333').text('Forfeo Lab', {align:'center'});
-    doc.moveDown(2).fillColor('#000').fontSize(12).text(`Mission: ${d.titre}`).text(`Type: ${d.type_audit}`).text(`Date: ${new Date(d.created_at).toLocaleDateString()}`).moveDown(1.5);
-    const y = doc.y; doc.rect(50, y, 500, 75).fillAndStroke('#f0f9ff', '#0061ff');
-    doc.fillColor('#0061ff').fontSize(9).text("CERTIFICATION D'INDÉPENDANCE :\nCe rapport a été complété avec objectivité et impartialité par un Ambassadeur Certifié Forfeo LAB.", 60, y+15, {width:480, align:'center'});
-    doc.y = y+105; doc.fillColor('#000').fontSize(14).text('Détails :', {underline:true}).moveDown(); doc.fontSize(11);
-    for(const [k,v] of Object.entries(d.details)) { if(k!=='mission_id' && k!=='ambassadeur_id' && k!=='media_files') doc.font('Helvetica-Bold').text(`${k.toUpperCase().replace(/_/g,' ')}: `, {continued:true}).font('Helvetica').text(`${v}`).moveDown(0.5); }
-    doc.end();
+app.post('/entreprise/creer-audit', checkLimit, async (req, res) => { await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, adresse) VALUES ($1, $2, $3, 'Visite', $4, 'en_attente', $5)", [req.session.userId, req.body.titre, req.body.type_audit, req.body.recompense, req.body.adresse]); res.redirect('/entreprise/dashboard'); });
+app.post('/entreprise/commander-sondage', checkLimit, async (req, res) => { await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, client_nom, client_email) VALUES ($1, $2, $3, 'Sondage', $4, 'en_attente', $5, $6)", [req.session.userId, "Sondage "+req.body.client_nom, req.body.type_sondage, req.body.recompense, req.body.client_nom, req.body.client_email]); res.redirect('/entreprise/dashboard'); });
+app.post('/entreprise/ajouter-employe', async (req, res) => { 
+    const hash = await bcrypt.hash(req.body.password, 10);
+    await pool.query("INSERT INTO users (nom, email, password, role, entreprise_id) VALUES ($1, $2, $3, 'employe', $4)", [req.body.nom, req.body.email, hash, req.session.userId]);
+    res.redirect('/entreprise/dashboard');
 });
 
-// --- ENVOI DE CAMPAGNE EMAIL RÉELLE ---
+// UPLOAD LOGO
+app.post('/entreprise/upload-logo', upload.single('logo'), async (req, res) => {
+    if(req.file) {
+        const logoUrl = `/uploads/${req.file.filename}`;
+        await pool.query("UPDATE users SET logo_url = $1 WHERE id = $2", [logoUrl, req.session.userId]);
+    }
+    res.redirect('/entreprise/dashboard');
+});
+
+// ENVOI DE CAMPAGNE EMAIL (DEBUG)
 app.post('/entreprise/envoyer-campagne', async (req, res) => {
-    // 1. Récupération des données
     const emailList = req.body.emails.split(/[\n,;]+/).map(e => e.trim()).filter(e => e);
     const type = req.body.type_activite;
-    
-    // 2. Création du lien personnalisé
     const protocol = req.protocol;
     const host = req.get('host');
     const fullLink = `${protocol}://${host}/sondage-client/${req.session.userId}?type=${encodeURIComponent(type)}`;
 
+    console.log("Tentative envoi email...");
+    console.log("SMTP Config:", process.env.SMTP_HOST, process.env.SMTP_PORT, process.env.EMAIL_USER);
+
     try {
-        // 3. Boucle d'envoi
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+            throw new Error("Configuration email manquante");
+        }
+
         for(const email of emailList) {
-            await transporter.sendMail({
-                from: '"Forfeo Lab" <noreply@forfeo.com>', // Met ton vrai email ici si Gmail force l'adresse
+            let info = await transporter.sendMail({
+                from: `"Forfeo Lab" <${process.env.EMAIL_USER}>`,
                 to: email,
                 subject: `Votre avis compte - ${req.session.userName}`,
                 html: `
@@ -207,22 +280,77 @@ app.post('/entreprise/envoyer-campagne', async (req, res) => {
                         <a href="${fullLink}" style="background-color: #0061ff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
                             Répondre au sondage rapide
                         </a>
-                        <br><br>
-                        <p style="font-size: 12px; color: #888;">Cela ne prend qu'une minute.</p>
                     </div>
                 `
             });
+            console.log("Email envoyé à:", email, "MessageID:", info.messageId);
         }
         res.redirect('/entreprise/dashboard?msg=campagne_envoyee');
     } catch (error) {
-        console.error("Erreur envoi email:", error);
+        console.error("ERREUR CRITIQUE ENVOI EMAIL:", error);
         res.redirect('/entreprise/dashboard?error=email_fail');
     }
 });
 
+// PDF GENERATION
+app.get('/entreprise/telecharger-rapport/:id', async (req, res) => { 
+    const report = await pool.query(`SELECT r.details, m.titre, m.type_audit, m.created_at FROM audit_reports r JOIN missions m ON r.mission_id = m.id WHERE m.id = $1`, [req.params.id]);
+    if(report.rows.length === 0) return res.send("Non trouvé");
+
+    const data = report.rows[0];
+    const doc = new PDFDocument({ margin: 50 });
+    
+    res.setHeader('Content-Type', 'application/pdf'); 
+    res.setHeader('Content-Disposition', `attachment; filename=Rapport-Forfeo-${req.params.id}.pdf`);
+    doc.pipe(res); 
+
+    const logoPath = path.join(__dirname, 'images', 'logo-forfeo.png');
+    if(fs.existsSync(logoPath)) doc.image(logoPath, 50, 40, { width: 60 });
+
+    doc.moveDown(1);
+    doc.font('Helvetica-Bold').fontSize(22).fillColor('#0061ff').text('RAPPORT D\'AUDIT', {align:'center'});
+    doc.font('Helvetica').fontSize(10).fillColor('#333').text('Forfeo Lab - Division de FORFEO INC.', {align:'center'});
+    
+    doc.moveDown(2);
+    doc.fillColor('#000').fontSize(12);
+    doc.text(`Mission : ${data.titre}`);
+    doc.text(`Type : ${data.type_audit}`);
+    doc.text(`Date : ${new Date(data.created_at).toLocaleDateString()}`);
+    
+    doc.moveDown(1.5); 
+
+    // ENCADRÉ OBJECTIVITÉ
+    const startY = doc.y;
+    const boxHeight = 75; 
+    doc.rect(50, startY, 500, boxHeight).fillAndStroke('#f0f9ff', '#0061ff');
+    doc.fillColor('#0061ff').fontSize(9).text(
+        "CERTIFICATION D'INDÉPENDANCE :\nCe rapport a été complété avec objectivité et impartialité par un Ambassadeur Certifié Forfeo LAB. Les observations consignées reflètent fidèlement l'expérience client vécue, conformément aux standards de qualité de Forfeo Inc.",
+        60, startY + 15, { width: 480, align: 'center' }
+    );
+
+    doc.y = startY + boxHeight + 30; 
+    
+    doc.fillColor('#000').fontSize(14).text('Détails de l\'évaluation :', { underline: true });
+    doc.moveDown(1);
+    doc.fontSize(11);
+    
+    const details = data.details;
+    for (const [key, value] of Object.entries(details)) {
+        if(key !== 'mission_id' && key !== 'ambassadeur_id' && key !== 'media_files') {
+            doc.font('Helvetica-Bold').text(`${key.toUpperCase().replace(/_/g, ' ')} : `, { continued: true });
+            doc.font('Helvetica').text(`${value}`);
+            doc.moveDown(0.5);
+        }
+    }
+
+    doc.moveDown(4);
+    doc.fontSize(8).fillColor('#999').text('© 2025 Forfeo Inc. Document confidentiel.', {align:'center'});
+    doc.end(); 
+});
+
 // SONDAGE PUBLIC
 app.get('/sondage-client/:entrepriseId', async (req, res) => {
-    const ent = await pool.query("SELECT nom, id FROM users WHERE id=$1", [req.params.entrepriseId]);
+    const ent = await pool.query("SELECT nom, id, logo_url FROM users WHERE id=$1", [req.params.entrepriseId]);
     if(ent.rows.length === 0) return res.send("Entreprise introuvable");
     
     const type = req.query.type || 'Général';
@@ -237,7 +365,7 @@ app.post('/sondage-client/submit', async (req, res) => {
     res.send(`<div style="font-family:sans-serif; text-align:center; padding:50px;"><h1 style="color:#0061ff;">Merci !</h1><p>Votre avis a été transmis à l'équipe.</p><a href="/">Retour</a></div>`);
 });
 
-// AMBASSADEUR & ACADEMIE (Inchangés)
+// AMBASSADEUR & ACADEMIE
 app.get('/ambassadeur/dashboard', async (req, res) => { const m = await pool.query("SELECT * FROM missions WHERE statut='approuve'"); const h = await pool.query("SELECT * FROM missions WHERE ambassadeur_id=$1", [req.session.userId]); res.render('ambassadeur-dashboard', { missions: m.rows, historique: h.rows, totalGains: 0, userName: req.session.userName }); });
 app.post('/ambassadeur/postuler', async (req, res) => { await pool.query("UPDATE missions SET ambassadeur_id=$1, statut='reserve' WHERE id=$2", [req.session.userId, req.body.id_mission]); res.redirect('/ambassadeur/dashboard'); });
 app.post('/ambassadeur/soumettre-rapport', async (req, res) => { await pool.query("INSERT INTO audit_reports (mission_id, ambassadeur_id, details) VALUES ($1,$2,$3)", [req.body.mission_id, req.session.userId, JSON.stringify(req.body)]); await pool.query("UPDATE missions SET statut='soumis' WHERE id=$1", [req.body.mission_id]); res.redirect('/ambassadeur/dashboard'); });
