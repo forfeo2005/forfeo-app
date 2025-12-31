@@ -11,41 +11,24 @@
     <div class="container py-5">
         <div class="d-flex justify-content-between mb-5 align-items-center">
             <h3 class="fw-bold">Bonjour, <%= userName %></h3>
-            
-            <a class="navbar-brand p-0 d-flex flex-column align-items-center me-auto ms-4" href="#">
-                <img src="/images/logo-forfeo.png" alt="Forfeo" height="35">
-                <span style="font-size: 8px; font-weight: 900; letter-spacing: 3px; color: #0061ff; margin-top: 2px;">LAB</span>
-            </a>
-
+            <div class="d-flex flex-column align-items-center">
+                <img src="/images/logo-forfeo.png" height="40">
+                <span class="brand-lab-neon">LAB</span>
+            </div>
             <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
         </div>
 
-        <h4 class="fw-bold mb-4">Catalogue de formations</h4>
+        <h4 class="fw-bold mb-4">Formations</h4>
         <div class="row g-4">
-            <% if(typeof modules !== 'undefined') { %>
-                <% modules.forEach(m => { 
-                   const score = typeof scores !== 'undefined' ? scores.find(s => s.module_id === m.id) : null; 
-                   const reussi = score && score.statut === 'reussi';
-                %>
-                    <div class="col-md-4">
-                        <div class="glass-card h-100">
-                            <h5 class="fw-bold"><%= m.titre %></h5>
-                            <p class="small text-muted"><%= m.description %></p>
-                            <p class="text-primary fw-bold small"><%= m.duree %></p>
-                            <div class="mt-3">
-                                <% if(reussi) { %>
-                                    <div class="alert alert-success py-1 small text-center mb-2">
-                                        Note : <%= Math.round((score.meilleur_score/15)*100) %>%
-                                    </div>
-                                    <a href="/certificat/<%= score.code_verif %>" target="_blank" class="btn btn-success w-100 btn-sm rounded-pill">Télécharger Certificat</a>
-                                <% } else { %>
-                                    <a href="/formations/module/<%= m.id %>" class="btn btn-primary w-100 btn-sm rounded-pill">Commencer (15 Questions)</a>
-                                <% } %>
-                            </div>
-                        </div>
+            <% modules.forEach(m => { %>
+                <div class="col-md-4">
+                    <div class="glass-card h-100">
+                        <h5 class="fw-bold"><%= m.titre %></h5>
+                        <p class="small text-muted"><%= m.description %></p>
+                        <a href="/formations/module/<%= m.id %>" class="btn btn-primary w-100 btn-sm rounded-pill">Commencer</a>
                     </div>
-                <% }) %>
-            <% } %>
+                </div>
+            <% }) %>
         </div>
     </div>
     <%- include('partials/forfy') %>
