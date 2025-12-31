@@ -14,7 +14,6 @@ const port = process.env.PORT || 10000;
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// BANQUE DE QUESTIONS
 const QUESTIONS_DATA = [
     {
         titre: "Excellence du Service Client", description: "Les bases pour créer un effet WOW.", icon: "bi-emoji-smile", duree: "30 min",
@@ -44,14 +43,13 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v28_final_ultimate',
+    secret: 'forfeo_v29_mobile_ready',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
 
 app.set('view engine', 'ejs');
 
-// SETUP BDD
 async function setupDatabase() {
     try {
         await pool.query(`
@@ -63,7 +61,6 @@ async function setupDatabase() {
             CREATE TABLE IF NOT EXISTS audit_reports (id SERIAL PRIMARY KEY, mission_id INTEGER UNIQUE, ambassadeur_id INTEGER, details JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
         `);
 
-        // RECHARGEMENT QUESTIONS
         const countQ = await pool.query("SELECT COUNT(*) FROM formations_questions");
         if(parseInt(countQ.rows[0].count) < 5) {
             await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
@@ -82,7 +79,6 @@ async function setupDatabase() {
 }
 setupDatabase();
 
-// ROUTES
 app.get('/', (req, res) => res.render('index', { userName: req.session.userName || null }));
 app.get('/a-propos', (req, res) => res.render('a-propos', { userName: req.session.userName || null }));
 app.get('/audit-mystere', (req, res) => res.render('audit-mystere', { userName: req.session.userName || null }));
@@ -108,7 +104,6 @@ app.post('/register', async (req, res) => {
 });
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
-// PROFIL
 app.get('/profil', async (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
     const user = await pool.query("SELECT * FROM users WHERE id = $1", [req.session.userId]);
@@ -144,7 +139,14 @@ app.get('/admin/rapport-comptable', async (req, res) => {
     doc.pipe(res);
     const logoPath = path.join(__dirname, 'images', 'logo-forfeo.png');
     if(fs.existsSync(logoPath)) doc.image(logoPath, 50, 45, { width: 100 });
-    doc.moveDown(5).fontSize(18).text('RAPPORT DES PAIEMENTS', { align: 'center' });
+    doc.moveDown(5).fontSize(18).text('RAPPORT DES PAIEMENTS (TPS/TVQ)', { align: 'center' });
+    const paiements = await pool.query(`SELECT m.*, u.nom as ambassadeur_nom FROM missions m LEFT JOIN users u ON m.ambassadeur_id = u.id WHERE m.statut_paiement = 'paye'`);
+    let total = 0;
+    paiements.rows.forEach(p => {
+        doc.fontSize(10).text(`${new Date(p.date_paiement).toLocaleDateString()} - ${p.ambassadeur_nom} : ${p.recompense}$`);
+        total += parseFloat(p.recompense) || 0;
+    });
+    doc.moveDown().text(`Total Brut: ${total.toFixed(2)}$`).text(`TPS (5%): ${(total*0.05).toFixed(2)}$`).text(`TVQ (9.975%): ${(total*0.09975).toFixed(2)}$`).font('Helvetica-Bold').text(`TOTAL: ${(total*1.14975).toFixed(2)}$`);
     doc.end();
 });
 app.post('/admin/payer-ambassadeur', async (req, res) => {
@@ -186,8 +188,7 @@ app.get('/entreprise/dashboard', async (req, res) => {
     res.render('entreprise-dashboard', { user: user.rows[0], missions: missions.rows, userName: req.session.userName, error: req.query.error });
 });
 app.post('/entreprise/creer-audit', checkLimit, async (req, res) => {
-    const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(req.body.adresse)}`;
-    await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, adresse, google_map_link) VALUES ($1, $2, $3, $4, $5, 'en_attente', $6, $7)", [req.session.userId, req.body.titre, req.body.type_audit, "Visite terrain.", req.body.recompense, req.body.adresse, mapLink]);
+    await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, adresse, google_map_link) VALUES ($1, $2, $3, $4, $5, 'en_attente', $6, $7)", [req.session.userId, req.body.titre, req.body.type_audit, "Visite terrain.", req.body.recompense, req.body.adresse, `https://maps.google.com/?q=${req.body.adresse}`]);
     res.redirect('/entreprise/dashboard');
 });
 app.post('/entreprise/commander-sondage', checkLimit, async (req, res) => {
