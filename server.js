@@ -20,11 +20,11 @@ const upload = multer({ storage: storage });
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// CONFIGURATION EMAIL (Basée sur vos variables Render)
+// CONFIGURATION EMAIL ROBUSTE
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: false,
+    secure: false, // Utiliser TLS
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -34,7 +34,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// --- DONNÉES ACADÉMIE (RESTAURÉES COMPLÈTEMENT) ---
+// --- DONNÉES ACADÉMIE ---
 const ACADEMY_DATA = [
     {
         id: 1, titre: "Excellence du Service Client", description: "Créer un effet WOW et fidéliser.", icon: "bi-emoji-smile", duree: "20 min",
@@ -88,7 +88,7 @@ const ACADEMY_DATA = [
     }
 ];
 
-// --- TEMPLATES DE SONDAGES (AVEC COMMENTAIRES) ---
+// --- TEMPLATES DE SONDAGES ---
 const SURVEY_TEMPLATES = {
     "Restaurant": [
         { id: "accueil", text: "Comment avez-vous trouvé l'accueil ?", type: "stars" },
@@ -125,7 +125,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     store: new pgSession({ pool: pool, tableName: 'session' }),
-    secret: 'forfeo_v42_restored',
+    secret: 'forfeo_v45_complete_stable',
     resave: false, saveUninitialized: false,
     cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
@@ -137,7 +137,7 @@ async function setupDatabase() {
     try {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, nom VARCHAR(255), email VARCHAR(255) UNIQUE, password VARCHAR(255), role VARCHAR(50), entreprise_id INTEGER, forfait VARCHAR(50) DEFAULT 'Freemium', telephone VARCHAR(50), adresse TEXT, logo_data TEXT);
-            CREATE TABLE IF NOT EXISTS missions (id SERIAL PRIMARY KEY, entreprise_id INTEGER, ambassadeur_id INTEGER, titre VARCHAR(255), type_audit VARCHAR(100), description TEXT, recompense VARCHAR(50), statut VARCHAR(50) DEFAULT 'en_attente', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, client_nom VARCHAR(255), client_email VARCHAR(255), adresse VARCHAR(255), google_map_link TEXT, statut_paiement VARCHAR(50) DEFAULT 'non_paye', date_paiement TIMESTAMP);
+            CREATE TABLE IF NOT EXISTS missions (id SERIAL PRIMARY KEY, entreprise_id INTEGER, ambassadeur_id INTEGER, titre VARCHAR(255), type_audit VARCHAR(100), description TEXT, recompense VARCHAR(50), statut VARCHAR(50) DEFAULT 'en_attente', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, date_expiration TIMESTAMP, client_nom VARCHAR(255), client_email VARCHAR(255), adresse VARCHAR(255), google_map_link TEXT, statut_paiement VARCHAR(50) DEFAULT 'non_paye', date_paiement TIMESTAMP);
             CREATE TABLE IF NOT EXISTS formations_modules (id SERIAL PRIMARY KEY, titre VARCHAR(255), description TEXT, image_icon VARCHAR(50), duree VARCHAR(50));
             CREATE TABLE IF NOT EXISTS formations_questions (id SERIAL PRIMARY KEY, module_id INTEGER, question TEXT, option_a TEXT, option_b TEXT, option_c TEXT, reponse_correcte CHAR(1), mise_en_situation TEXT, explication TEXT);
             CREATE TABLE IF NOT EXISTS formations_scores (id SERIAL PRIMARY KEY, user_id INTEGER, module_id INTEGER, meilleur_score INTEGER DEFAULT 0, tentatives INTEGER DEFAULT 0, statut VARCHAR(50), code_verif VARCHAR(12) UNIQUE, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
@@ -145,11 +145,11 @@ async function setupDatabase() {
             CREATE TABLE IF NOT EXISTS sondages_publics (id SERIAL PRIMARY KEY, entreprise_id INTEGER, type_activite VARCHAR(50), reponses JSONB, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
         `);
         
-        // Assurer que la colonne logo_data existe
+        // Assurer que les colonnes existent
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS logo_data TEXT");
+        await pool.query("ALTER TABLE missions ADD COLUMN IF NOT EXISTS date_expiration TIMESTAMP");
 
         // RESTAURATION DES MODULES DE FORMATION
-        const countQ = await pool.query("SELECT COUNT(*) FROM formations_questions");
         await pool.query("TRUNCATE formations_questions RESTART IDENTITY CASCADE");
         await pool.query("TRUNCATE formations_modules RESTART IDENTITY CASCADE");
         
@@ -232,8 +232,8 @@ app.get('/entreprise/dashboard', async (req, res) => {
         surveyBaseLink: surveyBaseLink
     });
 });
-app.post('/entreprise/creer-audit', checkLimit, async (req, res) => { await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, adresse) VALUES ($1, $2, $3, 'Visite', $4, 'en_attente', $5)", [req.session.userId, req.body.titre, req.body.type_audit, req.body.recompense, req.body.adresse]); res.redirect('/entreprise/dashboard'); });
-app.post('/entreprise/commander-sondage', checkLimit, async (req, res) => { await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, client_nom, client_email) VALUES ($1, $2, $3, 'Sondage', $4, 'en_attente', $5, $6)", [req.session.userId, "Sondage "+req.body.client_nom, req.body.type_sondage, req.body.recompense, req.body.client_nom, req.body.client_email]); res.redirect('/entreprise/dashboard'); });
+app.post('/entreprise/creer-audit', checkLimit, async (req, res) => { await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, adresse, date_expiration) VALUES ($1, $2, $3, 'Visite', $4, 'en_attente', $5, CURRENT_TIMESTAMP + INTERVAL '30 days')", [req.session.userId, req.body.titre, req.body.type_audit, req.body.recompense, req.body.adresse]); res.redirect('/entreprise/dashboard'); });
+app.post('/entreprise/commander-sondage', checkLimit, async (req, res) => { await pool.query("INSERT INTO missions (entreprise_id, titre, type_audit, description, recompense, statut, client_nom, client_email, date_expiration) VALUES ($1, $2, $3, 'Sondage', $4, 'en_attente', $5, $6, CURRENT_TIMESTAMP + INTERVAL '30 days')", [req.session.userId, "Sondage "+req.body.client_nom, req.body.type_sondage, req.body.recompense, req.body.client_nom, req.body.client_email]); res.redirect('/entreprise/dashboard'); });
 app.post('/entreprise/ajouter-employe', async (req, res) => { const h = await bcrypt.hash(req.body.password, 10); await pool.query("INSERT INTO users (nom, email, password, role, entreprise_id) VALUES ($1, $2, $3, 'employe', $4)", [req.body.nom, req.body.email, h, req.session.userId]); res.redirect('/entreprise/dashboard'); });
 
 // UPLOAD LOGO (STOCKAGE BASE64)
@@ -318,8 +318,12 @@ app.post('/sondage-client/submit', async (req, res) => {
     res.send(`<div style="font-family:sans-serif; text-align:center; padding:50px;"><h1 style="color:#0061ff;">Merci !</h1><p>Votre avis a été transmis à l'équipe.</p><a href="/">Retour</a></div>`);
 });
 
-// AMBASSADEUR & ACADEMIE (Fonctionnels)
-app.get('/ambassadeur/dashboard', async (req, res) => { const m = await pool.query("SELECT * FROM missions WHERE statut='approuve'"); const h = await pool.query("SELECT * FROM missions WHERE ambassadeur_id=$1", [req.session.userId]); res.render('ambassadeur-dashboard', { missions: m.rows, historique: h.rows, totalGains: 0, userName: req.session.userName }); });
+// AMBASSADEUR & ACADEMIE
+app.get('/ambassadeur/dashboard', async (req, res) => { 
+    const m = await pool.query("SELECT * FROM missions WHERE statut='approuve'"); 
+    const h = await pool.query("SELECT * FROM missions WHERE ambassadeur_id=$1", [req.session.userId]); 
+    res.render('ambassadeur-dashboard', { missions: m.rows, historique: h.rows, totalGains: 0, userName: req.session.userName }); 
+});
 app.post('/ambassadeur/postuler', async (req, res) => { await pool.query("UPDATE missions SET ambassadeur_id=$1, statut='reserve' WHERE id=$2", [req.session.userId, req.body.id_mission]); res.redirect('/ambassadeur/dashboard'); });
 app.post('/ambassadeur/soumettre-rapport', async (req, res) => { await pool.query("INSERT INTO audit_reports (mission_id, ambassadeur_id, details) VALUES ($1,$2,$3)", [req.body.mission_id, req.session.userId, JSON.stringify(req.body)]); await pool.query("UPDATE missions SET statut='soumis' WHERE id=$1", [req.body.mission_id]); res.redirect('/ambassadeur/dashboard'); });
 app.get('/employe/dashboard', async (req, res) => { const mod = await pool.query("SELECT * FROM formations_modules ORDER BY id ASC"); const s = await pool.query("SELECT * FROM formations_scores WHERE user_id=$1", [req.session.userId]); res.render('employe-dashboard', { modules: mod.rows, scores: s.rows, userName: req.session.userName }); });
