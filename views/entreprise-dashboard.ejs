@@ -9,7 +9,54 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        .profile-logo { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #0061ff; }
+        /* Styles spécifiques pour le rendu "Chic" et le verrouillage */
+        .profile-logo { 
+            width: 60px; height: 60px; 
+            object-fit: cover; 
+            border-radius: 50%; 
+            border: 2px solid #0061ff; 
+            box-shadow: 0 4px 10px rgba(0,97,255,0.2);
+        }
+        .logo-placeholder { 
+            width: 60px; height: 60px; 
+            border-radius: 50%; 
+            background: #f8f9fa; 
+            display: flex; align-items: center; justify-content: center; 
+            border: 2px solid #e9ecef; color: #0061ff; font-size: 24px; 
+        }
+        
+        /* Effet de verrouillage */
+        .locked-overlay { 
+            position: relative; 
+            opacity: 0.5; 
+            pointer-events: none; /* Empêche le clic */
+            filter: grayscale(100%);
+        }
+        .lock-icon { 
+            position: absolute; 
+            top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); 
+            font-size: 4rem; 
+            color: #dc3545; 
+            z-index: 100; 
+            text-shadow: 0 2px 15px rgba(0,0,0,0.3);
+            background: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            width: 80px; height: 80px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        /* Cartes de prix "Chic" */
+        .card-price { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .card-price:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important; }
+        
+        /* Header chic */
+        .header-chic {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
     </style>
 </head>
 <body>
@@ -17,68 +64,173 @@
     <div class="container py-5">
         
         <% if (typeof error !== 'undefined' && error === 'limit_atteinte') { %>
-            <div class="alert alert-warning text-center fw-bold shadow mb-4">⚠️ Limite Freemium atteinte.</div>
+            <div class="alert alert-warning text-center fw-bold shadow mb-4 border-warning d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-lock-fill fs-4"></i>
+                <span>Limite atteinte. Abonnez-vous ci-dessous pour débloquer l'accès complet.</span>
+            </div>
         <% } %>
         <% if (typeof error !== 'undefined' && error === 'email_fail') { %>
-            <div class="alert alert-danger text-center fw-bold shadow mb-4">❌ Erreur d'envoi SMTP.</div>
+            <div class="alert alert-danger text-center fw-bold shadow mb-4">❌ Erreur d'envoi.</div>
         <% } %>
         <% if (typeof msg !== 'undefined' && msg === 'campagne_envoyee') { %>
-            <div class="alert alert-success text-center fw-bold shadow mb-4"><i class="bi bi-send-check-fill me-2"></i>Campagne envoyée avec succès !</div>
+            <div class="alert alert-success text-center fw-bold shadow mb-4"><i class="bi bi-send-check-fill me-2"></i>Campagne envoyée !</div>
         <% } %>
 
-        <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
+        <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3 header-chic p-4 rounded-5 shadow-sm">
             <div class="d-flex align-items-center gap-3">
                 <% if(user.logo_data) { %>
-                    <img src="<%= user.logo_data %>" class="profile-logo shadow-sm" alt="Logo">
+                    <img src="<%= user.logo_data %>" class="profile-logo" alt="Logo">
                 <% } else { %>
-                    <div class="bg-white rounded-circle d-flex align-items-center justify-content-center border" style="width:50px; height:50px;"><i class="bi bi-shop h4 mb-0 text-primary"></i></div>
+                    <div class="logo-placeholder"><i class="bi bi-building"></i></div>
                 <% } %>
-                <h3 class="fw-bold mb-0">Bonjour, <%= userName %></h3>
+                <div>
+                    <h3 class="fw-bold mb-0 text-dark">Bonjour, <%= userName %></h3>
+                    <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">Espace Entreprise</small>
+                </div>
             </div>
 
-            <form action="/entreprise/upload-logo" method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-center bg-white p-2 rounded-pill shadow-sm">
-                <input type="file" name="logo" class="form-control form-control-sm rounded-pill border-0" required style="width: 180px;">
-                <button class="btn btn-sm btn-dark rounded-pill px-3">Sauvegarder</button>
+            <form action="/entreprise/upload-logo" method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-center bg-light p-1 rounded-pill border">
+                <input type="file" name="logo" class="form-control form-control-sm rounded-pill border-0 bg-transparent" required style="width: 180px;">
+                <button class="btn btn-dark btn-sm rounded-pill px-3 fw-bold">Sauvegarder</button>
             </form>
 
             <div class="d-flex gap-2">
-                <a href="/profil" class="btn btn-outline-primary btn-sm rounded-pill">Profil</a>
-                <a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a>
+                <a href="/profil" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold">Profil</a>
+                <a href="/logout" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">Déconnexion</a>
             </div>
         </div>
 
         <% if(user.forfait === 'Freemium') { %>
-            <h4 class="fw-bold mb-4 text-center">Nos Forfaits PRO</h4>
-            <div class="row g-4 mb-5">
-                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Découverte</h5><h2 class="text-primary fw-bold">49$</h2><a href="https://buy.stripe.com/9B69AUdXAakvfaM9hQd7q0g" target="_blank" class="btn btn-outline-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
-                <div class="col-md-4"><div class="card h-100 border-primary shadow p-4 text-center" style="transform: scale(1.05);"><div class="badge bg-primary position-absolute top-0 start-50 translate-middle">Populaire</div><h5 class="fw-bold mt-2">Découverte+</h5><h2 class="text-primary fw-bold">119$</h2><a href="https://buy.stripe.com/8x23cwbPs1NZ3s4cu2d7q0f" target="_blank" class="btn btn-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
-                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Croissance</h5><h2 class="text-primary fw-bold">69$<small>/mois</small></h2><a href="https://buy.stripe.com/00w9AU1aO9gr9Qs1Pod7q0e" target="_blank" class="btn btn-outline-primary w-100 rounded-pill mt-3">S'abonner</a></div></div>
+            <div class="text-center mb-5">
+                <h4 class="fw-bold mb-4">Passez au niveau supérieur 🚀</h4>
+                <div class="row g-4 justify-content-center">
+                    
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm p-4 text-center card-price rounded-4">
+                            <h5 class="fw-bold text-secondary text-uppercase small ls-1">Découverte</h5>
+                            <h2 class="text-dark fw-bolder my-3">49$</h2>
+                            <ul class="list-unstyled small text-muted mb-4">
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>1 Audit Mystère</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Rapport PDF Détaillé</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Support Standard</li>
+                            </ul>
+                            <a href="https://buy.stripe.com/8x228s2eSgIT9Qs65Ed7q0j" target="_blank" class="btn btn-outline-dark w-100 rounded-pill fw-bold py-2">Choisir ce plan</a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card h-100 border-primary shadow p-4 text-center card-price rounded-4 position-relative overflow-hidden">
+                            <div class="bg-primary text-white position-absolute top-0 start-0 w-100 py-1 small fw-bold">RECOMMANDÉ</div>
+                            <h5 class="fw-bold text-primary text-uppercase small ls-1 mt-3">Découverte+</h5>
+                            <h2 class="text-primary fw-bolder my-3">119$</h2>
+                            <ul class="list-unstyled small text-muted mb-4">
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>3 Audits Mystère</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Analyse Approfondie</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-primary me-2"></i>Support Prioritaire</li>
+                            </ul>
+                            <a href="https://buy.stripe.com/dRm7sM3iW2S36Eg9hQd7q0i" target="_blank" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-lg">Choisir ce plan</a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm p-4 text-center card-price rounded-4">
+                            <h5 class="fw-bold text-success text-uppercase small ls-1">Croissance</h5>
+                            <h2 class="text-success fw-bolder my-3">69$<small class="fs-6 text-muted">/mois</small></h2>
+                            <ul class="list-unstyled small text-muted mb-4">
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Audits Récurrents</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Tableau de bord complet</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Formation Employés</li>
+                            </ul>
+                            <a href="https://buy.stripe.com/6oU00k9HkdwH1jW2Tsd7q0h" target="_blank" class="btn btn-outline-success w-100 rounded-pill fw-bold py-2">S'abonner</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         <% } %>
 
-        <ul class="nav nav-pills mb-4 gap-3 p-2 glass-card d-inline-flex flex-wrap" role="tablist">
-            <li class="nav-item"><button class="nav-link active rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#missions">Audits & Missions</button></li>
-            <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#campagnes">Campagnes & Sondages</button></li>
-            <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#academie">Suivi Académie</button></li>
-            <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="tab" data-bs-target="#employes">Gestion Employés</button></li>
+        <ul class="nav nav-pills mb-4 gap-3 p-2 glass-card d-inline-flex flex-wrap shadow-sm rounded-4" id="dashboardTabs" role="tablist">
+            <li class="nav-item"><button class="nav-link active rounded-pill fw-bold px-4" id="missions-tab" data-bs-toggle="tab" data-bs-target="#missions">Audits & Missions</button></li>
+            <li class="nav-item"><button class="nav-link rounded-pill fw-bold px-4" id="campagnes-tab" data-bs-toggle="tab" data-bs-target="#campagnes">Campagnes & Sondages</button></li>
+            <li class="nav-item"><button class="nav-link rounded-pill fw-bold px-4" id="academie-tab" data-bs-toggle="tab" data-bs-target="#academie">Suivi Académie</button></li>
+            <li class="nav-item"><button class="nav-link rounded-pill fw-bold px-4" id="employes-tab" data-bs-toggle="tab" data-bs-target="#employes">Gestion Employés</button></li>
         </ul>
 
         <div class="tab-content">
+            
             <div class="tab-pane fade show active" id="missions">
                 <div class="row g-4">
                     <div class="col-lg-4">
-                        <div class="glass-card mb-4">
-                            <h5 class="fw-bold">Publier Audit Terrain</h5>
+                        <% 
+                            // LOGIQUE DE VERROUILLAGE : 
+                            // Si Freemium ET + de 0 missions créées => BLOQUÉ
+                            const isLocked = user.forfait === 'Freemium' && missions.length >= 1; 
+                        %>
+                        
+                        <div class="glass-card mb-4 position-relative overflow-hidden <%= isLocked ? 'locked-overlay' : '' %>">
+                            <% if(isLocked) { %>
+                                <div class="lock-icon"><i class="bi bi-lock-fill"></i></div>
+                            <% } %>
+                            
+                            <h5 class="fw-bold mb-3">Publier un Audit Terrain</h5>
                             <form action="/entreprise/creer-audit" method="POST">
-                                <input type="text" name="titre" placeholder="Lieu" class="form-control mb-2" required>
-                                <input type="text" name="adresse" placeholder="Adresse" class="form-control mb-2" required>
-                                <select name="type_audit" class="form-select mb-2"><option>Audit Standard</option><option>Audit Qualité</option></select>
-                                <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-2" required>
-                                <button class="btn btn-primary w-100">Publier</button>
+                                <input type="text" name="titre" placeholder="Lieu à auditer" class="form-control mb-2 rounded-3" required <%= isLocked ? 'disabled' : '' %>>
+                                <input type="text" name="adresse" placeholder="Adresse complète" class="form-control mb-2 rounded-3" required <%= isLocked ? 'disabled' : '' %>>
+                                <select name="type_audit" class="form-select mb-2 rounded-3" <%= isLocked ? 'disabled' : '' %>><option>Audit Standard</option><option>Audit Qualité & Propreté</option></select>
+                                <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-3 rounded-3" required <%= isLocked ? 'disabled' : '' %>>
+                                
+                                <% if(isLocked) { %>
+                                    <button type="button" class="btn btn-secondary w-100 rounded-pill" disabled>Limite atteinte (1/1)</button>
+                                <% } else { %>
+                                    <button class="btn btn-primary w-100 rounded-pill fw-bold">Publier la mission</button>
+                                <% } %>
+                            </form>
+                        </div>
+
+                        <div class="glass-card border-info position-relative overflow-hidden <%= isLocked ? 'locked-overlay' : '' %>">
+                            <% if(isLocked) { %>
+                                <div class="lock-icon"><i class="bi bi-lock-fill"></i></div>
+                            <% } %>
+
+                            <h5 class="fw-bold text-info mb-3">Commander un Sondage Certifié</h5>
+                            <form action="/entreprise/commander-sondage" method="POST">
+                                <input type="text" name="client_nom" placeholder="Nom du Client" class="form-control mb-2 rounded-3" <%= isLocked ? 'disabled' : '' %>>
+                                <input type="email" name="client_email" placeholder="Email du Client" class="form-control mb-2 rounded-3" <%= isLocked ? 'disabled' : '' %>>
+                                <select name="type_sondage" class="form-select mb-2 rounded-3" <%= isLocked ? 'disabled' : '' %>><option>Sondage Satisfaction</option></select>
+                                <input type="text" name="recompense" placeholder="Récompense ($)" class="form-control mb-3 rounded-3" <%= isLocked ? 'disabled' : '' %>>
+                                
+                                <% if(isLocked) { %>
+                                    <button type="button" class="btn btn-secondary w-100 rounded-pill" disabled>Limite atteinte</button>
+                                <% } else { %>
+                                    <button class="btn btn-info text-white w-100 rounded-pill fw-bold">Commander</button>
+                                <% } %>
                             </form>
                         </div>
                     </div>
-                    <div class="col-lg-8"><div class="glass-card"><h5 class="fw-bold">Historique</h5><table class="premium-table"><% missions.forEach(m => { %><tr><td><%= m.titre %></td><td><span class="badge bg-secondary"><%= m.statut %></span></td><td><% if(m.statut === 'approuve'){ %><a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-success">PDF</a><% } %></td></tr><% }) %></table></div></div>
+
+                    <div class="col-lg-8">
+                        <div class="glass-card h-100">
+                            <h5 class="fw-bold mb-4">Historique des missions</h5>
+                            <% if(missions.length > 0) { %>
+                                <table class="premium-table">
+                                    <thead><tr><th>Titre</th><th>Statut</th><th>Action</th></tr></thead>
+                                    <tbody>
+                                        <% missions.forEach(m => { %>
+                                            <tr>
+                                                <td class="fw-semibold"><%= m.titre %></td>
+                                                <td><span class="badge bg-secondary rounded-pill px-3"><%= m.statut %></span></td>
+                                                <td><% if(m.statut === 'approuve'){ %><a href="/entreprise/telecharger-rapport/<%= m.id %>" class="btn btn-sm btn-outline-success rounded-pill fw-bold"><i class="bi bi-download me-1"></i>PDF</a><% } else { %> - <% } %></td>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            <% } else { %>
+                                <div class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    Aucune mission créée pour l'instant.
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -87,7 +239,8 @@
                     <div class="col-lg-5">
                         <div class="glass-card h-100 border-primary border-2 shadow-lg text-center">
                             <h4 class="fw-bold mb-3 text-primary">QR Code Intelligent</h4>
-                            <div class="bg-white p-4 rounded-4 border d-inline-block mb-3">
+                            <p class="small text-muted mb-4">Ce QR code s'adapte automatiquement au type de questionnaire sélectionné.</p>
+                            <div class="bg-white p-4 rounded-4 border d-inline-block mb-3 shadow-sm">
                                 <img id="dynamic-qr" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<%= encodeURIComponent(surveyBaseLink + '?type=Général') %>" class="img-fluid">
                             </div>
                             <div class="input-group">
@@ -98,79 +251,53 @@
                     </div>
                     <div class="col-lg-7">
                         <div class="glass-card mb-4">
-                            <h5 class="fw-bold mb-3">Lancer une campagne</h5>
+                            <h5 class="fw-bold mb-3">Lancer une campagne Email</h5>
                             <form action="/entreprise/envoyer-campagne" method="POST">
                                 <div class="mb-3">
-                                    <select class="form-select" name="type_activite" id="survey-type-selector">
+                                    <label class="small fw-bold text-muted">Type de questionnaire</label>
+                                    <select class="form-select rounded-3" name="type_activite" id="survey-type-selector">
                                         <option value="Général">Général</option>
                                         <option value="Restaurant">Restaurant</option>
                                         <option value="Hôtel">Hôtel</option>
                                         <option value="Magasin">Magasin</option>
                                     </select>
                                 </div>
-                                <div class="mb-3"><textarea name="emails" class="form-control" rows="3" placeholder="Emails clients..." required></textarea></div>
-                                <button class="btn btn-success w-100 rounded-pill">Envoyer</button>
+                                <div class="mb-3">
+                                    <label class="small fw-bold text-muted">Liste d'emails (séparés par des virgules)</label>
+                                    <textarea name="emails" class="form-control rounded-3" rows="3" placeholder="client1@email.com, client2@email.com..." required></textarea>
+                                </div>
+                                <button class="btn btn-success w-100 rounded-pill fw-bold shadow-sm">
+                                    <i class="bi bi-send-fill me-2"></i>Envoyer la campagne
+                                </button>
                             </form>
                         </div>
-                        
                         <div class="glass-card">
-                            <h5 class="fw-bold mb-3">Réponses reçues</h5>
+                            <h5 class="fw-bold mb-3">Dernières réponses</h5>
                             <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
                                 <% if(sondages && sondages.length > 0) { %>
                                     <% sondages.forEach(s => { 
                                         const rep = s.reponses;
-                                        
-                                        // 1. Calculer la moyenne des étoiles (si présentes)
-                                        let starSum = 0;
-                                        let starCount = 0;
-                                        let comment = "";
-
+                                        let starSum = 0, starCount = 0, comment = "";
                                         for(let key in rep) {
-                                            // Ignorer les métadonnées
                                             if(!['entreprise_id', 'entreprise_nom', 'type_activite'].includes(key)) {
                                                 const val = rep[key];
-                                                
-                                                // Si c'est un nombre entre 1 et 5 (Note)
-                                                if(!isNaN(val) && val >= 1 && val <= 5) {
-                                                    starSum += parseInt(val);
-                                                    starCount++;
-                                                }
-                                                // Si c'est du texte long (Commentaire)
-                                                else if(typeof val === 'string' && val.length > 3) {
-                                                    comment = val;
-                                                }
+                                                if(!isNaN(val) && val >= 1 && val <= 5) { starSum += parseInt(val); starCount++; }
+                                                else if(typeof val === 'string' && val.length > 3) { comment = val; }
                                             }
                                         }
-
                                         let avg = starCount > 0 ? (starSum / starCount).toFixed(1) : null;
                                     %>
                                         <div class="list-group-item bg-transparent border-bottom py-3">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <div class="d-flex justify-content-between mb-1">
                                                 <span class="badge bg-light text-dark border"><%= s.type_activite %></span>
                                                 <small class="text-muted"><%= new Date(s.created_at).toLocaleDateString() %></small>
                                             </div>
-                                            
-                                            <div class="mb-1">
-                                                <% if(avg) { %>
-                                                    <span class="text-warning h5 me-2">
-                                                        <% for(let i=0; i<Math.round(avg); i++) { %>★<% } %>
-                                                        <% for(let i=Math.round(avg); i<5; i++) { %>☆<% } %>
-                                                    </span>
-                                                    <span class="fw-bold"><%= avg %>/5</span>
-                                                <% } else { %>
-                                                    <span class="badge bg-secondary">Info</span>
-                                                <% } %>
-                                            </div>
-
-                                            <% if(comment) { %>
-                                                <div class="p-2 bg-light rounded text-muted small fst-italic">
-                                                    "<%= comment %>"
-                                                </div>
-                                            <% } %>
+                                            <% if(avg) { %><div class="text-warning h5 fw-bold mb-1"><%= avg %> ★</div><% } %>
+                                            <% if(comment) { %><div class="small text-muted fst-italic">"<%= comment %>"</div><% } %>
                                         </div>
                                     <% }) %>
                                 <% } else { %>
-                                    <p class="text-muted small text-center">Aucune réponse pour l'instant.</p>
+                                    <p class="text-muted small text-center py-3">Aucune réponse pour l'instant.</p>
                                 <% } %>
                             </div>
                         </div>
@@ -179,18 +306,45 @@
             </div>
 
             <div class="tab-pane fade" id="academie">
-                <div class="glass-card"><h5 class="fw-bold">Performance</h5><table class="premium-table"><% scores.forEach(s => { %><tr><td><%= s.employe_nom %></td><td><%= s.module_titre %></td><td><%= s.statut %></td></tr><% }) %></table></div>
+                <div class="glass-card">
+                    <h5 class="fw-bold mb-4">Performance des équipes</h5>
+                    <table class="premium-table">
+                        <thead><tr><th>Employé</th><th>Module</th><th>Résultat</th></tr></thead>
+                        <tbody>
+                            <% if(scores.length > 0) { %>
+                                <% scores.forEach(s => { %>
+                                    <tr>
+                                        <td><%= s.employe_nom %></td>
+                                        <td><%= s.module_titre %></td>
+                                        <td><span class="badge bg-<%= s.statut === 'reussi' ? 'success' : 'danger' %>"><%= s.statut.toUpperCase() %></span></td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr><td colspan="3" class="text-center text-muted">Aucune formation complétée.</td></tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="tab-pane fade" id="employes">
-                <div class="glass-card"><h5 class="fw-bold">Ajout Employé</h5><form action="/entreprise/ajouter-employe" method="POST"><input type="text" name="nom" class="form-control mb-2" placeholder="Nom"><input type="email" name="email" class="form-control mb-2" placeholder="Email"><input type="password" name="password" class="form-control mb-2" placeholder="Pass"><button class="btn btn-success w-100">Créer</button></form></div>
+                <div class="glass-card" style="max-width: 500px;">
+                    <h5 class="fw-bold mb-3">Ajouter un employé</h5>
+                    <p class="text-muted small mb-4">Créez un accès pour permettre à vos employés de suivre l'Académie Forfeo.</p>
+                    <form action="/entreprise/ajouter-employe" method="POST">
+                        <input type="text" name="nom" class="form-control mb-3 rounded-3" placeholder="Nom complet" required>
+                        <input type="email" name="email" class="form-control mb-3 rounded-3" placeholder="Email professionnel" required>
+                        <input type="password" name="password" class="form-control mb-3 rounded-3" placeholder="Mot de passe provisoire" required>
+                        <button class="btn btn-success w-100 rounded-pill fw-bold">Créer le compte</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
     <%- include('partials/forfy') %>
     <script>
         function copyLink() {
-            const el = document.getElementById("dynamic-link"); el.select(); navigator.clipboard.writeText(el.value); alert("Copié !");
+            const el = document.getElementById("dynamic-link"); el.select(); navigator.clipboard.writeText(el.value); alert("Lien copié !");
         }
         const base = "<%= typeof surveyBaseLink !== 'undefined' ? surveyBaseLink : '' %>";
         const sel = document.getElementById('survey-type-selector');
