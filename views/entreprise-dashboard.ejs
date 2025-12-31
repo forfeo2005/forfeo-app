@@ -17,7 +17,7 @@
             <div class="alert alert-warning text-center fw-bold shadow mb-4">⚠️ Limite Freemium atteinte.</div>
         <% } %>
         <% if (typeof error !== 'undefined' && error === 'email_fail') { %>
-            <div class="alert alert-danger text-center fw-bold shadow mb-4">❌ Erreur d'envoi. Vérifiez la configuration SMTP.</div>
+            <div class="alert alert-danger text-center fw-bold shadow mb-4">❌ Erreur d'envoi. Vérifiez les paramètres SMTP.</div>
         <% } %>
         <% if (typeof msg !== 'undefined' && msg === 'campagne_envoyee') { %>
             <div class="alert alert-success text-center fw-bold shadow mb-4"><i class="bi bi-send-check-fill me-2"></i>Campagne envoyée avec succès !</div>
@@ -28,7 +28,7 @@
             
             <form action="/entreprise/upload-logo" method="POST" enctype="multipart/form-data" class="d-flex gap-2 align-items-center bg-white p-2 rounded-pill shadow-sm">
                 <input type="file" name="logo" class="form-control form-control-sm rounded-pill border-0" required style="width: 200px;">
-                <button class="btn btn-sm btn-dark rounded-pill px-3">Logo</button>
+                <button class="btn btn-sm btn-dark rounded-pill px-3">Sauvegarder Logo</button>
             </form>
 
             <div class="d-flex gap-2 mt-2 mt-md-0"><a href="/profil" class="btn btn-outline-primary btn-sm rounded-pill">Profil</a><a href="/logout" class="btn btn-danger btn-sm rounded-pill">Déconnexion</a></div>
@@ -37,9 +37,9 @@
         <% if(user.forfait === 'Freemium') { %>
             <h4 class="fw-bold mb-4 text-center">Nos Forfaits PRO</h4>
             <div class="row g-4 mb-5">
-                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Découverte</h5><h2 class="text-primary fw-bold">49$</h2><a href="#" class="btn btn-outline-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
-                <div class="col-md-4"><div class="card h-100 border-primary shadow p-4 text-center" style="transform: scale(1.05);"><div class="badge bg-primary position-absolute top-0 start-50 translate-middle">Populaire</div><h5 class="fw-bold mt-2">Découverte+</h5><h2 class="text-primary fw-bold">119$</h2><a href="#" class="btn btn-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
-                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Croissance</h5><h2 class="text-primary fw-bold">69$<small>/mois</small></h2><a href="#" class="btn btn-outline-primary w-100 rounded-pill mt-3">S'abonner</a></div></div>
+                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Découverte</h5><h2 class="text-primary fw-bold">49$</h2><a href="https://buy.stripe.com/9B69AUdXAakvfaM9hQd7q0g" target="_blank" class="btn btn-outline-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
+                <div class="col-md-4"><div class="card h-100 border-primary shadow p-4 text-center" style="transform: scale(1.05);"><div class="badge bg-primary position-absolute top-0 start-50 translate-middle">Populaire</div><h5 class="fw-bold mt-2">Découverte+</h5><h2 class="text-primary fw-bold">119$</h2><a href="https://buy.stripe.com/8x23cwbPs1NZ3s4cu2d7q0f" target="_blank" class="btn btn-primary w-100 rounded-pill mt-3">Choisir</a></div></div>
+                <div class="col-md-4"><div class="card h-100 border-0 shadow-sm p-4 text-center"><h5 class="fw-bold">Croissance</h5><h2 class="text-primary fw-bold">69$<small>/mois</small></h2><a href="https://buy.stripe.com/00w9AU1aO9gr9Qs1Pod7q0e" target="_blank" class="btn btn-outline-primary w-100 rounded-pill mt-3">S'abonner</a></div></div>
             </div>
         <% } %>
 
@@ -107,19 +107,27 @@
                         </div>
 
                         <div class="glass-card">
-                            <h5 class="fw-bold mb-3">Réponses reçues</h5>
+                            <h5 class="fw-bold mb-3">Dernières réponses reçues</h5>
                             <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
                                 <% if(sondages && sondages.length > 0) { %>
                                     <% sondages.forEach(s => { 
                                         const rep = s.reponses;
-                                        // LOGIQUE "N/A" CORRIGÉE
+                                        // LOGIQUE AFFICHAGE RÉPONSE INTELLIGENTE
                                         let displayRep = "Non précisé";
-                                        // On cherche la première valeur qui n'est pas une métadonnée
-                                        const keys = Object.keys(rep);
-                                        for(let k of keys) {
-                                            if(!['entreprise_id', 'entreprise_nom', 'type_activite'].includes(k) && rep[k]) {
-                                                displayRep = rep[k];
-                                                break;
+                                        
+                                        // On essaie de trouver une réponse textuelle ou une note
+                                        for(let key in rep) {
+                                            // On ignore les clés système
+                                            if(!['entreprise_id', 'entreprise_nom', 'type_activite'].includes(key)) {
+                                                // Si c'est un commentaire général, on le prend en priorité
+                                                if(key === 'comment_gen' && rep[key]) {
+                                                    displayRep = rep[key];
+                                                    break;
+                                                }
+                                                // Sinon on prend la première réponse non vide
+                                                if(rep[key] && displayRep === "Non précisé") {
+                                                    displayRep = rep[key];
+                                                }
                                             }
                                         }
                                     %>
@@ -128,7 +136,7 @@
                                                 <span class="badge bg-light text-dark border"><%= s.type_activite %></span>
                                                 <small class="text-muted"><%= new Date(s.created_at).toLocaleDateString() %></small>
                                             </div>
-                                            <div class="mt-1 small">Avis : <strong><%= displayRep %></strong></div>
+                                            <div class="mt-1 small">Avis/Note : <strong><%= displayRep %></strong></div>
                                         </div>
                                     <% }) %>
                                 <% } else { %>
@@ -151,27 +159,13 @@
     <%- include('partials/forfy') %>
 
     <script>
-        // SCRIPT COPIER-COLLER FIABLE
         function copyLink() {
-            const inputElement = document.getElementById("dynamic-link");
-            
-            // Sélectionner le texte
-            inputElement.select();
-            inputElement.setSelectionRange(0, 99999); // Pour mobile
-
-            // Copier dans le presse-papier
-            try {
-                navigator.clipboard.writeText(inputElement.value).then(() => {
-                    alert("Lien copié : " + inputElement.value);
-                });
-            } catch (err) {
-                // Fallback si navigator.clipboard échoue
-                document.execCommand('copy');
-                alert("Lien copié : " + inputElement.value);
-            }
+            const copyText = document.getElementById("dynamic-link");
+            copyText.select();
+            navigator.clipboard.writeText(copyText.value);
+            alert("Lien copié : " + copyText.value);
         }
 
-        // SCRIPT QR DYNAMIQUE
         const baseLink = "<%= typeof surveyBaseLink !== 'undefined' ? surveyBaseLink : '' %>";
         const selector = document.getElementById('survey-type-selector');
         const qrImage = document.getElementById('dynamic-qr');
