@@ -2,47 +2,51 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Examen | FORFEO</title>
+    <title>Quiz | FORFEO</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/premium-dashboard.css">
 </head>
 <body>
+    <div class="premium-bg"></div>
     <div class="container py-5" style="max-width: 800px;">
-        <a href="/employe/dashboard" class="btn btn-outline-secondary btn-sm mb-4 rounded-pill">← Retour</a>
+        <a href="/employe/dashboard" class="btn btn-outline-secondary btn-sm mb-4">← Retour</a>
         
-        <div class="module-header-art mb-4">
-            <div class="module-content-art">
-                <h2 class="fw-bold"><%= module.titre %></h2>
-                <p>Répondez aux 15 questions. 80% requis.</p>
-            </div>
-        </div>
-
         <div class="glass-card">
+            <h3 class="fw-bold mb-3"><%= module.titre %></h3>
+            <p class="text-muted mb-4"><%= module.description %></p>
+            
             <form action="/formations/soumettre-quizz" method="POST">
                 <input type="hidden" name="module_id" value="<%= module.id %>">
                 
                 <% questions.forEach((q, index) => { %>
-                    <div class="mb-4 p-3 border rounded bg-white">
-                        <h6 class="fw-bold mb-3"><%= index + 1 %>. <%= q.question %></h6>
-                        
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="q<%= q.id %>" value="A" id="q<%= q.id %>a" required>
-                            <label class="form-check-label" for="q<%= q.id %>a">A) <%= q.option_a %></label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="q<%= q.id %>" value="B" id="q<%= q.id %>b">
-                            <label class="form-check-label" for="q<%= q.id %>b">B) <%= q.option_b %></label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" name="q<%= q.id %>" value="C" id="q<%= q.id %>c">
-                            <label class="form-check-label" for="q<%= q.id %>c">C) <%= q.option_c %></label>
+                    <div class="card mb-4 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <h6 class="fw-bold text-primary mb-2">Question <%= index + 1 %></h6>
+                            <% if(q.mise_en_situation) { %>
+                                <div class="alert alert-light border mb-3 small fst-italic"><i class="bi bi-info-circle"></i> <%= q.mise_en_situation %></div>
+                            <% } %>
+                            <p class="fw-bold mb-3"><%= q.question %></p>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="q_<%= q.id %>" value="A" required>
+                                <label class="form-check-label"><%= q.option_a %></label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="q_<%= q.id %>" value="B">
+                                <label class="form-check-label"><%= q.option_b %></label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="q_<%= q.id %>" value="C">
+                                <label class="form-check-label"><%= q.option_c %></label>
+                            </div>
                         </div>
                     </div>
                 <% }) %>
-
-                <button class="btn btn-primary w-100 py-3 rounded-pill fw-bold">Soumettre mes réponses</button>
+                
+                <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold">Soumettre les réponses</button>
             </form>
         </div>
     </div>
+    <%- include('partials/forfy') %>
 </body>
 </html>
