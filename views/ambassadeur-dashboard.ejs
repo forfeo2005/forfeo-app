@@ -89,7 +89,7 @@
                                     <div>
                                         <h5 class="fw-bold mb-1"><%= h.titre %></h5>
                                         <span class="badge bg-warning text-dark">À compléter</span>
-                                        <small class="text-muted d-block mt-1">Type: <%= h.type_audit %></small>
+                                        <small class="text-muted d-block mt-1">Type: <%= h.type_audit %> (#<%= h.id %>)</small>
                                     </div>
                                     <div class="d-flex gap-2">
                                         <% if(h.type_audit.includes('Sondage')) { %>
@@ -97,43 +97,17 @@
                                                 <i class="bi bi-envelope-fill me-2"></i>Contacter Client
                                             </a>
                                         <% } %>
-                                        <button class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalFull<%= h.id %>">
+                                        
+                                        <% 
+                                            let link = "/ambassadeur/survey-qualite"; // Par défaut
+                                            if(h.type_audit && h.type_audit.toLowerCase().includes("satisfaction")) link = "/ambassadeur/survey-satisfaction";
+                                            if(h.type_audit && h.type_audit.toLowerCase().includes("expérience")) link = "/ambassadeur/survey-experience";
+                                        %>
+                                        
+                                        <a href="<%= link %>?missionId=<%= h.id %>" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
                                             <i class="bi bi-pencil-square me-2"></i>Remplir Rapport
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="modal fade" id="modalFull<%= h.id %>" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content border-0 rounded-4 shadow-lg">
-                                        <div class="modal-header bg-primary text-white">
-                                            <h5 class="modal-title fw-bold">Rapport : <%= h.titre %></h5>
-                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </a>
                                         </div>
-                                        <div class="modal-body p-4 bg-light">
-                                            <form action="/ambassadeur/soumettre-rapport" method="POST">
-                                                <input type="hidden" name="mission_id" value="<%= h.id %>">
-                                                
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-bold">Note Globale /10</label>
-                                                    <input type="number" name="note" class="form-control" min="0" max="10" required>
-                                                </div>
-                                                
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-bold">Commentaire détaillé</label>
-                                                    <textarea name="commentaire" class="form-control" rows="4" required placeholder="Décrivez votre expérience..."></textarea>
-                                                </div>
-
-                                                <div class="form-check mb-4">
-                                                    <input type="checkbox" class="form-check-input" required>
-                                                    <label class="form-check-label small">Je certifie l'exactitude de ces informations.</label>
-                                                </div>
-
-                                                <button class="btn btn-success w-100 fw-bold">Envoyer le rapport</button>
-                                            </form>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         <% }) %>
