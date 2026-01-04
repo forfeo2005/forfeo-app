@@ -239,21 +239,32 @@ app.post('/sondage-client/submit', async (req, res) => { await pool.query("INSER
 
 // AMBASSADEUR & ACADEMIE
 app.get('/ambassadeur/dashboard', async (req, res) => { 
-    const m = await pool.query("SELECT * FROM missions WHERE statut='approuve'"); 
+    const m = await pool.query("SELECT * FROM missions WHERE statut='approuve' OR statut='reserve'"); 
     const h = await pool.query("SELECT m.*, r.created_at as date_soumission FROM missions m LEFT JOIN audit_reports r ON m.id = r.mission_id WHERE m.ambassadeur_id=$1 ORDER BY m.created_at DESC", [req.session.userId]); 
     res.render('ambassadeur-dashboard', { missions: m.rows, historique: h.rows, totalGains: 0, userName: req.session.userName }); 
 });
+
 app.post('/ambassadeur/postuler', async (req, res) => { await pool.query("UPDATE missions SET ambassadeur_id=$1, statut='reserve' WHERE id=$2", [req.session.userId, req.body.id_mission]); res.redirect('/ambassadeur/dashboard'); });
+
+// NOUVELLES ROUTES AJOUTEES
+app.get('/ambassadeur/survey-qualite', (req, res) => res.render('survey-qualite', { userName: req.session.userName }));
+app.get('/ambassadeur/survey-satisfaction', (req, res) => res.render('survey-satisfaction', { userName: req.session.userName }));
+app.get('/ambassadeur/survey-experience', (req, res) => res.render('survey-experience', { userName: req.session.userName }));
+app.get('/ambassadeur/confirmation', (req, res) => res.render('confirmation', { userName: req.session.userName }));
+
 app.post('/ambassadeur/soumettre-rapport', async (req, res) => { 
     try {
-        const existing = await pool.query("SELECT id FROM audit_reports WHERE mission_id=$1", [req.body.mission_id]);
-        if (existing.rows.length === 0) {
-            await pool.query("INSERT INTO audit_reports (mission_id, ambassadeur_id, details) VALUES ($1,$2,$3)", [req.body.mission_id, req.session.userId, JSON.stringify(req.body)]); 
-        } else {
-            await pool.query("UPDATE audit_reports SET details=$1 WHERE mission_id=$2", [JSON.stringify(req.body), req.body.mission_id]);
+        const missionId = req.body.mission_id || null;
+        if (missionId) {
+            const existing = await pool.query("SELECT id FROM audit_reports WHERE mission_id=$1", [missionId]);
+            if (existing.rows.length === 0) {
+                await pool.query("INSERT INTO audit_reports (mission_id, ambassadeur_id, details) VALUES ($1,$2,$3)", [missionId, req.session.userId, JSON.stringify(req.body)]); 
+            } else {
+                await pool.query("UPDATE audit_reports SET details=$1 WHERE mission_id=$2", [JSON.stringify(req.body), missionId]);
+            }
+            await pool.query("UPDATE missions SET statut='soumis' WHERE id=$1", [missionId]); 
         }
-        await pool.query("UPDATE missions SET statut='soumis' WHERE id=$1", [req.body.mission_id]); 
-        res.redirect('/ambassadeur/dashboard'); 
+        res.redirect('/ambassadeur/confirmation'); 
     } catch (e) {
         console.error("Erreur soumission:", e);
         res.redirect('/ambassadeur/dashboard?error=submit_fail');
