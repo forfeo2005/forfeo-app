@@ -119,7 +119,7 @@ app.get('/admin/dashboard', async (req, res) => {
     let totalBrut = 0;
     m.rows.forEach(miss => {
         if(miss.statut === 'approuve' && miss.statut_paiement === 'non_paye') {
-            totalBrut += parseFloat(miss.recompense) || 0;
+            totalBrut += parseFloat(String(miss.recompense).replace(/[^0-9.-]+/g,"")) || 0;
         }
     });
     res.render('admin-dashboard', { missions: m.rows, users: u.rows, totalAPayer: totalBrut.toFixed(2), userName: req.session.userName });
@@ -127,73 +127,78 @@ app.get('/admin/dashboard', async (req, res) => {
 
 // --- COMPTABILITE PDF (AVEC TAXES QC) ---
 app.get('/admin/rapport-comptable', async (req, res) => {
-    const missions = await pool.query("SELECT m.*, u.nom as ambassadeur_nom FROM missions m JOIN users u ON m.ambassadeur_id=u.id WHERE m.statut IN ('approuve', 'paye') ORDER BY m.date_paiement DESC");
-    
-    const doc = new PDFDocument({ margin: 50 });
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=Rapport-Comptable-Forfeo.pdf');
-    doc.pipe(res);
-
-    // En-tête
-    const logoPath = path.join(__dirname, 'images', 'logo-forfeo.png');
-    if(fs.existsSync(logoPath)) doc.image(logoPath, 50, 45, { width: 50 });
-    doc.fontSize(20).font('Helvetica-Bold').text('Rapport Comptable', 120, 57);
-    doc.fontSize(10).font('Helvetica').text('Forfeo Lab Inc.', 120, 80);
-    doc.moveDown(3);
-    
-    // Tableau
-    let y = 150;
-    doc.font('Helvetica-Bold');
-    doc.text('Date', 50, y);
-    doc.text('Mission', 150, y);
-    doc.text('Ambassadeur', 350, y);
-    doc.text('Montant', 500, y);
-    doc.moveTo(50, y + 15).lineTo(550, y + 15).stroke();
-    y += 25;
-
-    let totalBrut = 0;
-    doc.font('Helvetica');
-
-    missions.rows.forEach(m => {
-        // CORRECTION : S'assure que le montant est bien un nombre, même si stocké en string
-        const montant = parseFloat(String(m.recompense).replace(/[^0-9.-]+/g,"")) || 0;
-        totalBrut += montant;
+    try {
+        const missions = await pool.query("SELECT m.*, u.nom as ambassadeur_nom FROM missions m JOIN users u ON m.ambassadeur_id=u.id WHERE m.statut IN ('approuve', 'paye') ORDER BY m.date_paiement DESC");
         
-        doc.text(new Date(m.created_at).toLocaleDateString(), 50, y);
-        doc.text(m.titre.substring(0, 30), 150, y);
-        doc.text(m.ambassadeur_nom || 'N/A', 350, y);
-        doc.text(montant.toFixed(2) + '$', 500, y);
+        const doc = new PDFDocument({ margin: 50 });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=Rapport-Comptable-Forfeo.pdf');
+        doc.pipe(res);
+
+        // En-tête
+        const logoPath = path.join(__dirname, 'images', 'logo-forfeo.png');
+        if(fs.existsSync(logoPath)) doc.image(logoPath, 50, 45, { width: 50 });
+        doc.fontSize(20).font('Helvetica-Bold').text('Rapport Comptable', 120, 57);
+        doc.fontSize(10).font('Helvetica').text('Forfeo Lab Inc.', 120, 80);
+        doc.moveDown(3);
+        
+        // Tableau
+        let y = 150;
+        doc.font('Helvetica-Bold');
+        doc.text('Date', 50, y);
+        doc.text('Mission', 150, y);
+        doc.text('Ambassadeur', 350, y);
+        doc.text('Montant', 500, y);
+        doc.moveTo(50, y + 15).lineTo(550, y + 15).stroke();
+        y += 25;
+
+        let totalBrut = 0;
+        doc.font('Helvetica');
+
+        missions.rows.forEach(m => {
+            // CORRECTION : S'assure que le montant est bien un nombre, même si stocké en string
+            const montant = parseFloat(String(m.recompense).replace(/[^0-9.-]+/g,"")) || 0;
+            totalBrut += montant;
+            
+            doc.text(new Date(m.created_at).toLocaleDateString(), 50, y);
+            doc.text(m.titre.substring(0, 30), 150, y);
+            doc.text(m.ambassadeur_nom || 'N/A', 350, y);
+            doc.text(montant.toFixed(2) + '$', 500, y);
+            y += 20;
+            
+            if (y > 700) { doc.addPage(); y = 50; }
+        });
+
+        // Calcul Taxes QC
+        const tps = totalBrut * 0.05;
+        const tvq = totalBrut * 0.09975;
+        const grandTotal = totalBrut + tps + tvq;
+
         y += 20;
+        doc.moveTo(350, y).lineTo(550, y).stroke();
+        y += 10;
+
+        doc.font('Helvetica-Bold');
+        doc.text('Sous-total :', 350, y, { align: 'right', width: 100 });
+        doc.text(totalBrut.toFixed(2) + '$', 500, y);
+        y += 20;
+        doc.font('Helvetica');
+        doc.text('TPS (5%) :', 350, y, { align: 'right', width: 100 });
+        doc.text(tps.toFixed(2) + '$', 500, y);
+        y += 20;
+        doc.text('TVQ (9.975%) :', 350, y, { align: 'right', width: 100 });
+        doc.text(tvq.toFixed(2) + '$', 500, y);
+        y += 25;
         
-        if (y > 700) { doc.addPage(); y = 50; }
-    });
+        doc.font('Helvetica-Bold').fontSize(12).fillColor('#0061ff');
+        doc.text('TOTAL À PAYER :', 350, y, { align: 'right', width: 100 });
+        doc.text(grandTotal.toFixed(2) + '$', 500, y);
 
-    // Calcul Taxes QC
-    const tps = totalBrut * 0.05;
-    const tvq = totalBrut * 0.09975;
-    const grandTotal = totalBrut + tps + tvq;
-
-    y += 20;
-    doc.moveTo(350, y).lineTo(550, y).stroke();
-    y += 10;
-
-    doc.font('Helvetica-Bold');
-    doc.text('Sous-total :', 350, y, { align: 'right', width: 100 });
-    doc.text(totalBrut.toFixed(2) + '$', 500, y);
-    y += 20;
-    doc.font('Helvetica');
-    doc.text('TPS (5%) :', 350, y, { align: 'right', width: 100 });
-    doc.text(tps.toFixed(2) + '$', 500, y);
-    y += 20;
-    doc.text('TVQ (9.975%) :', 350, y, { align: 'right', width: 100 });
-    doc.text(tvq.toFixed(2) + '$', 500, y);
-    y += 25;
-    
-    doc.font('Helvetica-Bold').fontSize(12).fillColor('#0061ff');
-    doc.text('TOTAL À PAYER :', 350, y, { align: 'right', width: 100 });
-    doc.text(grandTotal.toFixed(2) + '$', 500, y);
-
-    doc.end();
+        doc.end();
+    } catch(e) {
+        console.error("PDF Error:", e);
+        res.status(500).send("Erreur génération PDF");
+    }
 });
 
 app.post('/admin/payer-ambassadeur', async (req, res) => { await pool.query("UPDATE missions SET statut_paiement='paye', date_paiement=NOW() WHERE id=$1", [req.body.id_mission]); res.redirect('/admin/dashboard'); });
@@ -223,16 +228,24 @@ app.post('/entreprise/commander-sondage', checkLimit, async (req, res) => { awai
 app.post('/entreprise/ajouter-employe', async (req, res) => { const h = await bcrypt.hash(req.body.password, 10); await pool.query("INSERT INTO users (nom, email, password, role, entreprise_id) VALUES ($1, $2, $3, 'employe', $4)", [req.body.nom, req.body.email, h, req.session.userId]); res.redirect('/entreprise/dashboard'); });
 app.post('/entreprise/upload-logo', upload.single('logo'), async (req, res) => { if(req.file) { const b64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`; await pool.query("UPDATE users SET logo_data = $1 WHERE id = $2", [b64, req.session.userId]); } res.redirect('/entreprise/dashboard'); });
 app.get('/entreprise/telecharger-rapport/:id', async (req, res) => { 
-    const r = await pool.query(`SELECT r.details, m.titre, m.type_audit, m.created_at FROM audit_reports r JOIN missions m ON r.mission_id=m.id WHERE m.id=$1 AND m.statut='approuve'`, [req.params.id]); 
-    if(r.rows.length===0) return res.send("Rapport non disponible ou non approuvé."); 
-    const d = r.rows[0]; const doc = new PDFDocument({ margin: 50 }); res.setHeader('Content-Type','application/pdf'); res.setHeader('Content-Disposition', `attachment; filename=Rapport-${req.params.id}.pdf`); doc.pipe(res); 
-    const lp = path.join(__dirname, 'images', 'logo-forfeo.png'); if(fs.existsSync(lp)) doc.image(lp, 50, 40, { width: 60 }); 
-    doc.moveDown(1).font('Helvetica-Bold').fontSize(22).fillColor('#0061ff').text('RAPPORT D\'AUDIT', {align:'center'}).font('Helvetica').fontSize(10).fillColor('#333').text('Forfeo Lab', {align:'center'}); doc.moveDown(2).fillColor('#000').fontSize(12).text(`Mission: ${d.titre}`).text(`Type: ${d.type_audit}`).text(`Date: ${new Date(d.created_at).toLocaleDateString()}`).moveDown(1.5); 
-    const y = doc.y; doc.rect(50, y, 500, 75).fillAndStroke('#f0f9ff', '#0061ff'); doc.fillColor('#0061ff').fontSize(9).text("CERTIFICATION D'INDÉPENDANCE :\nCe rapport a été complété avec objectivité et impartialité par un Ambassadeur Certifié Forfeo LAB.", 60, y+15, {width:480, align:'center'}); 
-    doc.y = y+105; doc.fillColor('#000').fontSize(14).text('Détails :', {underline:true}).moveDown(); doc.fontSize(11); 
-    const details = JSON.parse(d.details);
-    for(const [k,v] of Object.entries(details)) { if(k!=='mission_id' && k!=='ambassadeur_id') doc.font('Helvetica-Bold').text(`${k}: `, {continued:true}).font('Helvetica').text(`${v}`).moveDown(0.5); } 
-    doc.end(); 
+    try {
+        const r = await pool.query(`SELECT r.details, m.titre, m.type_audit, m.created_at FROM audit_reports r JOIN missions m ON r.mission_id=m.id WHERE m.id=$1 AND m.statut='approuve'`, [req.params.id]); 
+        if(r.rows.length===0) return res.send("Rapport non disponible ou non approuvé."); 
+        const d = r.rows[0]; const doc = new PDFDocument({ margin: 50 }); res.setHeader('Content-Type','application/pdf'); res.setHeader('Content-Disposition', `attachment; filename=Rapport-${req.params.id}.pdf`); doc.pipe(res); 
+        const lp = path.join(__dirname, 'images', 'logo-forfeo.png'); if(fs.existsSync(lp)) doc.image(lp, 50, 40, { width: 60 }); 
+        doc.moveDown(1).font('Helvetica-Bold').fontSize(22).fillColor('#0061ff').text('RAPPORT D\'AUDIT', {align:'center'}).font('Helvetica').fontSize(10).fillColor('#333').text('Forfeo Lab', {align:'center'}); doc.moveDown(2).fillColor('#000').fontSize(12).text(`Mission: ${d.titre}`).text(`Type: ${d.type_audit}`).text(`Date: ${new Date(d.created_at).toLocaleDateString()}`).moveDown(1.5); 
+        const y = doc.y; doc.rect(50, y, 500, 75).fillAndStroke('#f0f9ff', '#0061ff'); doc.fillColor('#0061ff').fontSize(9).text("CERTIFICATION D'INDÉPENDANCE :\nCe rapport a été complété avec objectivité et impartialité par un Ambassadeur Certifié Forfeo LAB.", 60, y+15, {width:480, align:'center'}); 
+        doc.y = y+105; doc.fillColor('#000').fontSize(14).text('Détails :', {underline:true}).moveDown(); doc.fontSize(11); 
+        
+        let details = {};
+        try { details = JSON.parse(d.details); } catch(e) { details = { "Erreur": "Données corrompues" }; }
+
+        for(const [k,v] of Object.entries(details)) { if(k!=='mission_id' && k!=='ambassadeur_id') doc.font('Helvetica-Bold').text(`${k}: `, {continued:true}).font('Helvetica').text(`${v}`).moveDown(0.5); } 
+        doc.end(); 
+    } catch(e) {
+        console.error("PDF Report Error:", e);
+        res.status(500).send("Erreur lors de la génération du rapport.");
+    }
 });
 app.post('/entreprise/envoyer-campagne', async (req, res) => { const list = req.body.emails.split(/[\n,;]+/).map(e => e.trim()).filter(e => e); const type = req.body.type_activite; const protocol = 'https'; const host = req.get('host'); const fullLink = `${protocol}://${host}/sondage-client/${req.session.userId}?type=${encodeURIComponent(type)}`; try { if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) throw new Error("Config email manquante"); for(const email of list) { await transporter.sendMail({ from: `"Forfeo Lab" <${process.env.EMAIL_USER}>`, to: email, subject: `Votre avis compte - ${req.session.userName}`, html: `<div style="font-family: Arial; padding: 20px; text-align: center; background-color: #f9f9f9;"><h2 style="color: #0061ff;">Bonjour !</h2><p>Merci de votre visite chez <strong>${req.session.userName}</strong>.</p><br><a href="${fullLink}" style="background-color: #0061ff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 25px; display: inline-block;">Répondre au sondage</a></div>` }); } res.redirect('/entreprise/dashboard?msg=campagne_envoyee'); } catch (error) { console.error("ERREUR EMAIL:", error); res.redirect('/entreprise/dashboard?error=email_fail'); } });
 app.get('/sondage-client/:entrepriseId', async (req, res) => { const ent = await pool.query("SELECT nom, id, logo_data FROM users WHERE id=$1", [req.params.entrepriseId]); if(ent.rows.length === 0) return res.send("Entreprise introuvable"); const type = req.query.type || 'Général'; const questions = SURVEY_TEMPLATES[type] || SURVEY_TEMPLATES['Général']; res.render('sondage-public', { entreprise: ent.rows[0], questions: questions, type: type }); });
