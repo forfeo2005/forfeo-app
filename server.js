@@ -155,12 +155,13 @@ app.get('/admin/rapport-comptable', async (req, res) => {
     doc.font('Helvetica');
 
     missions.rows.forEach(m => {
-        const montant = parseFloat(m.recompense) || 0;
+        // CORRECTION : S'assure que le montant est bien un nombre, même si stocké en string
+        const montant = parseFloat(String(m.recompense).replace(/[^0-9.-]+/g,"")) || 0;
         totalBrut += montant;
         
         doc.text(new Date(m.created_at).toLocaleDateString(), 50, y);
         doc.text(m.titre.substring(0, 30), 150, y);
-        doc.text(m.ambassadeur_nom, 350, y);
+        doc.text(m.ambassadeur_nom || 'N/A', 350, y);
         doc.text(montant.toFixed(2) + '$', 500, y);
         y += 20;
         
@@ -239,21 +240,20 @@ app.post('/sondage-client/submit', async (req, res) => { await pool.query("INSER
 
 // AMBASSADEUR & ACADEMIE
 app.get('/ambassadeur/dashboard', async (req, res) => { 
-    const m = await pool.query("SELECT * FROM missions WHERE statut='approuve' OR statut='reserve'"); 
+    // CORRECTION : Ajout de 'en_attente' pour que l'ambassadeur voit les missions dispos
+    const m = await pool.query("SELECT * FROM missions WHERE statut IN ('en_attente', 'reserve', 'approuve', 'paye')"); 
     const h = await pool.query("SELECT m.*, r.created_at as date_soumission FROM missions m LEFT JOIN audit_reports r ON m.id = r.mission_id WHERE m.ambassadeur_id=$1 ORDER BY m.created_at DESC", [req.session.userId]); 
     res.render('ambassadeur-dashboard', { missions: m.rows, historique: h.rows, totalGains: 0, userName: req.session.userName }); 
 });
 
 app.post('/ambassadeur/postuler', async (req, res) => { await pool.query("UPDATE missions SET ambassadeur_id=$1, statut='reserve' WHERE id=$2", [req.session.userId, req.body.id_mission]); res.redirect('/ambassadeur/dashboard'); });
 
-// --- C'EST ICI QUE JE CORRIGE LE PROBLÈME ---
-// J'ajoute "missionId: req.query.missionId" pour que la vue EJS puisse l'utiliser
+// ROUTES POUR LES SONDAGES (Passage de ID Mission)
 app.get('/ambassadeur/survey-qualite', (req, res) => res.render('survey-qualite', { userName: req.session.userName, missionId: req.query.missionId }));
 app.get('/ambassadeur/survey-satisfaction', (req, res) => res.render('survey-satisfaction', { userName: req.session.userName, missionId: req.query.missionId }));
 app.get('/ambassadeur/survey-experience', (req, res) => res.render('survey-experience', { userName: req.session.userName, missionId: req.query.missionId }));
 app.get('/ambassadeur/confirmation', (req, res) => res.render('confirmation', { userName: req.session.userName }));
 
-// Logique de soumission corrigée
 app.post('/ambassadeur/soumettre-rapport', async (req, res) => { 
     try {
         const missionId = req.body.mission_id || null;
@@ -264,7 +264,6 @@ app.post('/ambassadeur/soumettre-rapport', async (req, res) => {
             } else {
                 await pool.query("UPDATE audit_reports SET details=$1 WHERE mission_id=$2", [JSON.stringify(req.body), missionId]);
             }
-            // IMPORTANT : Changement du statut pour que l'Admin le voie
             await pool.query("UPDATE missions SET statut='soumis' WHERE id=$1", [missionId]); 
         }
         res.redirect('/ambassadeur/confirmation'); 
