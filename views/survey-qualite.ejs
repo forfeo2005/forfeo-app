@@ -22,11 +22,18 @@
 <div class="survey-container">
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h1 style="margin: 0;">📋 Audit de Qualité Opérationnelle</h1>
-        <a href="/dashboard" style="color: #666; text-decoration: none; font-size: 0.9rem;">Annuler l'audit</a>
+        <a href="/ambassadeur/dashboard" style="color: #666; text-decoration: none; font-size: 0.9rem;">Annuler l'audit</a>
     </div>
-    <p style="color: #888;">Ce rapport sera transmis pour analyse et impactera le Score Forfeo de l'établissement.</p>
+    
+    <p style="color: #888;">
+        ID Mission: #<%= typeof missionId !== 'undefined' ? missionId : 'N/A' %> <br>
+        Ce rapport sera transmis pour analyse et impactera le Score Forfeo de l'établissement.
+    </p>
 
-    <form action="/submit-survey" method="POST">
+    <form action="/ambassadeur/soumettre-rapport" method="POST">
+        
+        <input type="hidden" name="mission_id" value="<%= typeof missionId !== 'undefined' ? missionId : '' %>">
+        
         <input type="hidden" name="survey_type" value="qualite_pro">
 
         <div class="category-title">1. Environnement & Ambiance</div>
