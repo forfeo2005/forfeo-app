@@ -246,10 +246,10 @@ app.get('/ambassadeur/dashboard', async (req, res) => {
 
 app.post('/ambassadeur/postuler', async (req, res) => { await pool.query("UPDATE missions SET ambassadeur_id=$1, statut='reserve' WHERE id=$2", [req.session.userId, req.body.id_mission]); res.redirect('/ambassadeur/dashboard'); });
 
-// NOUVELLES ROUTES AJOUTEES
-app.get('/ambassadeur/survey-qualite', (req, res) => res.render('survey-qualite', { userName: req.session.userName }));
-app.get('/ambassadeur/survey-satisfaction', (req, res) => res.render('survey-satisfaction', { userName: req.session.userName }));
-app.get('/ambassadeur/survey-experience', (req, res) => res.render('survey-experience', { userName: req.session.userName }));
+// --- NOUVELLES ROUTES POUR LES SONDAGES ET LA CONFIRMATION ---
+app.get('/ambassadeur/survey-qualite', (req, res) => res.render('survey-qualite', { userName: req.session.userName, missionId: req.query.missionId }));
+app.get('/ambassadeur/survey-satisfaction', (req, res) => res.render('survey-satisfaction', { userName: req.session.userName, missionId: req.query.missionId }));
+app.get('/ambassadeur/survey-experience', (req, res) => res.render('survey-experience', { userName: req.session.userName, missionId: req.query.missionId }));
 app.get('/ambassadeur/confirmation', (req, res) => res.render('confirmation', { userName: req.session.userName }));
 
 app.post('/ambassadeur/soumettre-rapport', async (req, res) => { 
@@ -264,6 +264,7 @@ app.post('/ambassadeur/soumettre-rapport', async (req, res) => {
             }
             await pool.query("UPDATE missions SET statut='soumis' WHERE id=$1", [missionId]); 
         }
+        // REDIRECTION VERS LA PAGE CONFIRMATION
         res.redirect('/ambassadeur/confirmation'); 
     } catch (e) {
         console.error("Erreur soumission:", e);
